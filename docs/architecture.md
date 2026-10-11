@@ -581,7 +581,7 @@ largest gap between this prototype and a valid entry.
 
 | Claim | Status |
 |---|---|
-| 158 automated tests pass (`make test`) | Verified — run on 2026-10-11 |
+| 162 automated tests pass (`make test`) | Verified — run on 2026-10-11 |
 | Safety router runs before the model and its verdict is not overridden | Verified by code path and by `tests/test_safety.py` |
 | The model has no reachable path that writes | Verified: no SQL tool, and `confirm_draft` has no schema so `schemas_for_model()` never emits it |
 | No rule or enabled fact contains a numeric BP threshold | Verified by two tests that scan the content files |

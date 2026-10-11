@@ -57,15 +57,108 @@ class TestEmergencyBeforeEverything:
         assert verdict.rule_id
 
     def test_negated_symptoms_do_not_trigger(self):
-        """A false positive here trains the user to ignore the alarm."""
-        for text in [
+        """A false positive here trains the user to ignore the alarm.
+
+        This grew out of a real defect. Per-rule ``exclude_patterns`` lists covered
+        only the phrasings someone had thought of, so three enabled red-flag rules had
+        no exclusion list at all and fired on plain denials: "no heavy bleeding" and
+        "I did not have a seizure" both raised the emergency panel. A false alarm on an
+        emergency screen is the most harmful failure in this product, because the next
+        alarm may be real and the user has learned to dismiss it.
+
+        The fix moved negation detection into the matcher, so it applies to every rule
+        including ones added later. These cases are the regression set.
+        """
+        denials = [
             "no chest pain",
-            "without chest pain",
-            "I have no shortness of breath",
-            "no weakness",
+            "no heavy bleeding",
+            "I did not have a seizure",
+            "there was no seizure",
+            "no confusion",
+            "she did not faint",
+            "no shortness of breath",
+            "no weakness or numbness",
+            "I have not had any bleeding",
+            "the bleeding has stopped",
+            "no chest pain today",
+            "my lips are not turning blue",
+            "he denies any chest pain",
+            "I have no blood in my vomit",
+            "no head injury",
+            "the seizure resolved",
+            "not short of breath",
+            "the fit is over",
+            "my chest pain went away",
+            "the numbness has gone",
+            "no bleeding at all",
+        ]
+        for text in denials:
+            verdict = safety_route(text, {})
+            assert verdict.action not in {"emergency", "urgent_advice"}, (
+                f"'{text}' states the symptom is ABSENT and must not alarm"
+            )
+
+    def test_continuation_phrases_still_alarm(self):
+        """The trap in the negation fix: 'will not stop' LOOKS like a denial.
+
+        Every continuation phrase contains a negation token, so a naive negation check
+        silences a genuine emergency. "The bleeding will not stop" is a cry for help,
+        not a denial, and these cases guard the ordering that keeps it one.
+        """
+        continuations = [
+            "the bleeding will not stop",
+            "my bleeding won't stop",
+            "bleeding that does not stop",
+            "my bleeding wont stop",
+            "bleeding that doesn't stop",
+        ]
+        for text in continuations:
+            verdict = safety_route(text, {})
+            assert verdict.action in {"emergency", "urgent_advice"}, (
+                f"'{text}' describes an ONGOING emergency and must alarm"
+            )
+
+    def test_a_denial_in_one_clause_does_not_mask_a_symptom_in_the_next(self):
+        """Clause scoping: the dangerous failure mode of a window-based check."""
+        for text in [
+            "no chest pain but I cannot breathe",
+            "I did not faint earlier but now I have chest pain",
+            "the numbness has gone but the bleeding will not stop",
         ]:
             verdict = safety_route(text, {})
-            assert verdict.action != "emergency", f"'{text}' should not alarm"
+            assert verdict.action in {"emergency", "urgent_advice"}, (
+                f"'{text}' contains a real symptom after a denial"
+            )
+
+    def test_uncertainty_is_not_reassurance(self):
+        """"Not sure if it is chest pain" is a live concern, not a denial."""
+        for text in [
+            "I am not sure if it is chest pain",
+            "not sure whether this is chest pain",
+        ]:
+            verdict = safety_route(text, {})
+            assert verdict.action in {"emergency", "urgent_advice"}, (
+                f"'{text}' expresses uncertainty about a real symptom"
+            )
+
+    def test_unnegated_symptoms_still_alarm(self):
+        """The positive half, so the negation check cannot pass by silencing everything."""
+        for text in [
+            "I have chest pain",
+            "chest pain that started an hour ago",
+            "heavy bleeding",
+            "I am bleeding a lot",
+            "I had a seizure",
+            "my lips are turning blue",
+            "I cannot breathe",
+            "I fell and hit my head",
+            "sudden weakness on one side",
+            "I was confused and then passed out",
+        ]:
+            verdict = safety_route(text, {})
+            assert verdict.action in {"emergency", "urgent_advice"}, (
+                f"'{text}' is a real symptom and must alarm"
+            )
 
     def test_urgent_is_not_escalated_to_emergency(self):
         verdict = safety_route("I fell and hit my head", {})

@@ -540,8 +540,8 @@ Nothing above should be taken on trust. The artefacts are in the repository.
 | The disabled grading-table entry | `facts.json` → `edu_numeric_bands_disabled` |
 | No clinical review anywhere | `review_state` fields in `content/education/*.json` and `content/rules/*.json`; every enabled entry reads `team_checked` |
 
-The automated test suite is 97 tests, covering data integrity, safety boundaries, and statistics
-and summary behaviour. All 97 pass. That figure and the ones in this document come from
+The automated test suite is 158 tests, covering data integrity, safety boundaries, statistics
+and summary behaviour, and the demo flows. All 158 pass. That figure and the ones in this document come from
 `docs/BUILD_LOG.md` and from test output; no other numbers about this project's coverage or
 performance are asserted anywhere.
 

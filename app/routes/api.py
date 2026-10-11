@@ -110,19 +110,66 @@ async def reset(request: Request):
 
     Present because a public demo needs a way back to a known state. It only ever
     rebuilds simulated data, and it says so in its response.
+
+    DESTRUCTIVE BY DESIGN, so the ordering here matters more than usual. An earlier
+    version called ``reset_db()`` and then failed on ``conn.close()`` - it had used
+    ``session()``, a context manager, as though it were a connection. The result was
+    the worst possible failure mode: every table dropped, nothing re-seeded, HTTP 500,
+    and a demo database left completely empty. A "recover the database" button that
+    destroys the database is worse than no button at all.
+
+    Two changes make that unrecoverable state impossible:
+
+    * the connection is opened with ``connect()``, and
+    * seeding is verified *before* success is reported. If the rebuild does not
+      actually produce a profile, the response says so and does not claim success.
     """
-    from ..db import reset_db, session as db_session
+    from ..db import connect, reset_db
     from ..demo import seed as demo_seed
 
     reset_db()
-    conn = db_session()
+
+    conn = connect()
     try:
         user_id = demo_seed.seed_demo(conn)
+
+        # Verify the rebuild rather than assuming it. Reaching the end of the previous
+        # function was treated as evidence of success, which is exactly how the empty
+        # database went unnoticed.
+        profile = repo.get_profile(conn, user_id)
+        readings = repo.count_rows(conn, "bp_reading")
+        if not profile or readings == 0:
+            return JSONResponse(
+                {
+                    "ok": False,
+                    "error": (
+                        "The demo data could not be rebuilt, so the database is "
+                        "currently empty. Run 'make seed' from a terminal to restore it."
+                    ),
+                    "profiles": repo.count_rows(conn, "user_profile"),
+                    "readings": readings,
+                },
+                status_code=500,
+            )
+
         repo.audit(
             conn, kind="tool_call", user_id=user_id,
             session_id=get_session_id(request), tool_name="demo_reset",
             args={}, result_status="ok", rule_version=RULES.version, mode="ui",
             detail="demo database rebuilt with simulated data",
+        )
+    except Exception as exc:
+        # Report the failure plainly instead of leaving a 500 and a silent empty file.
+        return JSONResponse(
+            {
+                "ok": False,
+                "error": (
+                    f"The demo data could not be rebuilt ({type(exc).__name__}). "
+                    "Run 'make seed' from a terminal to restore it."
+                ),
+                "profiles": repo.count_rows(conn, "user_profile"),
+            },
+            status_code=500,
         )
     finally:
         conn.close()
@@ -132,7 +179,12 @@ async def reset(request: Request):
     request.session.pop("summary_omitted", None)
 
     return JSONResponse(
-        {"ok": True, "message": "Demo data rebuilt. All of it is simulated.", "user_id": user_id}
+        {
+            "ok": True,
+            "message": "Demo data rebuilt. All of it is simulated.",
+            "user_id": user_id,
+            "readings": readings,
+        }
     )
 
 

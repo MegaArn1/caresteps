@@ -21,7 +21,13 @@ router = APIRouter(prefix="/summary", tags=["summary"])
 @router.get("", response_class=HTMLResponse)
 @router.get("/", response_class=HTMLResponse)
 def index(request: Request, days: int = 14):
-    """Preview screen. Everything here came from stored records."""
+    """Preview screen. Everything here came from stored records.
+
+    Omissions ARE applied here, not only on the print page. An earlier version applied
+    them in ``printable()`` alone, so a presenter who removed a section and pointed at
+    the preview to show it gone was pointing at a section that was still on screen.
+    The preview is the screen the user actually edits on, so it has to honour the edit.
+    """
     from .pages import _base
 
     user_id = current_user_id(request)
@@ -32,6 +38,9 @@ def index(request: Request, days: int = 14):
     finally:
         conn.close()
 
+    omitted = request.session.get("summary_omitted") or []
+    facts = apply_omissions(facts, omitted)
+
     return _render(
         request,
         "summary.html",
@@ -41,6 +50,7 @@ def index(request: Request, days: int = 14):
             "days": days,
             "questions": questions,
             "omittable": OMITTABLE_KEYS,
+            "omitted": omitted,
         },
     )
 

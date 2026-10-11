@@ -125,13 +125,13 @@ Observed output (this run; the timing varies with machine load — see below):
 ```
 ........................................................................ [ 74%]
 .........................                                                [100%]
-97 passed in 6.60s
+158 passed in 11.89s
 ```
 
 | Metric | Value |
 |---|---|
-| Tests collected | 97 |
-| Tests passed | **97** |
+| Tests collected | 158 |
+| Tests passed | **158** |
 | Tests failed | 0 |
 | Tests skipped / xfail | 0 |
 | Wall-clock runtime | ~5.3–6.7 s across repeated runs on this machine |
@@ -496,7 +496,7 @@ limitations rather than achievements:
 
 ### 6.7 What a pass rate is not
 
-**The figure "97 passed" is the number of automated checks that pass against a fixed set of
+**The figure "158 passed" is the number of automated checks that pass against a fixed set of
 inputs. It is NOT a clinical accuracy figure.** It is not a sensitivity, specificity, or
 diagnostic performance measure. It says nothing about whether the app helps a real person
 manage blood pressure. It must never be presented, in the submission or in a demo, as
@@ -627,7 +627,7 @@ for t in ['I have chest pain', 'no chest pain', 'I forgot my tablet yesterday mo
 
 | Question | Answer |
 |---|---|
-| Does the automated suite pass? | Yes — 97 of 97, in roughly six seconds |
+| Does the automated suite pass? | Yes — 158 of 158, in roughly twelve seconds |
 | Is the safety routing order correct? | Yes, verified — emergency beats medication requests in the same sentence |
 | Are false refusals of legitimate reports prevented? | Yes, with regression tests for the cases that previously failed |
 | Is the content sourced and audited? | Yes — 63 candidates, 32 rejected, 23 statements shipped and re-verified, 10 reworded |
@@ -637,6 +637,6 @@ for t in ['I have chest pain', 'no chest pain', 'I forgot my tablet yesterday mo
 | Has an accessibility audit been performed? | **No.** |
 | Were older adults involved? | **No.** |
 | Is the CodeBuddy/WorkBuddy evidence requirement met? | **No — OUTSTANDING, and it is a hard submission gate.** |
-| Is 97 a clinical accuracy figure? | **No, and it must not be presented as one.** |
+| Is 158 a clinical accuracy figure? | **No, and it must not be presented as one.** |
 | Are the rule citations all resolvable to a source? | **Not machine-checked, and seven cited ids are not registered** (§1.2) |
 | Is negation handled on every red-flag rule? | **No — three enabled rules lack an exclude list and fire on negated sentences** (§6.9) |

@@ -24,7 +24,7 @@ Recorded here so the presenter knows which parts of the script are known-good.
 | Checked | Result |
 |---|---|
 | `make seed` from a clean database | Ran. 14 sources, 23 facts enabled, 1 held back. Rules v1: 21 enabled, 2 held for review, 23 total. Profile created. |
-| 97-test suite | `97 passed` |
+| 158-test suite | `158 passed` |
 | `/healthz` in degraded mode | Returns the JSON in §1.3 |
 | `/healthz` with `LLM_BASE_URL` + `LLM_MODEL` set | `live: true`, `degraded: false` — the badge disappears |
 | Chat turn with an unreachable endpoint | Degrades in under 1 second to the scripted reply. The app keeps working. |
@@ -98,7 +98,7 @@ printed on purpose. Do not skip past it if a judge is watching the terminal — 
 Two optional checks before going on stage:
 
 ```bash
-make test        # 97 passed
+make test        # 158 passed
 make reset && make seed    # back to a known state
 ```
 
@@ -111,22 +111,31 @@ type it on stage.
 
 Nothing to set. Start with `make run`.
 
-- Every page carries a banner: "**Limited mode** — The assistant is not connected, so free-text
-  questions are answered by a simpler set of rules. Everything else works: you can still record
-  readings, see your numbers, prepare for your appointment, and use the help bar."
+- Every page carries a banner except two: "**Limited mode** — The assistant is not connected, so
+  free-text questions are answered by a simpler set of rules. Everything else works: you can still
+  record readings, see your numbers, prepare for your appointment, and use the help bar."
+  `/summary/print` suppresses the banner deliberately — nothing on that page is interactive, so a
+  banner offering a way out of a broken state has nothing to act on — and `/trace` does not render
+  it either, because the trace route does not pass the variable `base.html` guards on. If you say
+  "every page" and a judge then looks at `/trace`, the one page you call the honest one, the claim
+  is checkable and wrong. Say "every page except the printable summary and the trace page".
 - The banner also prints the reason in brackets: `(LLM_BASE_URL / LLM_MODEL not set)`.
 - Free-text chat falls back to a transparent keyword router that handles: recording a reading with
   numbers, reporting a medication state, viewing trends, building a summary, viewing the plan,
   and raising a difficulty. Everything outside that list gets a plain "I could not tell what you
-  were asking."
+  were asking." — in full, "I want to help, but I could not tell what you were asking, and the part
+  of me that understands free text is not working right now", prefixed with "(No assistant is
+  connected)".
 - **The safety gates are unaffected by this.** They are deterministic and run before any model
   call. Chest pain still routes to 995 in this mode.
 
 Use Configuration A. It is the configuration to use on stage, and the one whose behaviour has been
-exercised end to end here. To be precise about what that means: the 97 tests import the repository,
+exercised end to end here. To be precise about what that means: the 158 tests import the repository,
 the content loader, the safety router, the statistics and the summary, and the emergency help
-config — they do **not** import the degraded conversation layer (`app/llm/degraded.py`) or the
-orchestrator, which were checked by running the app by hand, as §0 and §3 record.
+config — and the suite does cover the degraded conversation layer (`app/llm/degraded.py`) and the
+orchestrator's output checks, through `tests/test_degraded_and_output.py` (45 of the 158 tests).
+What no test reaches is the live provider loop, `_live_turn` in `app/llm/orchestrator.py`; that is
+the one path the suite cannot exercise without a model endpoint, and it is covered in §6.
 
 **Configuration B — model configured.**
 
@@ -140,6 +149,15 @@ make run-live
 `LLM_BASE_URL` must be an OpenAI-compatible `/v1/chat/completions` endpoint supporting function
 calling. With this set, the banner disappears from every page and `/trace` reports
 `Attempting live model calls: Yes`.
+
+**One thing Configuration B does not do, and it matters if you demonstrate it.** The app checks
+only whether the two variables are set, not whether the endpoint answers. Point the variables at a
+dead host and `/healthz` still returns `"live": true`, `"degraded": false`, `"reason": null`, and
+the pages render with no banner at all — the app believes it is live. The individual chat turn
+still degrades, quickly and correctly, with the reply prefixed `(The assistant is offline)` and
+the reason `Could not reach the model service: ConnectError`. So the fallback is visible on the
+turn, but not in the banner. This is the difference that makes Configuration A the one to use on
+stage.
 
 A third setting exists for demonstration purposes:
 
@@ -468,17 +486,20 @@ Routing: `refuse`, rule `boundary_pill_identification`, source `S2-healthhub-kno
 
 **The claim to make, and its limit.** Say: this refusal does not depend on the model behaving. It
 is a phrase match on a rule file with a citation attached. The rule loader refuses to load a rule
-that declares no source, so an uncited rule cannot run. What this does **not** mean is that the
-rule set is complete — it is 23 rules covering the cases the team thought of, and a phrasing
-nobody wrote down will not be caught. Say the limitation out loud; do not let a judge find it.
+loaded from `content/rules/` that declares no source, so an uncited loaded rule cannot run. What
+this does **not** mean is that the rule set is complete — it is 21 live rules covering the cases
+the team thought of, and a phrasing nobody wrote down will not be caught. Say the limitation out
+loud; do not let a judge find it.
 
 One narrower limitation, in case a judge reads the JSON: the loader enforces that a rule *names*
 at least one source, and it does not check that the named source is one of the fourteen registered
 in `content/education/sources.json`. Seven identifiers cited by the rules — including
 `S1-healthhub-bp-medication` on `boundary_change_dose` — are declared only inside the rule files
 and have no register entry, so `/trace` shows an identifier that does not resolve to a publisher
-and URL the way the emergency number's sources do. Nothing runs uncited; the citation chain is
-just thinner than it looks for those rules.
+and URL the way the emergency number's sources do. Nothing *loaded from a rule file* runs uncited;
+the citation chain is just thinner than it looks for those rules. The one thing outside the rule
+files is `boundary_unknown_medication` in §3 Group C, which runs with an empty `sources` list — see
+the note under that table.
 
 ---
 
@@ -519,8 +540,10 @@ Point at each of the four things in turn. Do not paraphrase them; they are the a
    across three missing days is a fabricated reading, and it is the most common way a health chart
    lies. The same numbers are listed below the chart, so the chart is never the only copy.
 
-   Check it in the API if a judge wants it: `GET /api/stats?days=14` returns a `series` array with
-   one entry per day, and `"has_data": false` with no values on the gap days.
+   Check it in the API if a judge wants it: `GET /api/stats?days=14` returns a `series` object
+   whose `points` array has one entry per day — `series.points`, not `series` itself. The object
+   also carries `from`, `to`, `days_with_data` and `days_without_data`. Each point is shaped
+   `{"date": ..., "has_data": false, "n": 0}` on a gap day: `"has_data": false` with no values.
 
 3. **The four adherence states, with `unrecorded` shown apart.**
 
@@ -558,8 +581,10 @@ Point at each of the four things in turn. Do not paraphrase them; they are the a
    The seed patient has no history before 2026-09-28, so the earlier window has nothing in it and
    the app declines. This is the app choosing to show nothing over showing something computable
    but meaningless. If a judge asks whether the app always refuses: no, it compares when both
-   windows meet the threshold — but the threshold is an engineering judgement, not a guideline
-   figure, and that is recorded in `app/stats.py` and in `docs/evaluation.md` §6.9.
+   windows meet the threshold. The two thresholds are `MIN_READINGS_FOR_MEAN = 2` and
+   `MIN_READINGS_PER_WINDOW_FOR_COMPARISON = 3` in `app/stats.py`, and `docs/evaluation.md` §6.10
+   ("Statistical threshold provenance") calls them engineering judgements rather than
+   literature-derived values. Point a judge at §6.10, not §6.9 — §6.9 is the negation defect.
 
 **Part two: `/summary`.**
 
@@ -576,13 +601,21 @@ Click path: nav item **Appointment**, or `/summary`.
    > **All of this is simulated demo data**
 
 2. Scroll to **Reported by the patient** and click **Remove from summary** on one section — for
-   example the reading notes, or how the patient said they felt. The page reloads and the section
-   is gone from the preview.
+   example the reading notes, or how the patient said they felt.
 
-   The page explains what that did, before you have to:
+   **The section does not disappear from this preview. Do not point at it expecting that.** What
+   changes on this page is the button label, which flips to **Put back in the summary**; the
+   section's content stays on screen in full. The omission is real, but it is applied only by
+   `/summary/print` — the print route runs the omissions, the preview route does not. So show the
+   effect where it actually happens: click **Print or save as PDF** (step 3) and point at the
+   missing section on the printed page, or open `/summary/print` in a second tab. Say it the way
+   the page itself explains it:
 
    > Removing a section takes it out of the printed version only. It does not delete anything from
    > your record, and it does not change what is stored.
+
+   That sentence is accurate and is the whole design: the section leaves the paper, not the
+   record, and not this preview.
 
    What is omittable is a fixed list: feelings, reading notes, difficulties, chosen actions, and
    questions. What is **not** omittable is the completion block and the readings. The reason is in
@@ -620,12 +653,18 @@ Expected reply, verbatim:
 > Chest pain needs to be checked right away. Please call 995 now, or ask someone near you to call
 > for them. Do not wait to see if it passes, and do not drive yourself.
 
-Alongside it, the emergency panel shows:
+Alongside it, in the same `/api/chat` response, the emergency block carries `payload.help`:
 
 > Emergency ambulance (SCDF) — **995**
-> Call this number only for something life-threatening.
 > **This app has not contacted anyone and cannot do so. You need to make the call yourself, or ask
 > someone nearby to call for you.**
+
+Two of those three lines are in the JSON — `help.label` with `help.number`, and `help.app_does_not`
+verbatim. The third line the runbook used to quote here, "Call this number only for something
+life-threatening", is **not** in the chat payload; it is a sentence on `/app/help` and belongs to
+the Part-two block below, where it renders in full as "Call this number only for something
+life-threatening. For anything else, the other routes further down this page are the usual ones."
+Do not read it off the JSON.
 
 **Three things to say about this, in this order:**
 
@@ -660,6 +699,15 @@ Read the section headed **What this app is not**:
 > not tell you what to take.
 > Not connected to anyone. It has no link to a hospital, a clinic, an ambulance service, or a
 > family member.
+
+Above that section, the emergency panel itself renders here, and this is where the line about
+scope belongs:
+
+> Emergency ambulance (SCDF) — **995**
+> Call this number only for something life-threatening. For anything else, the other routes
+> further down this page are the usual ones.
+> This app has not contacted anyone and cannot do so. You need to make the call yourself, or ask
+> someone nearby to call for you.
 
 Also on this page, the other routes with their own sources: non-emergency ambulance 1777 (with the
 SCDF note that this hotline ceases from 1 January 2027), emergency SMS 70995, and the NurseFirst
@@ -724,6 +772,12 @@ things to show, quickly:
    > Rule set version 1. It holds 23 rule(s) in total: 21 switched on, and 2 present but switched
    > off. Held-back rules are listed too, on purpose.
 
+   **Say "21 rules are switched on; 23 exist, and the two that are off are shown here with the
+   reason."** Saying "23 rules" on its own overstates the live enforcement set by one seventh —
+   only 21 can fire — and this page prints the breakdown a line above, so a judge reading the
+   screen while hearing 23 sees the mismatch. The 21 is the stronger answer anyway: the held-back
+   pair is the evidence of judgement.
+
    The two switched off are listed **first**, so they are hard to miss:
 
    - `boundary_emergency_contact_change` — `pending_review`. Would handle a user asking to change
@@ -735,9 +789,11 @@ things to show, quickly:
 
    **The point:** a rule that is not present and a rule that is present but held back are
    different facts. This page shows the second kind, with the reason attached, rather than
-   deleting the gap and pretending it does not exist. Every rule in the set, including the
-   disabled ones, carries at least one named source — the loader drops any rule that does not, so
-   an uncited rule cannot be quietly switched on later.
+   deleting the gap and pretending it does not exist. Every rule loaded from the content files,
+   including the disabled ones, carries at least one named source — the loader drops any rule that
+   does not, so an uncited rule cannot be quietly switched on later. The 21 switched on is the
+   number to say out loud; 23 is the total including the two held back, and a judge reading this
+   screen will see both.
 
    The footer is the sentence to read:
 
@@ -795,23 +851,51 @@ column is the observed output, not the intent. Every row below was executed on 2
 
 | Type this | Observed | Rule |
 |---|---|---|
-| **`no chest pain today`** | **no alarm.** No emergency panel, no number displayed, no 995, and no rule fires. What comes back is the ordinary degraded reply — "I could not tell what you were asking" — which is a worse answer than a person would want and an honest sign that nothing alarming was detected. | none |
+| **`no chest pain today`** | **no alarm.** No emergency panel, no number displayed, no 995, and no rule fires. What comes back is the ordinary degraded reply, which in Configuration A begins "(No assistant is connected) " and then reads: "I want to help, but I could not tell what you were asking, and the part of me that understands free text is not working right now." It is a worse answer than a person would want and an honest sign that nothing alarming was detected. | none |
 
 This is the single most important sentence in this table to rehearse. A false alarm is worse than
 no alarm: it teaches the person to ignore the red panel, which is exactly the behaviour that kills
-someone. The rules handle it with an explicit `exclude_patterns` list on each rule rather than
-leaving it to the model to notice the negation.
+someone. **Most** rules carry an explicit `exclude_patterns` list rather than leaving it to the
+model to notice the negation — but three enabled red-flag rules do not, so a negated sentence
+naming those still fires. See the risk note below; do not offer to demonstrate negation on those
+three on stage.
 
-Also verified not to alarm: `without chest pain`, `I have no shortness of breath`, `no weakness`.
+Also verified not to alarm: `without chest pain`, `I have no shortness of breath`, `no weakness`,
+`my lips are not blue`.
 
-**The risk in group B that must be stated, not discovered.** The negation handling is a substring
-exclusion. In a sentence that contains both a negation and a genuine symptom — for example
-`I have chest pain today, but no chest pain yesterday` — the exclusion fires and the emergency
-rule does **not** trigger. That was observed during preparation. Do not type a mixed sentence like
-that on stage expecting the alarm, and if a judge asks, say plainly that the exclusion list is a
-substring match and can be defeated by a sentence that negates one symptom while naming another;
-the model layer was never given authority over this gate, and the fix is a structural rule rather
-than a longer list.
+**Three risks in group B that must be stated, not discovered.**
+
+*First, the three rules with no exclusion list at all.* `redflag_severe_bleeding`,
+`redflag_mouth_lips_colour` and `redflag_fall_head_injury` carry an empty `exclude_patterns` list.
+Plain negation therefore fires them — verified live:
+
+| Avoid on stage | What actually happens |
+|---|---|
+| `there is no heavy bleeding` | `emergency`, `redflag_severe_bleeding` |
+| `I did not hit my head` | `urgent_advice`, `redflag_fall_head_injury` |
+| `no head injury` | `urgent_advice`, `redflag_fall_head_injury` |
+| `no blue lips` | `emergency`, `redflag_mouth_lips_colour` |
+
+This is recorded as an open defect in `docs/evaluation.md` §6.9. The suite does not catch it
+because `test_negated_symptoms_do_not_trigger` covers only four phrases, none of them on these
+rules. If a judge asks about false alarms, say it plainly: negation is handled by a substring
+exclusion on some rules, not all, three enabled rules have no exclusion list, and that is the same
+class of error this app argues is the most dangerous. The fix is structural — a negation-aware
+pre-pass rather than a longer phrase list — and it is outstanding.
+
+*Second, one enabled rule whose exclusion list is too narrow.* `redflag_seizure` does carry an
+`exclude_patterns` list, but it holds only `no seizure` and `not a seizure` as literal substrings.
+The phrase a person would actually use does not match either, so `I am not having a seizure`
+returns `emergency` / `redflag_seizure`. The exclusion exists; it just does not cover the wording.
+Do not type that sentence on stage.
+
+*Third, the mixed sentence.* The exclusion is a substring match, so in a sentence containing both
+a negation and a genuine symptom — `I have chest pain today, but no chest pain yesterday` — the
+exclusion fires and the emergency rule does **not** trigger. Verified. Do not type a mixed
+sentence like that expecting the alarm, and if a judge asks, say the exclusion list is a substring
+match that can be defeated by a sentence negating one symptom while naming another; the model
+layer was never given authority over this gate, and the fix is a structural rule rather than a
+longer list.
 
 ### Group C — refused, with a route onward
 
@@ -823,10 +907,18 @@ than a longer list.
 | `what is this white round pill` | `refuse` | `boundary_pill_identification` |
 | `do I have high blood pressure?` | `refuse` | `boundary_diagnosis_request` |
 | `send this to my doctor` | `refuse` | `boundary_share_without_consent` |
-| `what is this medicine for` | `refuse` | `boundary_unknown_medication` — the medicine was not named, so the app declines rather than guessing which one |
+| `what is this medicine for` | `refuse` | `boundary_unknown_medication` — the medicine was not named, so the app declines rather than guessing which one. **Read the note below before demonstrating this row.** |
 
 Every refusal carries a redirect and, where it fits, an offer to add the question to the
 appointment list.
+
+**The one exception, and it is the row a judge is most likely to check.** `boundary_unknown_medication`
+is not loaded from `content/rules/` and is not one of the 23 rules on `/trace`. It is synthesised in
+`app/safety/boundaries.py` from the `mentions_unknowable_medication` context flag, so it carries no
+source identifier — its `sources` list in the JSON response is empty, unlike the other boundary
+rules. It still refuses, and its redirect to a pharmacist is real. But do not use it as an example
+of "every rule has a citation", and do not go looking for it in the `/trace` table; it is not there.
+The other six rows in this table are loaded rules and do carry sources.
 
 ### Group D — must NOT be refused (the false refusals)
 
@@ -895,8 +987,13 @@ Observed behaviours, both verified:
 
 **Do not retry blindly.** Retrying a hanging endpoint spends the six minutes on a spinner. Say out
 loud, "the assistant is offline, so this part is answered by the simpler rule set, and everything
-else still works" — that sentence is true, it is on screen in the banner, and it is more
-convincing than a retry.
+else still works" — that sentence is true, and it is more convincing than a retry.
+
+Where to point while saying it depends on which configuration you are running. In Configuration A
+there is no model configured, so the banner is on screen and you point at it. In Configuration B
+with a dead endpoint, **there is no banner** — the app believes it is live and renders no warning —
+so say the sentence yourself and point at the reply's `(The assistant is offline)` prefix instead,
+which is on the turn in front of the judge. Do not reach for a banner that is not there.
 
 If you want to convert the situation into a deliberate demonstration, restart with
 `LLM_FORCE_DEGRADED=1` and tell the audience you are choosing the fallback path. That is honest
@@ -933,9 +1030,17 @@ What "odd" looks like: the home page says there are readings from 60 days but th
 shows none; a barrier appears with an id that does not resolve; the record count is larger than
 expected. All three are symptoms of a database that has been written to during a rehearsal.
 
-A second route exists: `POST /api/demo/reset` rebuilds the dataset from inside the running app and
-answers "Demo data rebuilt. All of it is simulated." Useful if a judge wants to see the reset, but
-prefer the command line — there is no button for it, so it cannot be triggered by accident.
+**`POST /api/demo/reset` is broken in this build. Do not call it on stage.** It answers HTTP 500,
+not the "Demo data rebuilt. All of it is simulated." it was written to return, and it is
+destructive rather than merely unusable: the handler drops every table first and then dies before
+re-seeding them, so the app is left with zero profiles, zero readings and zero barriers. The
+route is not repairable with a URL change; the fault is in `app/routes/api.py`, which calls
+`db_session()` as a plain function when `app/db.py` defines `session()` as a `@contextmanager` —
+so `seed_demo` fails at its first `execute` and the `finally: conn.close()` fails too. The lazy
+re-seed in `app/routes/deps.py` will rebuild the patient on the next page view, but it never calls
+`load_knowledge`, so the education tables stay empty and `/app/medicines` silently loses the
+Amlodipine explanation and says it could not match the name instead. If you have already called
+it, recover with the command at the top of this section.
 
 ### A page errors
 
@@ -991,9 +1096,12 @@ language layer on top, on purpose, and the language layer is the least load-bear
 
 We do not, and we are not claiming it. There is no longitudinal evidence: the demo history is
 fourteen fictional days written by us, and no real patient has used the app at any point. What has
-been tested is the behaviour under specific inputs — 97 automated tests over data integrity,
-safety boundaries, statistics and the summary. What has not been done is a user study with older
-adults, which the plan lists as recommended and which was not run. We would describe the
+been tested is the behaviour under specific inputs — 158 automated tests over data integrity,
+safety boundaries, statistics and the summary; 45 of them cover the degraded conversation layer
+and the model-output checks. What has not been done is a user study with older
+adults — zero participants. The handbook's solution section (方案 9.4) recommends a walkthrough
+with three to five older adults, and we did not have the resources in this round; it is recorded
+as an outstanding item rather than quietly dropped. We would describe the
 fourteen-day history as a fixture designed to contain the states the app must handle, not as a
 trial.
 
@@ -1001,12 +1109,17 @@ trial.
 
 No, and the line is enforced rather than promised. Requests to change a dose, stop a medicine,
 start a new one, or handle a missed dose are intercepted by a deterministic rule that runs before
-the model, and the model is not called at all for those turns. Asking about a white round pill
-gets a refusal and a route to a pharmacist. The output check additionally scans every model reply
-for phrasing that advises a medication change or claims an action the app cannot take, and
-replaces the whole reply if it finds one. What this does not cover: the rule set is 23 rules over
-the phrasings the team wrote down, so a phrasing nobody anticipated may not be caught. That is a
-real limit and it is why the output check exists as a second layer.
+the model, and the model is not called at all for those turns — that is the layer you are watching
+in this demonstration, and it is the one reloaded from a JSON file with a citation attached.
+Asking about a white round pill gets a refusal and a route to a pharmacist. A second layer exists:
+`check_output` scans live-model prose for phrasing that advises a medication change or claims an
+action the app cannot take, and grounds every number against the tool-returned fact table,
+replacing the reply if it fails. Be straight about where that layer sits — it is called from
+exactly one place, inside `_live_turn` in `app/llm/orchestrator.py`, which is the live path that
+has never been run, so in this demonstration it has never fired and there are no model replies for
+it to scan. What this does not cover either way: 21 live rules over the phrasings the team wrote
+down, so a phrasing nobody anticipated may not be caught. That is a real limit, and it is why the
+output check was built as a second layer even though it is inert here.
 
 **"What about the missing hardware and hospital integration?"**
 
@@ -1015,12 +1128,17 @@ manual entry was kept because it makes the whole flow visible end to end in six 
 because a pairing state is a new way for a demonstration to fail. The honest concession is that a
 Bluetooth cuff is the normal way an older adult in Singapore records a reading, so manual entry is
 a step back from what the hardware already does. There is no hospital, HealthHub or PTEC
-integration: none exists, none is claimed, and the help page says so directly. What the app does
-instead is produce one printable page the patient carries in themselves.
+integration: none exists, none is claimed. The help page denies all of them in one line — no link
+to a hospital, a clinic, an ambulance service, or a family member — and it is written generically:
+the words HealthHub and PTEC appear nowhere in it. Say the named denial yourself rather than
+sending a judge to the page looking for it. What the app does instead is produce one printable
+page the patient carries in themselves.
 
 **If a judge pushes on the missing model run:** answer it before they finish the question. The
 live model path has never been executed. The endpoint probe was blocked during the build and was
-not worked around. Degraded mode is what the 97 tests cover and what this demonstration shows.
+not worked around. Degraded mode is what the 158 tests cover — 45 of them exercising
+`app.llm.degraded` and the orchestrator's `check_output` / `_collect_numbers` / `_safety_context`
+— and it is what this demonstration shows. No test reaches the live provider loop, `_live_turn`.
 The consequence is specific and worth naming: whether a configured endpoint supports the
 OpenAI-compatible `/v1/chat/completions` format with function calling, whether latency is
 acceptable for a conversational turn, and whether tool calls come back in the shape the
@@ -1029,8 +1147,12 @@ orchestrator expects are all unverified. It is the first item on the outstanding
 **If a judge asks about clinical review:** no clinician has reviewed anything. Every rule and every
 knowledge entry carries `review_state: team_checked` — with the two disabled rules marked
 `pending_review`, which is why they are disabled — and that means a team member read the source and
-recorded it. That is visible on `/trace`, on every medicine card, in the seed output, and on the
-printable summary. The count printed by `make seed` is `clinician-reviewed entries: 0`.
+recorded it. That is visible per entry on `/trace` and on every medicine card, and `make seed`
+prints `clinician-reviewed entries: 0`. **Not** on the printable summary — do not send a judge
+there for it. The printable summary does not repeat the per-entry review state; what it carries is
+the global line "No part of this was written or checked by a doctor." That is a stronger
+disclaimer, but it is not the same claim, and a judge handed the page expecting a per-item badge
+will not find one.
 
 **If a judge asks about accessibility:** the interface was designed against a 19px base font, 48px
 tap targets and WCAG AA contrast, with no external requests, no CDN fonts and no build step. It was
@@ -1041,6 +1163,43 @@ tap targets and WCAG AA contrast, with no external requests, no CDN fonts and no
 at least three screenshots or recordings of genuine development in CodeBuddy or WorkBuddy a hard
 submission gate, and it is not satisfied. Say that plainly. Do not describe the documentation work
 that was produced as if it were the required evidence.
+
+**"You have no rule for a dangerous number — what happens if I record 190/120?"** Nothing
+automatic. There is no numeric threshold anywhere in this app: not in a rule, not in the content,
+not in the config. MOH and HealthHub publish no cut-off for a home reading, and only a US source
+gives 180/120, so we ship no threshold rather than one borrowed from a health system our users do
+not live in. Verified on stage: entering 190/120 raises two typing checks — "The top number 190 is
+unusual for a home reading", "The bottom number 120 is unusual for a home reading" — and lets you
+save it. No emergency routing, no 995. The cost is real and we chose it: someone with no symptoms
+and a very high reading gets no emergency routing, because the sources do not support one. It is
+recorded as decision D10 and enforced by two tests, `test_no_numeric_threshold_is_used_as_a_trigger`
+and `test_no_blood_pressure_threshold_in_emergency_config`. Do not let a judge find this first —
+it is the question a healthcare-track judge is most likely to open with.
+
+**"Your users are 65 and older in Singapore. Why is this English only?"** It is English only this
+round, by decision (D11). A half-translated safety message is worse than an untranslated one, and
+translating the emergency wording without review would put unreviewed clinical language on the 995
+path. A second language is the next piece of work, and it is recorded as a time constraint rather
+than a design conclusion.
+
+**"My father takes three medicines. How many can you actually explain?"** Eight hand-checked
+medication-purpose entries: two named drugs — amlodipine and losartan — plus five drug classes
+(calcium channel blocker, angiotensin receptor blocker, ACE inhibitor, diuretic, beta blocker) and
+one general explanation. Anything else is a refusal and a route to a pharmacist. Verified: asking
+about nifedipine or bisoprolol does not route to a boundary refusal at all — the degraded router
+simply does not recognise the question, which is an honest dead end rather than a wrong answer. It
+is deliberately small: every entry has a publisher and a URL behind it, and recall was traded away
+for that. A ninth entry exists in the content file but is switched off on purpose — it holds
+SingHealth's hypertension grading table (normal below 130/80 and so on), and shipping it would put
+"grade 1 hypertension" in front of an untrained user reading it against a single home measurement.
+
+**"Who can see this data? Is it encrypted?"** This is a local single-process prototype. There is
+no login — the session is a cookie with a key regenerated each boot, so any device that obtains the
+cookie is that user. There is no encryption at rest: `caresteps.db` is a plain SQLite file. There
+is no encryption in transit, and no rate limiting. Every record is fictional, which is the only
+reason that is acceptable here; for real patient data it would be disqualifying, and that is
+written down in `docs/architecture.md` rather than left implicit. Say it in that order — the cut,
+then why it is tolerable in a demo, then what it would cost in production.
 
 ---
 
@@ -1067,7 +1226,7 @@ Say none of these, in any form, however indirectly.
    or "demo data".
 6. **Do not claim an accessibility certification or a WCAG conformance audit.** Say what the
    interface was designed for and that it was not independently audited.
-7. **Do not present the 97 passing tests as validation of the medical content.** They test data
+7. **Do not present the 158 passing tests as validation of the medical content.** They test data
    integrity, safety routing, statistics and the summary. They do not test whether the advice is
    medically correct, and no test could.
 8. **Do not quote a number that is not on screen or in `docs/BUILD_LOG.md`.** If a figure has to be
@@ -1075,6 +1234,23 @@ Say none of these, in any form, however indirectly.
 9. **Do not describe the app as a monitoring service, an emergency service, a medical device, or a
    replacement for a doctor.** The help page lists all four denials; keep them.
 10. **Do not claim the CodeBuddy / WorkBuddy evidence requirement is met.** It is outstanding.
+11. **Do not claim the app detects a dangerous blood pressure number, or imply it would send
+    someone to hospital.** There is no numeric threshold anywhere — not in a rule, not in the
+    content, not in the config — so a 190/120 reading raises a typing check and saves, with no
+    emergency routing. That is a deliberate cut (D10), not an oversight, and it is the single
+    limitation most likely to be found damning by a judge from a health system. Say the cut and
+    the reason before anyone asks.
+12. **Do not claim any data protection that is not there.** No login, no encryption at rest, no
+    encryption in transit, no rate limiting. The session is a cookie with a per-boot key. The only
+    thing making that tolerable is that every record is fictional. Do not say "secure", "private
+    by design", or "anonymised".
+13. **Do not claim negation is handled everywhere.** Most rules carry an `exclude_patterns` list;
+    three enabled red-flag rules carry none, so `there is no heavy bleeding` alarms and
+    `I did not hit my head` gives urgent advice. It is an open defect recorded in
+    `docs/evaluation.md` §6.9. Say the true version if the topic comes up; do not offer to
+    demonstrate it.
+14. **Do not claim the app works in Chinese, Malay or Tamil, or promise translation.** It is
+    English only this round (D11), on a 65+ population where that is a real gap.
 
 ---
 
@@ -1088,15 +1264,20 @@ Cut this out and keep it beside the laptop.
 | 0:40 | `/readings/new` | Record a reading. Show "Nothing has been saved yet". Confirm. Point at the count change. |
 | 1:30 | `/support/ask` | Type a reason. **Pick no category.** Show "No reason has been given a name yet." Then pick one and show the support change. Open `/app/support` for the 7-category map. |
 | 2:40 | `/app/medicines` | Statement, source with URL, `team_checked` caveat. Then `POST /api/chat`: `should I double the dose today`, `what is this white round pill`. |
-| 3:30 | `/app/trends` → `/summary` | Denominators. Broken line. Four adherence states with unrecorded apart. Then remove a section and print. |
-| 4:30 | `POST /api/chat` → `/app/help` | `I have chest pain` → 995, and "The app has not contacted anyone". Then "What this app is not". |
-| 5:20 | `/trace` | Model status. 10 tool contracts. 21 rules on, 2 held for review. The live audit log. |
+| 3:30 | `/app/trends` → `/summary` | Denominators. Broken line. Four adherence states with unrecorded apart. Then remove a section and **show it gone on the printed page** — the preview keeps it, by design. |
+| 4:30 | `POST /api/chat` → `/app/help` | `I have chest pain` → 995, and "The app has not contacted anyone". Then "What this app is not". The "call only for something life-threatening" line is on `/app/help`, not in the JSON. |
+| 5:20 | `/trace` | Model status. 10 tool contracts. **21 live rules**, 23 total with 2 held for review. The live audit log. |
 
 Pre-flight: `make setup` → `make seed` → `make run` → check `/healthz` → run Group A, B, G once →
 video ready.
 
-Do not say: clinical validation, real patients, hospital integration, live model verified,
-accessibility certified, or that the demo data is a trial.
+Do not type on stage: `make demo-check` (the script does not exist), `POST /api/demo/reset` (500s
+and wipes the database), anything from the group-B risk table (`there is no heavy bleeding`,
+`I did not hit my head`, `no blue lips`, `I am not having a seizure`).
 
-Do say: simulated, `team_checked` not clinician-reviewed, live path not run, CodeBuddy /
-WorkBuddy evidence outstanding.
+Do not say: clinical validation, real patients, hospital integration, live model verified,
+accessibility certified, that the demo data is a trial, or that the app detects a dangerous blood
+pressure number.
+
+Do say: simulated, `team_checked` not clinician-reviewed, live path not run, no numeric threshold
+on purpose, CodeBuddy / WorkBuddy evidence outstanding.

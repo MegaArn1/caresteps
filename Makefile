@@ -27,10 +27,13 @@ help:
 $(BIN)/python:
 	$(PY) -m venv $(VENV)
 	$(BIN)/pip install --quiet --upgrade pip
-	$(BIN)/pip install --quiet -r requirements.txt
+	# Install the dev requirements, which include the runtime ones. `make setup` must
+	# leave the repo able to run `make test`, otherwise a fresh clone passes setup and
+	# seed and then fails at the test step.
+	$(BIN)/pip install --quiet -r requirements-dev.txt
 
 setup: $(BIN)/python
-	@echo "Installed. Next: make seed && make run"
+	@echo "Installed (runtime + test). Next: make seed && make run"
 
 seed: $(BIN)/python
 	$(BIN)/python -m scripts.seed --verbose

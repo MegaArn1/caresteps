@@ -81,13 +81,47 @@ def new_id(prefix: str) -> str:
     return f"{prefix}_{uuid.uuid4().hex[:12]}"
 
 
+# Internal field names never reach the user. A validation message is read by a
+# 70-year-old on a phone, so it says "the top number", not "systolic", and never
+# leaks a database column name.
+FIELD_LABELS = {
+    "systolic": "the top number",
+    "diastolic": "the bottom number",
+    "pulse": "the pulse",
+    "measured_at": "when you took the reading",
+    "name": "the name",
+    "instruction": "the plan text",
+    "text": "the question",
+    "user_words": "what you tell us",
+    "status": "the answer",
+    "medication_id": "the medicine",
+    "category": "the reason",
+    "reminder_time": "the time",
+    "original_id": "that reading",
+    "target_source": "where the target came from",
+    "age_band": "the age range",
+    "display_name": "a name",
+}
+
+
+def field_label(field: str | None) -> str:
+    """A patient-readable name for an internal field, or a safe generic fallback."""
+    if not field:
+        return "that"
+    return FIELD_LABELS.get(field, "that value")
+
+
 def _as_int(value: Any, field: str) -> int:
+    label = field_label(field)
     if value is None or value == "":
-        raise ValidationError(f"{field} is required", field)
+        raise ValidationError(f"I still need {label}.", field)
     try:
         n = int(str(value).strip())
     except (TypeError, ValueError):
-        raise ValidationError(f"{field} must be a whole number", field) from None
+        raise ValidationError(
+            f"I could not read {label} as a number. Please type the digits only.",
+            field,
+        ) from None
     return n
 
 

@@ -141,13 +141,13 @@ when the cuff was on the arm and `entered_at` when the row was created. These ar
 questions, and a schema that stores one column loses the ability to answer the other. That is
 visible in a `CREATE TABLE` statement and it is a comment in a model class.
 
-**Evidence.** `app/db.py` defines ten tables with column-level comments stating what each column
-answers. The claims that are structural, not stylistic:
+**Evidence.** `app/db.py` defines thirteen tables with column-level comments stating what each
+column answers. The claims that are structural, not stylistic:
 
 | Claim | Where it is enforced |
 |---|---|
-| Three separate verification questions | `verified_by_user`, `verified_by_team`, `reviewed_by_clinician` are three independent columns on `care_plan` and on `education_fact` |
-| Simulated data can never be mistaken for real | `is_simulated` on every table, defaulting to 1 |
+| Three separate verification questions | `verified_by_user`, `verified_by_team`, `reviewed_by_clinician` are three independent columns on `care_plan`; `education_source` and `education_fact` carry the same question as a single `review_state` value, whose vocabulary is `team_checked` / `clinician_reviewed` / `unreviewed` |
+| Simulated data can never be mistaken for real | `is_simulated` appears on ten of the thirteen tables and defaults to 1. `education_source` defaults to 0, because a published source is not simulated. `education_fact`, `conversation_message` and `audit_event` carry no such column: a vetted fact, a turn and an audit line are not health observations of a patient |
 | When it was measured is not when it was entered | `measured_at` and `entered_at`, never merged |
 | A correction keeps its predecessor | `superseded_by` and `corrects` on `bp_reading` |
 | A repeated submit does not double-count | `dedupe_key TEXT UNIQUE` |
@@ -199,10 +199,14 @@ Two structural points carry most of the weight:
   model, because no language model is involved.
 - **The model cannot write to the database.** Every health record is written in two phases:
   `prepare_*` validates and returns a draft without persisting, and a separate `confirm_*` step
-  persists it after the user confirms. No tool handler executes SQL; `app/repository.py` is the
-  only module that writes, and it uses parameterised statements. The model has no path to a
-  direct write, which makes "the model cannot save anything by itself" a structural fact rather
-  than a prompt instruction.
+  persists it after the user confirms. No tool handler executes SQL, and none is reachable
+  without a person having confirmed the draft: `app/tools/handlers.py` lists the persisting
+  handlers in `UI_ONLY_HANDLERS`, and `dispatch()` refuses them unless a confirmation page
+  called it. `app/repository.py` is the module that performs those writes, using parameterised
+  statements. The exceptions are build-time code, not model-reachable paths: `app/demo/seed.py`
+  and `app/content_loader.py` issue statements directly, and `app/db.py` owns the schema. The
+  model has no path to a direct write, which makes "the model cannot save anything by itself" a
+  structural fact rather than a prompt instruction.
 
 **Cost.** A single agent has one context window and one tool budget. If a future version needed
 genuinely different reasoning for a benefits question and a records question, a single agent
@@ -448,8 +452,9 @@ claim to make on their behalf from nothing. The app must not be able to make it.
 **Evidence.** `app/repository.py` defines `ADHERENCE_STATUSES` with all four values, and raises
 `ValidationError` when a caller submits `status="unrecorded"`, with the message that it is
 derived from a missing entry and cannot be reported. `derive_unrecorded` returns synthetic rows
-with `is_self_report = 0`, so the distinction survives into the database.
-`app/db.py` documents the same rule on the `medication_report` table.
+with `is_self_report = 0`; those rows are a view and are never persisted, so `medication_report`
+holds only what a person actually reported and a derived gap can never later be read back as a
+patient's statement. `app/db.py` documents the same rule on the `medication_report` table.
 
 `app/stats.py::adherence_summary` counts the four states into four separate keys and states the
 interpretation explicitly: a day with no record does not mean a dose was missed. The same
@@ -577,8 +582,8 @@ respond to.
 docstring, and implements the pattern in `READING_PATTERN` with explicit `None` days commented
 as gaps. Plan items carry `source_type = 'demo_fictional'`, so the plan text is labelled as
 written by us and carrying no clinical authority. Every seeded row sets `is_simulated`, and the
-schema sets that column on every table so no simulated history can be mistaken for a real
-observation.
+schema carries that column, defaulting to 1, on every table that stores a patient record, so no
+simulated history can be mistaken for a real observation.
 
 **Cost.** No breadth. The app cannot be shown with a patient on four medicines, or a patient who
 raises a difficulty in a language other than English, or a patient whose plan came from a
@@ -620,19 +625,21 @@ make this app better at the thing it does. It would make it look more serious wh
 nothing about whether a 72-year-old can record a reading. The dataset question and the product
 question are different questions, and only the second one is being asked here.
 
-This is written up in `docs/content-provenance.md` section 5.5, and no file in this repository
-references such a dataset.
+This is written up in `docs/content-provenance.md` section 5.5. No such dataset is used, loaded
+or referenced as input anywhere in this repository; the only mentions of it are the written
+explanation of why it is not used.
 
 ### Is eight medication-purpose entries enough?
 
 No. It is nowhere near enough, and the app says so rather than working around it.
 
-Eight entries cover two named drugs and five drug classes, from two HealthHub pages. A real
-hypertension patient may be on any of several dozen medicines, and most of them are not here. The
-app's behaviour when it has no entry is deliberate: `h_retrieve_education` returns an empty
-result flagged `nothing_found: True` with an instruction not to answer from general knowledge,
-and the medicines page tells the user directly that a medicine not on the list is not guessed
-at.
+Eight entries cover two named drugs and five drug classes, drawn from three HealthHub pages
+(`S2-healthhub-bp-medication` for the classes and the general entry, `S4a-healthhub-amlodipine`
+and `S4b-healthhub-losartan` for the two named drugs). A real hypertension patient may be on any
+of several dozen medicines, and most of them are not here. The app's behaviour when it has no
+entry is deliberate: `h_retrieve_education` returns an empty result flagged `nothing_found: True`
+with an instruction not to answer from general knowledge, and the medicines page tells the user
+directly that a medicine not on the list is not guessed at.
 
 The relevant comparison is not "eight versus a database". It is what the app does with the gap.
 A system with a database that is wrong about a drug is worse than a system that declines, because
@@ -683,8 +690,10 @@ was not independently audited.
 No, and this is the most important limitation in the project.
 
 The model endpoint was never exercised. The probe was blocked during the build and was not worked
-around. Degraded mode is what the 97 tests cover and what the demonstration will most likely
-show. `_live_turn` in `app/llm/orchestrator.py` has been statically reviewed and not run.
+around. The 97 tests run against the database, safety, statistics and summary layers, which are
+the layers the degraded path also uses, so degraded mode is covered indirectly rather than by a
+test of its own; it is what the demonstration will most likely show. `_live_turn` in
+`app/llm/orchestrator.py` has been statically reviewed and not run, and no test reaches it.
 
 This means the following are unverified: whether a configured endpoint supports the
 OpenAI-compatible `/v1/chat/completions` format with function calling, whether latency is
@@ -710,7 +719,7 @@ satisfy, and it is recorded in `docs/content-provenance.md` section 6 and in
 | A failed model call returns `ok=False` rather than raising | A dead endpoint degrades the app; it does not break it | `LLMResult` in `app/llm/provider.py`; the failure branch in `_live_turn` |
 | Statistics thresholds set at 2 readings for a mean and 3 per window for a comparison | An engineering judgement to avoid describing a period from a single reading | `MIN_READINGS_FOR_MEAN`, `MIN_READINGS_PER_WINDOW_FOR_COMPARISON` in `app/stats.py`, marked in the comments as an engineering judgement and not a literature finding |
 | Local emergency numbers are shown only when the entry is verified | The most dangerous bug found in the whole build was two templates printing the emergency number when the verification flag was false | Fixed and recorded in `docs/BUILD_LOG.md` phase P5 |
-| The user's own words are stored verbatim in barrier records and reproduced on the summary | A concern rewritten into clinical language is no longer the patient's concern | `app/stats.py`, `app/summary.py`; the `reported by the patient` labelling in the summary |
+| The user's own words are stored verbatim in barrier records and reproduced on the summary | A concern rewritten into clinical language is no longer the patient's concern | `app/summary.py` (the `difficulties` block carries `user_words` with `record_ids`, labelled confirmed or not confirmed by the patient); `app/routes/barrier.py` records the words as submitted |
 | The visit summary is preview, edit, omit, then print — never sent | The app cannot send anything, and must not appear to | `app/summary.py::apply_omissions`; `docs/PLAN.md` M5 |
 | Two held-back safety rules ship disabled rather than deleted | The demo can show a rule that exists and is held back pending confirmation instead of pretending the gap is not there | `redflag_fever_with_confusion`, `boundary_emergency_contact_change` |
 | The demo database resets by deleting the file | No migration tooling is needed for fictional data, and a clean demonstration is worth more than persisted state | `make seed`, `make reset`, and `app/db.py::reset_db` |

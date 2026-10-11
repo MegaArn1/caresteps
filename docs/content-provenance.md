@@ -48,8 +48,9 @@ foundation.
 
 **63 candidate sources were gathered. 32 were rejected.**
 
-The rejections were not about format. They were substantive, and the build log records the
-category of defect for each (`docs/BUILD_LOG.md`, phase P7):
+The rejections were not about format. They were substantive. The build log records the
+category of defect, and it does so for the five highlighted below rather than for all
+32 (`docs/BUILD_LOG.md`, phase P7):
 
 | Rejected candidate | Defect |
 |---|---|
@@ -169,10 +170,11 @@ provenance rather than a footnote:
 - **`S1-healthhub-hf-bp-monitoring` carries a 130/80 target belonging to a heart-failure
   population.** That number is not imported anywhere.
 
-Two registered sources are not cited by any enabled fact: `S1-scdf-ems` (the 995 emergency
-number, which is consumed by the emergency configuration rather than by an education fact) and
-`S3-healthhub-hypertension-hub` (cited only by the disabled numeric-bands entry). They are
-listed here because the register is the register.
+Three registered sources are not cited by any enabled fact: `S1-scdf-ems` (the 995 emergency
+number, which is consumed by the emergency configuration rather than by an education fact),
+`S3-healthhub-hypertension-hub` (registered, but cited by no fact at all — not even a disabled
+one), and `S5-singhealth-hypertension-management` (cited only by the disabled numeric-bands
+entry). They are listed here because the register is the register.
 
 ### Attribution corrections
 
@@ -189,8 +191,9 @@ kind of error this file exists to prevent, so it is recorded rather than quietly
 ## 3. The enabled facts
 
 23 of the 24 entries in `content/education/facts.json` are enabled. Each carries an `id`, a
-`topic`, a `subject`, a `statement`, an `applies_to` scope, a `review_state` and the
-`source_id` it came from.
+`topic`, a `statement`, an `applies_to` scope, a `review_state` and the `source_id` it came
+from. Seven also carry a `subject`, which is the drug class or drug the statement is about;
+the measurement and routing facts leave it empty.
 
 The statement column below is the shipped text, copied from the file.
 
@@ -238,9 +241,10 @@ retrieval index or a knowledge base. No part of CareSteps reproduces the body te
 cited page.
 
 **What we did instead:** each of the 23 enabled entries is **our own short paraphrase of a
-specific section** of one page, paired with the exact location in that page it came from. The
-`_why_paraphrase` note in `facts.json` states the rule in one line: *citing a source is not
-the same as being allowed to reproduce it.*
+specific section** of one page. The `_why_paraphrase` note in `facts.json` states the rule in
+one line: *citing a source is not the same as being allowed to reproduce it.* The section we
+used is recorded in the source's `reuse_note` rather than as a per-fact field — an entry points
+at a whole source, not at a page anchor, and the reuse note is what narrows it.
 
 The practical differences:
 
@@ -282,17 +286,19 @@ is not a careful app — it is an unguarded one.
 searched for one and did not find one. Other jurisdictions do publish such a figure; the
 Singapore sources this app is built on do not.
 
-Therefore the app states no threshold, anywhere. There is no number in `content/rules/`, and no
-enabled fact states a cut-off. Inventing 180/120 because other sources use it would be a
-fabrication with real consequences for a real reader.
+Therefore the app states no threshold, anywhere. No rule in `content/rules/` keys on a
+blood-pressure number, and no enabled fact states a cut-off. (The rules directory does contain
+numbers — 995 and the other emergency contacts, and version years. The claim here is about
+numeric *blood-pressure* thresholds, and there is none.) Inventing 180/120 because other
+sources use it would be a fabrication with real consequences for a real reader.
 
 This is enforced by tests rather than by good intentions:
 
 | Test | What it enforces |
 |---|---|
-| `tests/test_safety.py::TestSafetyRules::test_no_numeric_threshold_is_used_as_a_trigger` | No rule pattern may match an `NNN/NN` form. A rule keyed to a number cannot be added. |
+| `tests/test_safety.py::TestRuleIntegrity::test_no_numeric_threshold_is_used_as_a_trigger` | No rule pattern may match an `NNN/NN` form. A rule keyed to a number cannot be added. |
 | `tests/test_safety.py::TestEmergencyConfig::test_no_blood_pressure_threshold_in_emergency_config` | Walks the whole emergency config tree, including nested strings, so a threshold cannot be added anywhere without the test noticing. |
-| `tests/test_data_integrity.py::test_no_numeric_threshold_in_enabled_content` | Scans the `when_to_seek_help` and `how_to_measure` statements. If our own content has no threshold, the app cannot leak one by retrieval. |
+| `tests/test_data_integrity.py::TestKnowledgeBase::test_no_numeric_threshold_in_enabled_content` | Scans the `when_to_seek_help` and `how_to_measure` statements. If our own content has no threshold, the app cannot leak one by retrieval. |
 
 The consequence is stated plainly in `content/rules/redflags.json`: *a very high reading with no
 symptoms does not trigger this gate; the app reports the number and its source without
@@ -375,8 +381,10 @@ are disabled. A test asserts no enabled fact contains placeholder text
 ### 5.5 MIMIC-III and similar clinical datasets
 
 No MIMIC-III or comparable de-identified clinical dataset is used anywhere in this project. The
-repository contains no reference to one; this is a category exclusion rather than a record of a
-rejected candidate, and it is stated here so the absence is visible rather than assumed.
+only mentions of one in the repository are the discussions of why it was not used (`decisions.md`,
+and this section); no code, content file or test reads one, and none is a dependency. This is a
+category exclusion rather than a record of a rejected candidate, and it is stated here so the
+absence is visible rather than assumed.
 
 The reasons are three, and any one of them is sufficient:
 
@@ -392,8 +400,10 @@ The reasons are three, and any one of them is sufficient:
    presented. A competition prototype has no basis for that use.
 
 All patient data in this repository is **fictional**. The demo patient, Mdm Tan, is a
-constructed character, and the seed data is labelled `is_simulated` on every table so that
-synthetic records cannot be mistaken for real ones.
+constructed character, and the seed data is labelled `is_simulated` on every table that holds
+patient records, so that synthetic records cannot be mistaken for real ones. The three tables
+that do not carry the flag — `education_fact`, `conversation_message` and `audit_event` — hold
+no patient data: they are the knowledge base, the transcript, and the audit trail.
 
 ### 5.6 Drug-class taxonomy presented as exhaustive
 
@@ -446,9 +456,11 @@ Note that `edu_measure_high_reading_repeat` is a case in point. It is sourced, b
 qualified to have made. We cite it; we do not defend it.
 
 The same applies to the safety rules. The build log records it as a known limitation: every
-rule's `review_state` is `team_checked` and **none has been reviewed by a clinician**. This is
-stated in three places in the product — `/trace`, the README, and seed output — rather than
-left for a reader to discover.
+*enabled* rule's `review_state` is `team_checked` and **none has been reviewed by a
+clinician**. (Two rules are disabled and carry `pending_review` rather than `team_checked`:
+`boundary_emergency_contact_change` and `redflag_fever_with_confusion`.) This is stated in
+three places in the product — `/trace`, the README, and seed output — rather than left for a
+reader to discover.
 
 Related limitations, all of which are load-bearing for how much this provenance file is worth:
 
@@ -494,9 +506,11 @@ What we do with it:
 - **We link.** A reader can open the original rather than trust our summary.
 - **We do not present it as advice.** No fact is framed as advice for the reader. The app states
   what a source says and who says it.
-- **We echo the disclaimers.** Where a source carries a not-medical-advice disclaimer — as
-  `S5-singhealth-hypertension-management` does — this app echoes it rather than quietly
-  dropping it.
+- **We do not silently drop a source's own warnings.** Where a source carries a
+  not-medical-advice disclaimer — as `S5-singhealth-hypertension-management` does — that is
+  recorded in its `reuse_note`. The app's own disclaimers are its own words rather than the
+  publisher's: the visit summary prints a fixed CareSteps disclaimer, not the wording of any
+  cited page.
 - **Emergency numbers** are quoted as facts with attribution to SCDF.
 
 Original work in this repository — the application code, the safety architecture, the
@@ -518,13 +532,13 @@ Nothing above should be taken on trust. The artefacts are in the repository.
 | 14 sources, with publishers, URLs, dates and review states | `content/education/sources.json` |
 | 23 enabled facts and their source ids | `content/education/facts.json` |
 | The audit, the 14 rewrites and the reason for each | `facts.json` → `_audit` |
-| The 32 rejected candidates and the defect for each | `docs/BUILD_LOG.md`, phase P7 |
+| The 63 candidates and the 32 rejections, with the defect named for six of them | `docs/BUILD_LOG.md`, phase P7 |
 | No numeric threshold in any rule or config | `tests/test_safety.py`; run `make test` |
 | No numeric threshold in enabled content | `tests/test_data_integrity.py` |
 | Uncited rules cannot load | `app/safety/rules.py`; `content/rules/boundaries.json` |
 | Uncited facts cannot load | `app/content_loader.py`, `validate_fact` / `validate_source` |
 | The disabled grading-table entry | `facts.json` → `edu_numeric_bands_disabled` |
-| No clinical review anywhere | `review_state` fields; every one reads `team_checked` |
+| No clinical review anywhere | `review_state` fields in `content/education/*.json` and `content/rules/*.json`; every enabled entry reads `team_checked` |
 
 The automated test suite is 97 tests, covering data integrity, safety boundaries, and statistics
 and summary behaviour. All 97 pass. That figure and the ones in this document come from

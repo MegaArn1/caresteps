@@ -22,12 +22,12 @@ is marked as unverified rather than left standing.
 | Item | Value |
 |---|---|
 | Language / runtime | Python 3.11.7 (`.venv`) |
-| Test runner | pytest 9.1.1 |
+| Test runner | pytest 9.1.1 (installed in `.venv`; `requirements-dev.txt` pins 9.0.1, so a fresh `make setup` may resolve a slightly different version) |
 | Database | SQLite, fresh temporary file per test (`tests/conftest.py`) |
 | Model endpoint | **Not configured.** No `LLM_*` variables set |
 | Application mode | Degraded mode (deterministic fallback), which is the default when no model is present |
 | Network use during tests | None |
-| Data used | Fictional only. The demo patient and all history are `is_simulated = 1` |
+| Data used | Fictional only. Every table that holds patient data carries `is_simulated = 1` on its rows |
 
 The isolation property matters more than the speed. Each test builds its own database in
 a `tmp_path`, loads the **real** content files through `app/content_loader.py`, and
@@ -81,6 +81,17 @@ source; held-back rules are reported in metadata rather than hidden; emergency r
 cite a source; the emergency number is verified and matches its citation; the help text
 states the app did not call anyone on the user's behalf.
 
+One gap to state plainly here rather than bury. The rule test asserts that a `sources` list
+is **non-empty**; it does not resolve each id against a register. Seven ids cited by rules —
+`S10-moh-995-symptoms`, `S6-healthhub-selfmed`, `S11-ace-acg-hypertension`,
+`S12-healthxchange-silent-killer`, `S4-scdf-emergency-medical-services`,
+`S1-healthhub-bp-medication`, `S2-healthhub-know-your-medication` — appear in
+`content/rules/*.json` but are not registered in `content/education/sources.json` or in
+`content/rules/emergency.json`. A rule citation is therefore present but not
+machine-verifiable, which is weaker than the guarantee the knowledge-base loader gives for
+facts (§4.1): there, an unregistered `source_id` is a load failure caught by the suite.
+Closing this gap means giving rules the same register the facts use.
+
 **`test_stats_and_summary.py`** — the claim under test is that no number the user sees was
 produced by a language model.
 
@@ -109,12 +120,12 @@ cd /mnt/d/personal_Profiles/files/NTU学系资料/Trimester1/Tencent_Hackathon/c
 .venv/bin/python -m pytest tests/ -q
 ```
 
-Observed output:
+Observed output (this run; the timing varies with machine load — see below):
 
 ```
 ........................................................................ [ 74%]
 .........................                                                [100%]
-97 passed in 5.45s
+97 passed in 6.60s
 ```
 
 | Metric | Value |
@@ -123,10 +134,11 @@ Observed output:
 | Tests passed | **97** |
 | Tests failed | 0 |
 | Tests skipped / xfail | 0 |
-| Wall-clock runtime | **5.45 s** |
+| Wall-clock runtime | ~5.3–6.7 s across repeated runs on this machine |
 
-Two repeat runs on the same machine gave 5.46 s and 5.49 s, so the runtime is stable to
-about ±0.05 s. The count is exact and is not rounded.
+Repeat runs on the same machine ranged from about 5.3 s to about 6.7 s, so treat the runtime
+as "about six seconds" and not as a precise figure. The count is what is exact, and it is not
+rounded.
 
 `make test-fast` runs the same command and is the intended entry point for a judge.
 
@@ -164,8 +176,16 @@ asserts the citation is present.
 | "no weakness" | not emergency | `allow` |
 
 A false positive here teaches the user to ignore the alarm, which is a worse outcome than
-the alarm never firing — so negation is handled by an explicit exclude list on each rule
-rather than left to the model.
+the alarm never firing — so negation is handled by an explicit exclude list on the rules that
+need one (`redflag_chest_pain`, `redflag_breathlessness`, `redflag_stroke_signs`,
+`redflag_consciousness`, `redflag_seizure`), rather than left to the model. Five of the nine
+red-flag rules carry an exclude list; the remaining enabled rules (`redflag_severe_bleeding`,
+`redflag_mouth_lips_colour`, `redflag_fall_head_injury`) do not. This is a demonstrated gap,
+not a design choice: `route("there is no heavy bleeding")` returns `emergency` and
+`route("I did not hit my head")` returns `urgent_advice`, because with no exclude list the
+negated sentence still contains the trigger phrase. Neither is covered by the negation test,
+which only exercises the four phrases in the table above. Adding the missing excludes is an
+outstanding fix — recorded as open in §6.9 rather than left for a reader to discover.
 
 ### 3.3 Medication boundaries — must be refused, with a route onward
 
@@ -179,9 +199,12 @@ rather than left to the model.
 | "what is this white round pill?" | refuse | `refuse` | `boundary_pill_identification` |
 | "do I have high blood pressure?" | refuse | `refuse` | `boundary_diagnosis_request` |
 
-Every refusal carries a `redirect` (to a pharmacist, or a doctor/pharmacist) and
-`offer_question = True`. A refusal with no route onward is a dead end, and the test
-enforces that it does not happen.
+Every refusal carries a `redirect` (to a pharmacist, or a doctor/pharmacist). A refusal
+with no route onward is a dead end, and the test enforces that it does not happen.
+`offer_question = True` on four of the five rules above, so the app can offer to save the
+concern as a question for the appointment. `boundary_diagnosis_request` does not offer
+that: "do I have high blood pressure?" is answered by declining to diagnose, and the
+redirect is the whole of the response.
 
 ### 3.4 The false refusals that must **not** happen
 
@@ -221,8 +244,11 @@ vomiting), so an urgent verdict never closes off the emergency path.
 |---|---|---|---|
 | "I don't feel well" | clarify, with options | `clarify` | `clarify_vague_feeling` |
 
-Every clarification carries a `skip` option, asserted by test. A question the user cannot
-escape is a trap, not a clarification.
+Four of the five clarification rules carry a `skip` option, and the test asserts one is
+present on the vague-feeling rule. The exception is `clarify_when_reading_taken`, whose
+options are time choices (`now`, `this_morning`, `yesterday`, `pick_time`) — the question
+is "when", so every offered answer is an answer, and declining to answer is handled by the
+user simply not replying. A question the user cannot escape is a trap, not a clarification.
 
 ---
 
@@ -245,11 +271,11 @@ The rejections were not formatting problems. Examples recorded in `BUILD_LOG.md`
 
 | Rejected source | Defect |
 |---|---|
-| `S8-healthhub-amlodipine` | contained "may be taken with or without food" — administration guidance, not explanation |
+| `S4a-healthhub-amlodipine` (cited in the build log as `S8-healthhub-amlodipine`, a stale id that appears nowhere in the register) | contained "may be taken with or without food" — administration guidance, not explanation |
 | `S2-moh-hbp`, `S4-sgh-gpfirst-hbp` | contained "continue taking **your usual medicines**" — a medication instruction |
 | `S4-sgh-gpfirst-hbp` | claimed a "not medical advice" disclaimer that does not exist on the page (the verifier grepped the HTML; zero matches) |
 | `S6-shf-elderly-bp` | "stop smoking" was stronger than the source's "limit smoking"; also a 130/85 figure conflicting with mainstream guidance |
-| `S2-healthhub-know-your-medication` | "you may need more than one medicine" steered toward combining medicines |
+| `S2b-healthhub-know-your-medication` (build log: `S2-healthhub-know-your-medication`) | "you may need more than one medicine" steered toward combining medicines |
 
 Rejecting a source does not mean deleting the specific sentence we wanted from it, so a
 second pass re-read every statement we intended to **ship**. Ten of the twenty-three had
@@ -301,7 +327,8 @@ honesty rule overriding how the product looks.
 `test_no_diagnosis_words_in_generated_text` originally matched the substring `diagnos`. It
 failed against text we had deliberately written: the negation "these are not a diagnosis."
 The test was at fault. It now matches affirmative clinical assertions (`diagnosed with`,
-`prescription is`) instead. A test suite that flags the correct behaviour is actively
+`diagnosis is`, `prescribed`, `you should`, `we recommend`, `is stable`) instead. A test
+suite that flags the correct behaviour is actively
 harmful, because it pressures the next person to delete the disclaimers.
 
 ---
@@ -321,7 +348,9 @@ a number the app could not confirm.
 
 **How it was caught.** Template validation during P5, not by a unit test.
 
-**Fix.** Both templates now print the number only inside `{% if help.verified %}`. The
+**Fix.** Both templates now gate on the verification flag — `help.html` on
+`{% if help and help.verified %}`, `trace.html` on `{% if emergency and emergency.verified %}`.
+The
 unverified branch uses cautious wording and routes the person to a hospital or a doctor.
 `app/llm/help.py` deliberately contains no fallback that guesses a number. Locked by
 `test_number_is_verified_and_matches_a_source`.
@@ -382,7 +411,7 @@ number in the message. Locked by the ordinary-requests tests.
 | `clarify_ambiguous_medicine` matched "my tablets" (plural), misreading "my tablets are running out" as an unclear drug name | Rule review | Added `running out` / `running low` excludes |
 | `clarify_when_reading_taken` used bare time words and hijacked "I forgot my medicine yesterday" | Rule review | Now requires reading context (`blood pressure`, `reading`, `took my blood pressure`) |
 | `check_output` number grounding flagged the legitimate emergency constant 995 as a hallucination | P3 review | Allowed numbers are injected from the rule files |
-| `TemplateResponse(name, context)` used the old Starlette signature — all 13 pages returned 500 | Starting the server once | Corrected to the current signature |
+| `TemplateResponse(name, context)` used the old Starlette signature — all 13 pages returned 500 | Starting the server once | Corrected to the current signature. 13 is the figure recorded in `BUILD_LOG.md` and `docs/architecture.md`; the tree now holds 16 template files, so treat 13 as the count at that moment rather than a count of the current tree |
 | `itsdangerous` was an undeclared transitive dependency — install succeeded, startup crashed | Starting the server once | Pinned explicitly in `requirements.txt` |
 | Un-escaped inline SVG favicon data URI truncated the attribute; emoji leaked into document text | Template validation | Percent-encoded, with the reason in a comment |
 | Correction chain overwrote the original value, conflicting with M1 | P6 review | `superseded_by` / `corrects` dual links |
@@ -403,7 +432,8 @@ This section is deliberately blunt. Read it before quoting any number from this 
 ### 6.1 The live model path has never been executed
 
 **No call has ever been made to a live model endpoint.** The endpoint probe was blocked by
-a permission classifier and was not worked around. Consequences:
+a permission classifier and was not worked around; `LLM_*` variables are unset in the
+environment this evaluation ran in. Consequences:
 
 - Degraded mode is well tested. **The live path (`_live_turn` in
   `app/llm/orchestrator.py`) has been statically reviewed only.**
@@ -419,24 +449,29 @@ unsupported. It has not been run.
 
 ### 6.2 No clinician has reviewed anything
 
-Every rule and every knowledge entry carries `review_state = "team_checked"`. That means a
-team member read the source and recorded it. **It does not mean a clinician reviewed it.**
+Every enabled rule, and every knowledge entry, carries `review_state = "team_checked"`; the
+two rules held back pending review are marked `pending_review` and disabled, and are
+reported in the rule metadata rather than removed. `team_checked` means a team member read
+the source and recorded it. **It does not mean a clinician reviewed it.**
 Clinician review is outstanding and is disclosed in the interface, the trace page, and the
 seed output. No clinician, pharmacist, or nurse has seen this content.
 
 ### 6.3 No older adults were involved
 
 No user study, walkthrough, or usability session took place. **Zero participants.** The
-design targets older adults — 19px base type, 48px touch targets, AA contrast ratios,
-single-column mobile layout — but the target users have never used it. No figure for task
+design targets older adults — a 19px base type size, a 48px minimum tap target, darker text
+colours chosen for contrast, and a single-column mobile layout — but the target users have
+never used it. No figure for task
 completion, comprehension, or satisfaction exists, and none may be quoted.
 
 ### 6.4 No accessibility audit
 
-The interface was **designed for** large type, large touch targets, and AA contrast. It has
+The interface was **designed for** large type, large touch targets, and text colours chosen
+to meet WCAG AA contrast — the stylesheet states that intent in its header comment. It has
 **not** been subjected to a WCAG conformance audit, and no independent accessibility
-review has been performed. Nothing here should be described as accessible or AA-conformant
-in the certification sense.
+review has been performed. No contrast measurement is recorded in the repository, so the
+contrast target is an intention rather than a verified property. Nothing here should be
+described as accessible or AA-conformant in the certification sense.
 
 ### 6.5 No load or security testing
 
@@ -482,7 +517,22 @@ guard — it proves the rules still behave as designed, not that the design is c
 - Static assets, demo recording, and cover image status are tracked in the "next steps"
   table of `BUILD_LOG.md`.
 
-### 6.9 Statistical threshold provenance
+### 6.9 Known open defect: negation on three red-flag rules
+
+Not every red-flag rule carries an `exclude_patterns` list (see §3.2). Three enabled rules
+do not, so a negated sentence containing the trigger phrase still fires:
+
+```
+route("there is no heavy bleeding")  -> emergency   redflag_severe_bleeding
+route("I did not hit my head")       -> urgent_advice redflag_fall_head_injury
+```
+
+This is the same class of false positive the project treats as most harmful — an alarm that
+cries wolf trains the user to ignore it. It is listed here because the suite does not catch
+it: `test_negated_symptoms_do_not_trigger` covers four phrases, none of them on these rules.
+It is an outstanding fix, not a known-good property.
+
+### 6.10 Statistical threshold provenance
 
 `MIN_READINGS_FOR_MEAN = 2` and `MIN_READINGS_PER_WINDOW_FOR_COMPARISON = 3` in
 `app/stats.py` are **engineering judgements, not literature-derived values**. They are
@@ -490,10 +540,14 @@ marked as such in code comments. They determine when the app declines to compare
 changing them changes user-visible behaviour; if any guideline figure becomes available,
 these should be re-checked against it.
 
-### 6.10 All patient data is fictional
+### 6.11 All patient data is fictional
 
-Every record in the repository is fictional and flagged `is_simulated = 1`. Mdm Tan is not
-a real person, and no real patient data was used at any point in development or testing.
+Every patient-data row the demo creates is fictional and flagged `is_simulated = 1`:
+`user_profile`, `care_plan`, `medication_item`, `bp_reading`, `medication_report`,
+`barrier_event`, `support_action`, `consultation_question`. `education_source` deliberately
+carries 0, because a published MOH or HealthHub page is a real citation and not simulated.
+Mdm Tan is not a real person, and no real patient data was used at any point in development
+or testing.
 
 ---
 
@@ -503,7 +557,7 @@ From the project root
 (`/mnt/d/personal_Profiles/files/NTU学系资料/Trimester1/Tencent_Hackathon/caresteps`):
 
 ```bash
-# 1. Environment (creates .venv, installs the 5 dependencies)
+# 1. Environment (creates .venv, installs the pinned dependencies)
 make setup
 
 # 2. Test suite — the command behind §2
@@ -558,7 +612,7 @@ for t in ['I have chest pain', 'no chest pain', 'I forgot my tablet yesterday mo
 |---|---|
 | Gate order and that the model is skipped | `app/safety/__init__.py`, `route()` and `SafetyVerdict.blocks_model` |
 | Five-step turn pipeline | `app/llm/orchestrator.py`, `run_turn()` |
-| Only `repository.py` writes to the database | `app/repository.py`; tool handlers call `prepare_*` / `confirm_*` |
+| No model-facing path writes to the database | `app/repository.py`; tool handlers call `prepare_*` / `confirm_*`. (`app/demo/seed.py` does issue a few direct statements, but it is the offline demo builder, not a request path) |
 | 10 tool contracts | `app/tools/contracts.py` |
 | Statistics definitions and thresholds | `app/stats.py` |
 | Summary fact table and `record_ids` | `app/summary.py` |
@@ -573,7 +627,7 @@ for t in ['I have chest pain', 'no chest pain', 'I forgot my tablet yesterday mo
 
 | Question | Answer |
 |---|---|
-| Does the automated suite pass? | Yes — 97 of 97, in 5.45 s |
+| Does the automated suite pass? | Yes — 97 of 97, in roughly six seconds |
 | Is the safety routing order correct? | Yes, verified — emergency beats medication requests in the same sentence |
 | Are false refusals of legitimate reports prevented? | Yes, with regression tests for the cases that previously failed |
 | Is the content sourced and audited? | Yes — 63 candidates, 32 rejected, 23 statements shipped and re-verified, 10 reworded |
@@ -584,3 +638,5 @@ for t in ['I have chest pain', 'no chest pain', 'I forgot my tablet yesterday mo
 | Were older adults involved? | **No.** |
 | Is the CodeBuddy/WorkBuddy evidence requirement met? | **No — OUTSTANDING, and it is a hard submission gate.** |
 | Is 97 a clinical accuracy figure? | **No, and it must not be presented as one.** |
+| Are the rule citations all resolvable to a source? | **Not machine-checked, and seven cited ids are not registered** (§1.2) |
+| Is negation handled on every red-flag rule? | **No — three enabled rules lack an exclude list and fire on negated sentences** (§6.9) |

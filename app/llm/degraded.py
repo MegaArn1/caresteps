@@ -106,11 +106,40 @@ def classify_intent(text: str) -> str:
                             "show my", "what do i take")):
         return "view_plan"
 
-    # 5. Recording a reading. Requires a digit, deliberately.
-    if any(c.isdigit() for c in t) and any(
-        k in t for k in ("blood pressure", "bp", "systolic", "diastolic",
-                         "reading", "mmhg", " over ")
-    ):
+    # 5. Recording a reading.
+    #
+    # Three ways in, and the distinctions are load-bearing:
+    #
+    #   (a) an explicit request to record one - "I want to record my blood pressure".
+    #       No digit needed, because the reply asks for the numbers.
+    #   (b) a statement that already carries a number alongside a reading word -
+    #       "my blood pressure was 150 over 95". A digit is REQUIRED, so prose
+    #       *about* readings ("my readings have been consistent") is not mistaken
+    #       for a reading.
+    #   (c) a bare "NNN over NNN" pairing, which is unambiguous on its own and is how
+    #       people actually say a reading out loud. This is matched as a PATTERN
+    #       rather than by the substring " over ", because "I am over 65" would
+    #       otherwise be read as a blood pressure reading - the exact false positive
+    #       class this project keeps running into.
+    import re
+
+    _BP_PAIR = re.compile(r"\b\d{2,3}\s*(?:over|/)\s*\d{2,3}\b")
+
+    reading_subject = any(
+        k in t
+        for k in ("blood pressure", "bp", "reading", "systolic", "diastolic", "mmhg")
+    )
+    explicit_request = any(
+        k in t
+        for k in (
+            "record my", "record a", "log my", "log a", "save my", "add my",
+            "enter my", "put in my", "write down my", "measured my", "took my blood",
+            "check my blood", "want to record", "need to record", "like to record",
+        )
+    )
+    has_number = any(ch.isdigit() for ch in t)
+
+    if (reading_subject and (explicit_request or has_number)) or _BP_PAIR.search(t):
         return "record_reading"
 
     # 6. Reporting a medication state.
@@ -126,19 +155,40 @@ def _extract_bp_numbers(text: str) -> tuple[int | None, int | None]:
 
     Returns ``(None, None)`` when it is not confident, so the caller asks instead of
     guessing. Never picks a single number and assumes the other.
+
+    Ordering is respected. An earlier version took the largest number as systolic,
+    which meant "82 over 150" was silently rearranged into a plausible-looking
+    ``(150, 82)`` and then offered back for confirmation. That is the worst kind of
+    error this app can make: inventing a normal-looking reading out of an inverted
+    one. If the text says X over Y, X is the top number and Y is the bottom number,
+    whether or not that looks clinically sensible - and if it does not, the
+    confirmation step is where the user sees it and corrects it.
     """
     import re
 
-    nums = [int(n) for n in re.findall(r"\b(\d{2,3})\b", text or "")]
-    # A pulse value is often present too; the two largest plausible BP numbers are
-    # the best available guess, and the result is always shown for confirmation.
+    body = (text or "").lower()
+
+    # Preferred path: an explicit "X over Y" or "X/Y" pairing.
+    pair = re.search(r"\b(\d{2,3})\s*(?:over|/|\s+by\s+)\s*(\d{2,3})\b", body)
+    if pair:
+        top, bottom = int(pair.group(1)), int(pair.group(2))
+        if 40 <= top <= 300 and 20 <= bottom <= 200:
+            # Deliberately returned in the order written, even when inverted, so the
+            # user is asked about what they actually said.
+            return top, bottom
+        return None, None
+
+    nums = [int(n) for n in re.findall(r"\b(\d{2,3})\b", body)]
     candidates = [n for n in nums if 40 <= n <= 300]
     if len(candidates) < 2:
         return None, None
-    top = max(candidates)
-    rest = [n for n in candidates if n != top]
-    bottom = max(rest) if rest else None
-    if bottom is None or top <= bottom:
+
+    # No explicit pairing: fall back to the two largest, which is a guess. It is only
+    # reachable when the phrasing carries no ordering to respect, and the result is
+    # always shown for confirmation.
+    ordered = sorted(candidates, reverse=True)
+    top, bottom = ordered[0], ordered[1]
+    if top <= bottom:
         return None, None
     return top, bottom
 

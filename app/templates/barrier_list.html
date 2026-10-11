@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}Difficulties you have raised - {{ app_name }}{% endblock %}
+
+{#
+  The history view.
+
+  support.html is the "what does this app do with a difficulty" page. This one is
+  the log: everything raised, newest first, in the person's own words.
+
+  Oldest entries are not buried and are not ranked by anything. Newest first is the
+  only ordering used, and it is stated so the list is not read as a scoreboard.
+#}
+
+{% block content %}
+
+<h1>Difficulties you have raised</h1>
+
+<p>
+  Everything here was said by you, and is shown in your own words. Newest first.
+  Nothing on this page is a score, and an entry that is still open is not an
+  unfinished task.
+</p>
+
+{% if not barriers %}
+
+  <div class="card">
+    <h2>Nothing here yet</h2>
+    <p>
+      You have not raised a difficulty, so there is nothing for this page to show.
+      That is not a problem to fix.
+    </p>
+    <p class="muted small" style="margin-bottom:0">
+      If a day went by with no record, or the app kept asking about something you
+      would rather leave alone, you can say so. Saying "I would rather not say" is a
+      complete answer.
+    </p>
+    <div class="btn-row">
+      <a class="btn primary wide" href="/support/ask">Say what got in the way</a>
+    </div>
+  </div>
+
+{% else %}
+
+  <p class="muted small">
+    {{ barriers | length }} entr{{ "y" if barriers | length == 1 else "ies" }} in
+    total.
+  </p>
+
+  <div class="stack">
+
+    {% for b in barriers %}
+      {% set status_word = {"open": "Open", "resolved": "Resolved", "parked": "Left for now"}.get(b.status, b.status | replace("_", " ") | capitalize) %}
+      {% set status_class = {"open": "warn", "resolved": "ok", "parked": "neutral"}.get(b.status, "neutral") %}
+
+      <div class="card">
+        <p style="margin-bottom:6px">
+          <strong>In your words:</strong>
+          {{ b.user_words }}
+        </p>
+
+        <p class="muted small" style="margin-bottom:10px">
+          Raised on {{ b.created_at[:10] }}{% if b.resolved_at %} &middot; closed on {{ b.resolved_at[:10] }}{% endif %}
+        </p>
+
+        <p style="margin-bottom:10px">
+          {% if b.category %}
+            <span class="cat-chip {{ 'confirmed' if b.category_confirmed else 'proposed' }}">
+              {{ categories.get(b.category, b.category | replace("_", " ") | capitalize) }}
+            </span>
+            {% if b.category_confirmed %}
+              <span class="tiny muted">you chose this</span>
+            {% else %}
+              <span class="tiny muted">the app suggested this and you have not confirmed it</span>
+            {% endif %}
+          {% else %}
+            <span class="cat-chip">No category</span>
+            <span class="tiny muted">nothing was picked, which is allowed</span>
+          {% endif %}
+        </p>
+
+        <p style="margin-bottom:10px">
+          <span class="badge {{ status_class }}">{{ status_word }}</span>
+        </p>
+
+        <div class="btn-row">
+          <a class="btn ghost" href="/support/barrier/{{ b.id }}">Open this entry</a>
+        </div>
+      </div>
+    {% endfor %}
+
+  </div>
+
+{% endif %}
+
+{% if actions %}
+
+  <h2>Support you have chosen so far</h2>
+  <div class="card">
+    <table>
+      <caption class="muted small" style="text-align:left;padding-bottom:8px">
+        {{ actions | length }} in total. Nothing on this list has been sent, booked
+        or ordered by the app.
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">What you chose</th>
+          <th scope="col">Where it stands</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in actions %}
+          {% set a_word = {"chosen": "Chosen", "done": "Done", "dropped": "Set aside"}.get(a.status, a.status | capitalize) %}
+          {% set a_class = {"chosen": "info", "done": "ok", "dropped": "neutral"}.get(a.status, "neutral") %}
+          <tr>
+            <td>{{ a.title }}</td>
+            <td><span class="badge {{ a_class }}">{{ a_word }}</span></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+{% endif %}
+
+<hr>
+
+<div class="btn-row">
+  <a class="btn primary" href="/support/ask">Raise something new</a>
+  <a class="btn ghost" href="/app/support">How different reasons lead to different help</a>
+</div>
+
+<p class="muted small">
+  This app records, asks and explains. It cannot change a prescription, cannot stop a
+  medicine, and cannot contact your clinic or pharmacy. If you feel unwell, use the
+  red bar at the bottom of this page.
+</p>
+
+{% endblock %}

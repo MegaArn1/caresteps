@@ -1,0 +1,173 @@
+{
+  "_about": "Source register. Every fact in facts.json must point at one of these. A source with no URL cannot be registered; a fact with no source cannot be loaded. Retrieved 2026-10-11 by automated fetch plus a verification pass; see docs/content-provenance.md for how each was checked and what failed.",
+  "sources": [
+    {
+      "id": "S2-healthhub-bp-medication",
+      "publisher": "HealthHub, Ministry of Health Singapore (article contributed by NHG Polyclinics)",
+      "title": "High Blood Pressure: Medication",
+      "url": "https://www.healthhub.sg/health-conditions/high-blood-pressure-medicines",
+      "retrieved_at": "2026-10-11",
+      "applies_to": "Adults prescribed blood pressure medicine",
+      "reuse_note": "Government of Singapore site, Ministry of Health Singapore copyright (page footer reads (c) 2026 Ministry of Health Singapore); the article is contributed by NHG Polyclinics. Publisher corrected on 2026-10-11 after an attribution audit found the earlier 'Health Promotion Board' attribution to be wrong. Short paraphrase of factual content only, with attribution. Not presented anywhere in this app as medical advice. Page footer states last reviewed 22 July 2024.",
+      "review_state": "team_checked",
+      "reviewer": "Team source check 2026-10-11",
+      "reviewed_at": "2026-10-11"
+    },
+    {
+      "id": "S2b-healthhub-know-your-medication",
+      "publisher": "HealthHub, Ministry of Health Singapore",
+      "title": "Understand Your Medication for Chronic Illness",
+      "url": "https://www.healthhub.sg/well-being-and-lifestyle/personal-care/know-your-medication",
+      "retrieved_at": "2026-10-11",
+      "applies_to": "People taking long-term medicines",
+      "reuse_note": "Government of Singapore site, Ministry of Health Singapore copyright. Short paraphrase only, with attribution. HealthHub patient guidance. NOT an independent authority: this page and S2-healthhub-bp-medication are both HealthHub / Ministry of Health Singapore publications with near-identical drug-class content, so this source is never counted as second corroboration of anything the other one says. It is cited only for what it says in its own right - consult your doctor or pharmacist with questions about your medicines, know what you are taking and why, and keep a written record of your medicines to show your doctor. Correction applied 2026-10-11 after an attribution audit.",
+      "review_state": "team_checked",
+      "reviewer": "Team source check 2026-10-11",
+      "reviewed_at": "2026-10-11"
+    },
+    {
+      "id": "S4a-healthhub-amlodipine",
+      "publisher": "HealthHub (Ministry of Health, Singapore)",
+      "title": "Amlodipine (patient information leaflet)",
+      "url": "https://www.healthhub.sg/medication-devices-and-treatment/medications/amlodipine",
+      "retrieved_at": "2026-10-11",
+      "applies_to": "People prescribed amlodipine",
+      "reuse_note": "Government of Singapore site, MOH copyright. Paraphrase of the 'what is this medication for' section only. The dosing, missed-dose and side-effect sections of the same page are deliberately NOT used - see the boundary rules.",
+      "review_state": "team_checked",
+      "reviewer": "Team source check 2026-10-11",
+      "reviewed_at": "2026-10-11"
+    },
+    {
+      "id": "S4b-healthhub-losartan",
+      "publisher": "HealthHub (Ministry of Health, Singapore)",
+      "title": "Losartan (patient information leaflet)",
+      "url": "https://www.healthhub.sg/medication-devices-and-treatment/medications/losartan",
+      "retrieved_at": "2026-10-11",
+      "applies_to": "People prescribed losartan",
+      "reuse_note": "Government of Singapore site, MOH copyright. Paraphrase of the 'what is this medication for' section only.",
+      "review_state": "team_checked",
+      "reviewer": "Team source check 2026-10-11",
+      "reviewed_at": "2026-10-11"
+    },
+    {
+      "id": "S1-healthhub-hf-bp-monitoring",
+      "publisher": "HealthHub (Ministry of Health, Singapore) - contributed by NHCS",
+      "title": "Monitoring Weight and Blood Pressure",
+      "url": "https://www.healthhub.sg/health-conditions/heart-failure-monitoring-weight-and-blood-pressure",
+      "retrieved_at": "2026-10-11",
+      "applies_to": "People monitoring blood pressure at home",
+      "reuse_note": "Government of Singapore site, MOH copyright. Short paraphrase with attribution. NOTE: the numeric target on that page (130/80) belongs to a heart-failure population and is NOT used here as a general target - importing it would be exactly the kind of context error this project argues against.",
+      "review_state": "team_checked",
+      "reviewer": "Team source check 2026-10-11",
+      "reviewed_at": "2026-10-11"
+    },
+    {
+      "id": "S3-healthhub-hypertension-hub",
+      "publisher": "HealthHub (Ministry of Health, Singapore)",
+      "title": "Hypertension",
+      "url": "https://www.healthhub.sg/health-conditions/hypertension",
+      "retrieved_at": "2026-10-11",
+      "applies_to": "General adult audience",
+      "reuse_note": "Government of Singapore site, MOH/HPB copyright. Short paraphrase with attribution.",
+      "review_state": "team_checked",
+      "reviewer": "Team source check 2026-10-11",
+      "reviewed_at": "2026-10-11"
+    },
+    {
+      "id": "S4-healthhub-5-ways-lower-bp",
+      "publisher": "HealthHub (Ministry of Health, Singapore) - contributed by the National Heart Centre Singapore",
+      "title": "5 Ways to Lower Your High Blood Pressure Without the Help of Medicine",
+      "url": "https://www.healthhub.sg/health-conditions/5-ways-to-lower-your-high-blood-pressure-without-the-help-of-medicine",
+      "retrieved_at": "2026-10-11",
+      "applies_to": "Adults with raised blood pressure",
+      "reuse_note": "Government of Singapore site, MOH copyright. Short paraphrase with attribution. Used only for general lifestyle statements, never individualised.",
+      "review_state": "team_checked",
+      "reviewer": "Team source check 2026-10-11",
+      "reviewed_at": "2026-10-11"
+    },
+    {
+      "id": "S6-shf-elderly-bp",
+      "publisher": "Singapore Heart Foundation",
+      "title": "Normal Blood Pressure: Guidelines for the Elderly",
+      "url": "https://www.myheart.org.sg/heart-news/blood-pressure-for-elderly/",
+      "retrieved_at": "2026-10-11",
+      "applies_to": "Older adults",
+      "reuse_note": "Singapore Heart Foundation (a local charity/voluntary welfare organisation). Short paraphrase with attribution. SCOPE LIMIT, applied 2026-10-11: this page's only smoking content is the treatment step 'Limit the Use of Cigarettes'. It does not state that quitting or not smoking lowers blood pressure, so this source must never be cited for 'not smoking', 'quit smoking' or smoking-cessation claims. It is cited only for the blood-pressure variation note and the advice to measure at home regularly and record the readings for doctor's appointments. The page is addressed to older adults and carries numeric content (a 130/85 figure and 120/80 for people with diabetes or kidney disease); none of that is imported into any fact.",
+      "review_state": "team_checked",
+      "reviewer": "Team source check 2026-10-11",
+      "reviewed_at": "2026-10-11"
+    },
+    {
+      "id": "S5-singhealth-hypertension-management",
+      "publisher": "SingHealth (Singapore Health Services)",
+      "title": "High Blood Pressure (Hypertension) Management",
+      "url": "https://www.singhealth.com.sg/symptoms-treatments/high-blood-pressure-hypertension-management",
+      "retrieved_at": "2026-10-11",
+      "applies_to": "General adult audience",
+      "reuse_note": "SingHealth copyright. Short paraphrase with attribution. The page itself carries a not-medical-advice disclaimer, which this app echoes.",
+      "review_state": "team_checked",
+      "reviewer": "Team source check 2026-10-11",
+      "reviewed_at": "2026-10-11"
+    },
+    {
+      "id": "S4-sgh-gpfirst-hbp",
+      "publisher": "SingHealth (Singapore Health Services), GPFirst programme",
+      "title": "Hypertension - What is GPFirst?",
+      "url": "https://www.singhealth.com.sg/community-care/find-resources-in-your-community/what-is-gpfirst/conditions-your-gp-can-treat/hypertension",
+      "retrieved_at": "2026-10-11",
+      "applies_to": "Adults with hypertension in the community",
+      "reuse_note": "SingHealth copyright. Short paraphrase with attribution. Used for the community-care route (seeing a GP) and for the Emergency Department symptom list, which matches MOH's.",
+      "review_state": "team_checked",
+      "reviewer": "Team source check 2026-10-11",
+      "reviewed_at": "2026-10-11"
+    },
+    {
+      "id": "S2-moh-hbp",
+      "publisher": "Ministry of Health, Singapore",
+      "title": "High blood pressure",
+      "url": "https://www.moh.gov.sg/seeking-healthcare/getting-medical-help/conditions/high-blood-pressure/",
+      "retrieved_at": "2026-10-11",
+      "applies_to": "General public in Singapore",
+      "reuse_note": "Government of Singapore, MOH copyright. Short paraphrase with attribution.",
+      "review_state": "team_checked",
+      "reviewer": "Team source check 2026-10-11",
+      "reviewed_at": "2026-10-11"
+    },
+    {
+      "id": "S3-moh-ed",
+      "publisher": "Ministry of Health, Singapore",
+      "title": "When to visit the hospital for emergencies",
+      "url": "https://www.moh.gov.sg/seeking-healthcare/getting-medical-help/visiting-the-hospital-for-emergencies/",
+      "retrieved_at": "2026-10-11",
+      "applies_to": "General public in Singapore",
+      "reuse_note": "Government of Singapore, MOH copyright. Short paraphrase with attribution.",
+      "review_state": "team_checked",
+      "reviewer": "Team source check 2026-10-11",
+      "reviewed_at": "2026-10-11"
+    },
+    {
+      "id": "S1-scdf-ems",
+      "publisher": "Singapore Civil Defence Force (SCDF)",
+      "title": "Emergency Medical Services",
+      "url": "https://www.scdf.gov.sg/home/about-scdf/emergency-medical-services",
+      "retrieved_at": "2026-10-11",
+      "applies_to": "Anyone in Singapore",
+      "reuse_note": "Government of Singapore, SCDF copyright. The emergency numbers are quoted as facts with attribution.",
+      "review_state": "team_checked",
+      "reviewer": "Team source check 2026-10-11",
+      "reviewed_at": "2026-10-11"
+    },
+    {
+      "id": "S2b-singhealth-polyclinics-telemonitoring",
+      "publisher": "SingHealth Polyclinics",
+      "title": "Manage Your Blood Pressure Through Telemonitoring",
+      "url": "https://www.singhealth.com.sg/news/shp-pop/we-advance-take-charge-of-your-blood-pressure-through-telemonitoring",
+      "retrieved_at": "2026-10-11",
+      "applies_to": "Adults in Singapore",
+      "reuse_note": "SingHealth copyright. Short paraphrase with attribution. Used only for the 'high blood pressure often has no symptoms' point, which supports why home monitoring matters.",
+      "review_state": "team_checked",
+      "reviewer": "Team source check 2026-10-11",
+      "reviewed_at": "2026-10-11"
+    }
+  ]
+}

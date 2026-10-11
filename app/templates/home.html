@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+{#
+  Today - the front door.
+
+  Design intent, kept to on purpose:
+    * Three big actions, then what is already known. Not a dashboard.
+    * Nothing on this page is a verdict. A number is shown with when it was
+      recorded and is labelled as one reading, never as good or bad.
+    * A gap in the record is asked about as a question ("there is no record"),
+      never reported as a failure ("you missed"). What was hard is more useful
+      to this app than a clean-up apology.
+  Deliberately absent: an average. An average without its denominator is exactly
+  the kind of number this app refuses to put in front of someone. The pattern
+  lives on My numbers, where the count of days is shown next to it.
+#}
+
+{% block title %}Today - {{ app_name }}{% endblock %}
+
+{% block content %}
+
+<h1>
+  Hello{% if profile and profile.display_name %}, {{ profile.display_name }}{% endif %}
+</h1>
+
+<p class="small muted">
+  {% if today %}Today is {{ today }}.{% endif %}
+  {% if profile and profile.age_band %}Your age band is {{ profile.age_band }}.{% endif %}
+  {% if profile and profile.reminder_time %}Your reminder time is {{ profile.reminder_time }}.{% endif %}
+  {% if not profile %}No profile details are recorded yet.{% endif %}
+</p>
+
+{# ---------------------------------------------------------- three entry points
+   Exactly three. The order is the order of how often each one is needed. #}
+<nav class="tiles" aria-label="What you can do now">
+
+  <a class="tile" href="/readings/new">
+    <svg class="icon" width="34" height="34" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="2" stroke-linecap="round"
+         stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+      <path d="M8 21h8"></path>
+      <path d="M12 17v4"></path>
+    </svg>
+    <span>
+      <span class="tile-title">Record blood pressure</span>
+      <span class="tile-sub">Type in one reading from your cuff. You check it before it is saved.</span>
+    </span>
+  </a>
+
+  <a class="tile" href="/app/medicines">
+    <svg class="icon" width="34" height="34" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="2" stroke-linecap="round"
+         stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <g transform="rotate(-45 12 12)">
+        <rect x="3" y="8" width="18" height="8" rx="4"></rect>
+        <path d="M12 8v8"></path>
+      </g>
+    </svg>
+    <span>
+      <span class="tile-title">Confirm my medicine</span>
+      <span class="tile-sub">Check the list of what you take, and say if something is wrong.</span>
+    </span>
+  </a>
+
+  <a class="tile" href="/support/ask">
+    <svg class="icon" width="34" height="34" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="2" stroke-linecap="round"
+         stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <path d="M18 11V6a2 2 0 0 0-4 0v5"></path>
+      <path d="M14 10V4a2 2 0 0 0-4 0v6"></path>
+      <path d="M10 10.5V6a2 2 0 0 0-4 0v8"></path>
+      <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-6-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.83L7 15"></path>
+    </svg>
+    <span>
+      <span class="tile-title">Something is difficult</span>
+      <span class="tile-sub">Say what is getting in the way, in your own words. There is no wrong answer.</span>
+    </span>
+  </a>
+
+</nav>
+
+{# ------------------------------------------------------------------- the nudge
+   A question about the record, not a report of a failure. Plain .notice, not
+   .notice.alert: this is routine and must not look like a warning. #}
+{% if nudge %}
+<div class="notice" role="status">
+  <strong>There is no record for some days</strong>
+  <p class="small">{{ nudge.question }}</p>
+
+  {% if nudge.days %}
+  <p class="small">
+    The days with no record:
+    {% for d in nudge.days %}<span class="nowrap">{{ d }}</span>{% if not loop.last %}, {% endif %}{% endfor %}.
+  </p>
+  {% endif %}
+
+  <p class="small">
+    A blank day can have a reason. If you would like to say what made it hard,
+    the app will keep it in your own words.
+  </p>
+
+  <div class="btn-row">
+    <a class="btn" href="/support/ask">Say what was hard</a>
+  </div>
+
+  <p class="small muted" style="margin-top:10px">
+    You can skip this. Nothing is sent to anyone.
+  </p>
+</div>
+{% endif %}
+
+{# -------------------------------------------------------------- most recent #}
+<div class="card">
+  <h2>Most recent reading</h2>
+
+  {% if latest %}
+    <p class="big-number">
+      {{ latest.systolic }} / {{ latest.diastolic }}<span class="unit"> mmHg</span>
+    </p>
+    <p class="small muted">
+      The first number is the pressure when your heart pushes out.
+      The second is the pressure between beats. Both are in millimetres of mercury (mmHg).
+    </p>
+    <p class="small">
+      Recorded on {{ latest.measured_at[:10] }}{% if latest.measured_at[11:16] %} at {{ latest.measured_at[11:16] }}{% endif %}.
+      This is the newest of the readings this page can see, which are the last 7 days.
+    </p>
+    {% if latest.status == 'draft' %}
+    <p class="small">
+      <span class="badge warn">Draft</span>
+      This one is saved as a draft and you have not confirmed it yet.
+    </p>
+    {% endif %}
+    <p class="small">A single reading is not a diagnosis.</p>
+
+    <div class="btn-row">
+      <a class="btn" href="/app/trends">See my numbers over time</a>
+    </div>
+
+  {% else %}
+    <p>No blood pressure reading is recorded yet.</p>
+    <p class="small muted">
+      There is nothing to show here until you record one. If you have an old
+      reading on paper you would like to add, start on the record page.
+    </p>
+    <div class="btn-row">
+      <a class="btn primary" href="/readings/new">Record blood pressure</a>
+    </div>
+  {% endif %}
+</div>
+
+{# ---------------------------------------------------------------- still open #}
+{% if open_barriers %}
+<div class="card">
+  <h2>Still open</h2>
+  <p>You mentioned these earlier.</p>
+
+  <div class="choices">
+    {% for b in open_barriers %}
+    <a href="/support/barrier/{{ b.id }}">
+      {{ b.user_words }}<br>
+      <span class="small muted">Mentioned on {{ b.created_at[:10] }}. Still open.</span>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{# ------------------------------------------------------------ chosen actions #}
+{% if open_actions %}
+<div class="card">
+  <h2>What you chose to do</h2>
+  <p>These are steps you picked out yourself. They are not instructions from the app.</p>
+
+  <ul class="stack">
+    {% for a in open_actions %}
+    <li>
+      {{ a.title }}<br>
+      <span class="small muted">Chosen on {{ a.created_at[:10] }}.</span>
+    </li>
+    {% endfor %}
+  </ul>
+
+  <div class="btn-row">
+    <a class="btn" href="/app/support">See all my support steps</a>
+  </div>
+</div>
+{% endif %}
+
+{# ------------------------------------------------------------- my medicines #}
+<div class="card">
+  <h2>My medicines</h2>
+
+  {% if medications %}
+    <ul class="stack">
+      {% for m in medications %}
+      <li>
+        {{ m.name }}
+        {% if m.confirmed_by_user %}
+          <span class="cat-chip confirmed">confirmed by you</span>
+        {% else %}
+          <span class="cat-chip proposed">not confirmed by you</span>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    <p class="small muted">
+      This list is what is written down. The app did not choose it and cannot change it.
+    </p>
+    <div class="btn-row">
+      <a class="btn" href="/app/medicines">See what each medicine is for</a>
+    </div>
+
+  {% else %}
+    <p>No medicines are recorded yet.</p>
+    <p class="small muted">
+      You can write down what you take, or leave this empty for now.
+    </p>
+    <div class="btn-row">
+      <a class="btn" href="/app/medicines">Open my medicines</a>
+    </div>
+  {% endif %}
+</div>
+
+{# ------------------------------------------------------------------ end link #}
+<hr>
+
+<p>
+  <a class="btn primary wide" href="/summary">Prepare for my appointment</a>
+</p>
+<p class="small muted">
+  It puts your numbers and your questions in one place so you can take it to your
+  next visit. Nothing is sent anywhere by this app.
+</p>
+
+{% endblock %}

@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% block title %}What has been difficult - {{ app_name }}{% endblock %}
+
+{#
+  M3, the differentiator.
+
+  The page has one job: make it visible that the SAME missing record leads to
+  DIFFERENT help depending on what the person says got in the way. That is why
+  the support map gets real space at the bottom rather than being described.
+
+  Two things are held apart on purpose:
+    * confirmed   - the person picked the category themselves
+    * proposed    - the app suggested it, and the person has not agreed yet
+  An unconfirmed category is never rendered as though it were settled.
+#}
+
+{% block content %}
+
+<h1>What has been difficult</h1>
+
+<div class="card">
+  <p>
+    Recording a blood pressure reading is easy on a good day. It is the other days
+    that matter, and they are usually about something else: the day was busy, the
+    cuff was hard to use, the reason for the medicine was not clear, or something
+    felt wrong.
+  </p>
+  <p>
+    So when there is no record, this app asks what got in the way. A missing record
+    is a question, not a conclusion. It is not a score, and it is not something you
+    got wrong.
+  </p>
+  <p class="muted small" style="margin-bottom:0">
+    Every entry below is kept in the words you used. Where the app has added a
+    suggestion of its own, it is marked as a suggestion and not as your words.
+  </p>
+</div>
+
+{% if not barriers %}
+
+  <div class="card">
+    <h2>Nothing recorded yet</h2>
+    <p>
+      There is nothing here yet. That only means nothing has been written down so
+      far. It is not a count of anything you did or did not do.
+    </p>
+    <p>
+      If a day went by with no record, you can say what happened. You can also say
+      that you would rather not say, and that is a complete answer too.
+    </p>
+    <div class="btn-row">
+      <a class="btn primary wide" href="/support/ask">Say what got in the way</a>
+    </div>
+  </div>
+
+{% else %}
+
+  <h2>{{ barriers | length }} entr{{ "y" if barriers | length == 1 else "ies" }} raised</h2>
+
+  <div class="stack">
+
+    {% for b in barriers %}
+      {# ---- status, shown as a word and a shape as well as a colour ---- #}
+      {% set status_word = {"open": "Open", "resolved": "Resolved", "parked": "Left for now"}.get(b.status, b.status | replace("_", " ") | capitalize) %}
+      {% set status_class = {"open": "warn", "resolved": "ok", "parked": "neutral"}.get(b.status, "neutral") %}
+
+      <div class="card">
+        <p style="margin-bottom:8px">
+          <strong>In your words:</strong>
+          {{ b.user_words }}
+        </p>
+
+        <p class="muted small" style="margin-bottom:10px">
+          Raised on {{ b.created_at[:10] }}{% if b.related_event %} &middot; about: {{ b.related_event }}{% endif %}
+        </p>
+
+        <p style="margin-bottom:10px">
+          {% if b.category %}
+            <span class="cat-chip {{ 'confirmed' if b.category_confirmed else 'proposed' }}">
+              {{ categories.get(b.category, b.category | replace("_", " ") | capitalize) }}
+            </span>
+            {% if not b.category_confirmed %}
+              <span class="muted small">
+                Proposed by the app. Not confirmed by you &mdash; it may be wrong.
+              </span>
+            {% endif %}
+          {% else %}
+            <span class="cat-chip">No category yet. That is allowed.</span>
+          {% endif %}
+        </p>
+
+        <p style="margin-bottom:10px">
+          <span class="badge {{ status_class }}">{{ status_word }}</span>
+        </p>
+
+        <div class="btn-row">
+          <a class="btn ghost" href="/support/barrier/{{ b.id }}">Open this entry</a>
+        </div>
+      </div>
+    {% endfor %}
+
+  </div>
+
+{% endif %}
+
+{# ---------------------------------------------------------------------------
+   Chosen support actions. Each one carries the basis it was chosen on, so a
+   reader can see WHY it is on the list rather than only that it is.
+--------------------------------------------------------------------------- #}
+<h2>Support you have chosen</h2>
+
+{% if actions %}
+
+  <div class="card">
+    <table>
+      <caption class="muted small" style="text-align:left;padding-bottom:8px">
+        {{ actions | length }} chosen in total. Nothing here has been sent, booked or
+        ordered by the app.
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">What you chose</th>
+          <th scope="col">Why it was offered</th>
+          <th scope="col">Where it stands</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in actions %}
+          {% set a_word = {"chosen": "Chosen", "done": "Done", "dropped": "Set aside"}.get(a.status, a.status | capitalize) %}
+          {% set a_class = {"chosen": "info", "done": "ok", "dropped": "neutral"}.get(a.status, "neutral") %}
+          <tr>
+            <td>{{ a.title }}</td>
+            <td class="small">
+              {% if a.basis_label %}{{ a.basis_label }}{% endif %}
+              {% if a.basis_type == "education" %}
+                <span class="tiny muted">from a recorded source</span>
+              {% elif a.basis_type == "care_plan" %}
+                <span class="tiny muted">from what is on your plan</span>
+              {% elif a.basis_type == "user_choice" %}
+                <span class="tiny muted">your own choice</span>
+              {% else %}
+                <span class="tiny muted">basis not recorded</span>
+              {% endif %}
+            </td>
+            <td><span class="badge {{ a_class }}">{{ a_word }}</span></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+{% else %}
+
+  <div class="card">
+    <p class="muted small" style="margin-bottom:0">
+      No support has been chosen yet. When you open an entry and pick something,
+      it will be listed here with the reason it was offered.
+    </p>
+  </div>
+
+{% endif %}
+
+{# ---------------------------------------------------------------------------
+   The differentiator, given real space.
+
+   support_map is keyed by category. Where a category has no list in the map, the
+   page says so rather than filling the gap with invented help.
+--------------------------------------------------------------------------- #}
+<h2>How the same situation leads to different help</h2>
+
+<p>
+  Two people can both have a day with no record. If one says the day was too busy
+  and the other says the medicine was hard to open, the useful next step is not the
+  same thing.
+</p>
+<p>
+  Below is the whole set of routes this app has on record: {{ support_map | length }}
+  categor{{ "y" if support_map | length == 1 else "ies" }} of
+  {{ categories | length }}. Each one is a different question with a different answer.
+</p>
+
+<div class="stack">
+
+  {% for key, options in support_map.items() %}
+    <div class="card">
+      <h3 style="margin-top:0">
+        {{ categories.get(key, key | replace("_", " ") | capitalize) }}
+      </h3>
+
+      {% if key == "declined_to_say" %}
+        <p class="small muted">
+          Choosing this is a full answer. The app stops asking and offers to leave it
+          alone.
+        </p>
+      {% endif %}
+
+      <div class="choices">
+        {% for opt in options %}
+          <div class="muted" style="cursor:default">
+            {{ opt.title }}
+            <span class="tiny">
+              &mdash; {% if opt.basis == "education" %}from a recorded source{% elif opt.basis == "care_plan" %}from what is on your plan{% elif opt.basis == "user_choice" %}your own choice{% else %}basis not recorded{% endif %}
+            </span>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+
+  {% for key, label in categories.items() %}
+    {% if key not in support_map %}
+      <div class="card flat">
+        <h3 style="margin-top:0">{{ label }}</h3>
+        <p class="muted small" style="margin-bottom:0">
+          No route is on record for this one yet, so the app has nothing specific to
+          offer. It will say so rather than guess, and it can be added to the list of
+          things to ask about.
+        </p>
+      </div>
+    {% endif %}
+  {% endfor %}
+
+</div>
+
+<div class="btn-row">
+  <a class="btn ghost" href="/support/barriers">See all your entries as a list</a>
+  <a class="btn primary" href="/support/ask">Raise something new</a>
+</div>
+
+<p class="muted small">
+  This app records, asks and explains. It does not change a prescription, does not
+  tell you to start or stop a medicine, and does not contact anyone for you.
+</p>
+
+{% endblock %}

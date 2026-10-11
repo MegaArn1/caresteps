@@ -1,0 +1,323 @@
+{# M4: the numbers, with their denominators, and one suggested action.
+   Three rules shape every line below:
+     1. No number appears without the count or window it came from.
+     2. Nothing here is a verdict. Two recorded numbers are described as two numbers.
+     3. A day with no record is a question, not a failure.
+#}
+{% extends "base.html" %}
+
+{% block title %}My numbers{% endblock %}
+
+{% block content %}
+
+<h1>My numbers</h1>
+
+<p>
+  This page describes {{ s.readings.window.days }} day(s): from
+  {{ s.readings.window.from }} to {{ s.readings.window.to }}.
+  You recorded {{ s.readings.n }} reading(s) in that time.
+</p>
+<p class="small muted">
+  Figures put together on {{ s.generated_at[:10] }} from what is stored in your record.
+</p>
+
+{# ------------------------------------------------------------- the averages #}
+
+<h2>Readings in this period</h2>
+
+{% if not s.readings.sufficient %}
+
+  <div class="notice" role="status">
+    <strong>Not enough recorded to describe an average</strong>
+    <p>{{ s.readings.note }}</p>
+    <p class="small">
+      There is not enough here to work out an average, so none is shown.
+      The reading(s) that are in your record are listed below.
+    </p>
+  </div>
+
+{% else %}
+
+  <div class="card">
+    <h3>Average in this period</h3>
+    <p class="small muted">
+      Each average uses {{ s.readings.n }} reading(s) recorded between
+      {{ s.readings.window.from }} and {{ s.readings.window.to }}.
+    </p>
+
+    <div class="stat-row">
+      <span class="label">Top number, average (systolic)</span>
+      <span class="value">{{ s.readings.mean_systolic }} <span class="tiny muted">mmHg</span></span>
+    </div>
+    <p class="small muted">
+      Range of the top number across those {{ s.readings.n }} reading(s):
+      {{ s.readings.min_systolic }} to {{ s.readings.max_systolic }} mmHg.
+    </p>
+
+    <div class="stat-row">
+      <span class="label">Bottom number, average (diastolic)</span>
+      <span class="value">{{ s.readings.mean_diastolic }} <span class="tiny muted">mmHg</span></span>
+    </div>
+    <p class="small muted">
+      Range of the bottom number across those {{ s.readings.n }} reading(s):
+      {{ s.readings.min_diastolic }} to {{ s.readings.max_diastolic }} mmHg.
+    </p>
+
+    <p class="small muted">{{ s.readings.note }}</p>
+  </div>
+
+{% endif %}
+
+{# -------------------------------------------------------------- the chart #}
+
+<h2>Day by day</h2>
+
+<p class="small">
+  This chart shows the top number and the bottom number you recorded on each day.
+  The line stops on days with no reading rather than carrying across them.
+</p>
+
+<svg class="chart"
+     viewBox="0 0 640 240"
+     role="img"
+     aria-label="Chart of the top and bottom numbers recorded each day from {{ s.series.from }} to {{ s.series.to }}. {{ s.series.days_with_data }} of {{ s.series.points | length }} days have a reading. Dashed vertical lines mark days with no reading. The same numbers are listed below under the heading, this data as a list."
+     data-series='{{ s.series.points | tojson }}'></svg>
+
+<p class="small muted">
+  If the chart does not appear on your screen, nothing is missing:
+  <a href="#data-list">the same numbers are listed further down this page</a>.
+</p>
+
+<div class="legend">
+  <span class="key"><span class="swatch sys"></span> Top number (systolic)</span>
+  <span class="key"><span class="swatch dia"></span> Bottom number (diastolic)</span>
+  <span class="key"><span class="swatch gap"></span> Dashed marker: a day with no reading</span>
+</div>
+
+<p>
+  {{ s.series.days_with_data }} of {{ s.series.points | length }} days have a reading.
+  The dashed lines mark days with no reading.
+</p>
+
+<details id="data-list">
+  <summary>Show these numbers as a list</summary>
+  <table>
+    <caption class="small muted">
+      One row for each of the {{ s.series.points | length }} day(s) from
+      {{ s.series.from }} to {{ s.series.to }}.
+    </caption>
+    <thead>
+      <tr>
+        <th scope="col">Day</th>
+        <th scope="col">Top number</th>
+        <th scope="col">Bottom number</th>
+        <th scope="col">Readings that day</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in s.series.points %}
+      <tr>
+        <td>{{ p.date }}</td>
+        {% if p.has_data %}
+          <td class="num">{{ p.systolic }}</td>
+          <td class="num">{{ p.diastolic }}</td>
+          <td>{{ p.n }} reading(s){% if p.had_correction %}
+            <span class="badge warn">corrected</span>{% endif %}</td>
+        {% else %}
+          <td class="muted">No reading</td>
+          <td class="muted">No reading</td>
+          <td class="muted">No record for this day</td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</details>
+
+{# -------------------------------------------------------- data quality #}
+
+<h2>How complete this record is</h2>
+
+<div class="card">
+  <div class="stat-row">
+    <span class="label">Days in this period</span>
+    <span class="value">{{ s.readings.coverage.window_days }}</span>
+  </div>
+  <div class="stat-row">
+    <span class="label">Days with at least one reading</span>
+    <span class="value">{{ s.readings.coverage.days_with_data }}</span>
+  </div>
+  <div class="stat-row">
+    <span class="label">Days with no reading</span>
+    <span class="value">{{ s.readings.coverage.missing_days }}</span>
+  </div>
+  <p class="small muted">
+    Period covered: {{ s.readings.window.from }} to {{ s.readings.window.to }},
+    {{ s.readings.coverage.window_days }} day(s).
+  </p>
+</div>
+
+<p>
+  {{ s.readings.coverage.days_with_data }} of
+  {{ s.readings.coverage.window_days }} day(s) in this period have a reading.
+  {{ s.readings.coverage.missing_days }} day(s) have no record.
+</p>
+<p class="small muted">
+  A day with no record means nothing was written down for that day. It says nothing
+  about what happened that day, and it is not counted against you anywhere on this page.
+</p>
+
+{% if s.readings.revised_count > 0 %}
+<div class="notice ok" role="status">
+  <strong>{{ s.readings.revised_count }} reading(s) in this period were corrected</strong>
+  <p>
+    A correction replaces what was first written down with what actually happened.
+    The figures on this page use the corrected values.
+  </p>
+  <p>
+    You can see both the original and the corrected entries in
+    <a href="/app/history">your full record</a>.
+  </p>
+</div>
+{% endif %}
+
+{# ----------------------------------------------------------- comparison #}
+
+<h2>This period and the one before</h2>
+
+{% if not s.comparison.comparable %}
+
+  <div class="notice" role="status">
+    <strong>These two periods are not compared</strong>
+    <p>{{ s.comparison.explanation }}</p>
+    <p class="small">
+      No difference between the periods is shown, because a difference worked out from
+      this few readings would not mean anything.
+    </p>
+  </div>
+
+{% else %}
+
+  <div class="card">
+    <div class="stat-row">
+      <span class="label">
+        This period, top number ({{ s.comparison.current.n }} reading(s),
+        {{ s.comparison.current.window.from }} to {{ s.comparison.current.window.to }})
+      </span>
+      <span class="value">{{ s.comparison.current.mean_systolic }}</span>
+    </div>
+    <div class="stat-row">
+      <span class="label">
+        This period, bottom number ({{ s.comparison.current.n }} reading(s))
+      </span>
+      <span class="value">{{ s.comparison.current.mean_diastolic }}</span>
+    </div>
+    <div class="stat-row">
+      <span class="label">
+        The period before, top number ({{ s.comparison.previous.n }} reading(s),
+        {{ s.comparison.previous.window.from }} to {{ s.comparison.previous.window.to }})
+      </span>
+      <span class="value">{{ s.comparison.previous.mean_systolic }}</span>
+    </div>
+    <div class="stat-row">
+      <span class="label">
+        The period before, bottom number ({{ s.comparison.previous.n }} reading(s))
+      </span>
+      <span class="value">{{ s.comparison.previous.mean_diastolic }}</span>
+    </div>
+    <p class="small muted">
+      Each average is over the number of reading(s) shown beside it. Both numbers are
+      in mmHg.
+    </p>
+  </div>
+
+  <p>{{ s.comparison.explanation }}</p>
+
+  <div class="notice warn" role="note">
+    <p>
+      This describes what was recorded. It does not explain why, and it is not a
+      measure of whether a treatment is working.
+    </p>
+  </div>
+
+{% endif %}
+
+{# ------------------------------------------------------------ adherence #}
+
+<h2>Medicine record for the same period</h2>
+
+<p>
+  These counts cover {{ s.adherence.window.days }} day(s), from
+  {{ s.adherence.window.from }} to {{ s.adherence.window.to }}.
+  Each day is counted once.
+</p>
+
+<div class="card">
+  <div class="stat-row">
+    <span class="label">{{ s.adherence.labels.taken }}</span>
+    <span class="value">{{ s.adherence.counts.taken }}</span>
+  </div>
+  <div class="stat-row">
+    <span class="label">{{ s.adherence.labels.not_taken }}</span>
+    <span class="value">{{ s.adherence.counts.not_taken }}</span>
+  </div>
+  <div class="stat-row">
+    <span class="label">{{ s.adherence.labels.unsure }}</span>
+    <span class="value">{{ s.adherence.counts.unsure }}</span>
+  </div>
+  <div class="stat-row muted">
+    <span class="label">{{ s.adherence.labels.unrecorded }}</span>
+    <span class="value muted">{{ s.adherence.counts.unrecorded }}</span>
+  </div>
+  <p class="small muted">
+    The last line is kept apart from the others on purpose. It counts days with no
+    record either way, which is not the same as a day you reported not taking it.
+  </p>
+</div>
+
+<p>{{ s.adherence.interpretation }}</p>
+<p class="small muted">{{ s.adherence.note }}</p>
+
+{# --------------------------------------------------------------- target #}
+
+{% if target %}
+<h2>The goal recorded on your plan</h2>
+<div class="card">
+  <div class="stat-row">
+    <span class="label">Top number recorded on your plan</span>
+    <span class="value">{{ target.target_systolic }} <span class="tiny muted">mmHg</span></span>
+  </div>
+  <div class="stat-row">
+    <span class="label">Bottom number recorded on your plan</span>
+    <span class="value">
+      {% if target.target_diastolic is not none %}
+        {{ target.target_diastolic }} <span class="tiny muted">mmHg</span>
+      {% else %}
+        <span class="muted small">Not recorded on this line of the plan</span>
+      {% endif %}
+    </span>
+  </div>
+  <p class="small muted">
+    These are the numbers recorded on your plan from this source:
+    {{ target.target_source }}.
+    They are not an assessment by this app, and this page does not judge your readings
+    against them. The comparison is left to you and your clinician at your appointment.
+  </p>
+</div>
+{% endif %}
+
+{# --------------------------------------------------------- next action #}
+
+<div class="card flat">
+  <h2>One thing you can do next</h2>
+  <p>
+    The numbers on this page are useful at an appointment: how many readings there
+    were, over how many days, and which days had no record. You can put them together
+    with your questions on one page to take with you.
+  </p>
+  <div class="btn-row">
+    <a class="btn primary wide" href="/summary">Prepare for my appointment</a>
+  </div>
+</div>
+
+{% endblock %}

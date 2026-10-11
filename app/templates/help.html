@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}If you need help now &middot; {{ app_name }}{% endblock %}
+
+{% block content %}
+
+{# Every read below goes through `help`, so an absent configuration must degrade to the
+   cautious branch rather than raise. Undefined is treated as unverified, which is the
+   safe direction: no number is shown. #}
+{% set help = help if help else {} %}
+
+<h1>If you need help now</h1>
+
+{# ---------------------------------------------------------------------------
+   The primary block. Everything here is conditional on help.verified. If the
+   configuration could not be traced to a source, NO number is printed at all.
+   Printing a plausible-looking digit string would be the worst failure this
+   app could make, so the unverified branch sends the person to a hospital or a
+   doctor instead.
+   --------------------------------------------------------------------------- #}
+
+{% if help and help.verified %}
+
+  <div class="msg emergency">
+    <p style="font-weight:700;font-size:22px;margin-bottom:8px">
+      If this is a life-threatening emergency, call now.
+    </p>
+
+    <p style="margin-bottom:6px">{{ help.label }}</p>
+
+    <p class="big-number" style="margin:10px 0 4px">
+      <a href="tel:{{ help.number }}" style="color:#fff;text-decoration:underline">{{ help.number }}</a>
+    </p>
+
+    <p class="small" style="margin-bottom:12px">
+      Call this number only for something life-threatening. For anything else, the
+      other routes further down this page are the usual ones.
+    </p>
+
+    <p class="small" style="font-weight:700;margin-bottom:0">
+      {{ help.app_does_not }}
+    </p>
+  </div>
+
+  <div class="notice alert" role="alert">
+    <strong>Read this before you rely on the number above</strong>
+    <p class="small" style="margin-bottom:0">
+      This number was copied from a published source{% if help.retrieved_at %} on
+      {{ help.retrieved_at }}{% endif %} and has been checked by the project team. It
+      has not been confirmed by a clinician, and the app has no way of knowing if it
+      has changed since. If you have any doubt, ask someone nearby, or call the
+      hospital directly and ask them which number to use.
+    </p>
+  </div>
+
+{% else %}
+
+  {# The cautious branch. Deliberately shows no digits at all. #}
+  <div class="notice alert" role="alert">
+    <strong>This app cannot confirm the emergency number</strong>
+    <p>
+      The number could not be traced to a published source, so this app will not show
+      one. Showing a number it cannot stand behind would be worse than showing none.
+    </p>
+    <p style="margin-bottom:0"><strong>What to do instead:</strong></p>
+    <ul>
+      <li>Call the hospital directly and ask them which number to use.</li>
+      <li>Ask a doctor, a nurse, or a pharmacist what number to call in your area.</li>
+      <li>Ask a neighbour or someone nearby to get help for you.</li>
+      <li>If you have a printed list of emergency numbers, use the number written on it.</li>
+    </ul>
+  </div>
+
+{% endif %}
+
+{# The help bar at the bottom of every page carries the same number. This line ties the
+   two together so the person can see the number is also always at the bottom edge. #}
+<p class="small muted">
+  The red bar at the bottom of the screen is on every page. It carries the same
+  information as this page, so you do not have to find your way back here.
+</p>
+
+<div class="btn-row no-print">
+  <a class="btn ghost" href="/app">Back to my records</a>
+</div>
+
+{# ------------------------------------------------------------------ what to say #}
+
+{% if help.what_to_say %}
+<div class="card">
+  <h2>What to say when you call</h2>
+  <p class="small muted">
+    You do not need to remember all of this. The person taking the call will ask, and
+    you can answer one question at a time.
+  </p>
+  <ol class="stack">
+    {% for line in help.what_to_say %}
+      <li>{{ line }}</li>
+    {% endfor %}
+  </ol>
+</div>
+{% endif %}
+
+{# ------------------------------------------------------------- other routes #}
+
+{% set extra_routes = other_routes if other_routes else [] %}
+
+{% if help.also or extra_routes %}
+
+<div class="card">
+  <h2>Other ways to get help</h2>
+
+  {% if extra_routes %}
+    <p class="small muted">
+      These are for things that are not life-threatening. Each one came from a published
+      source, listed at the bottom of this page.
+    </p>
+
+    {% for route in extra_routes %}
+      <div class="stat-row">
+        <span class="label">
+          <strong>{{ route.label }}</strong>
+          {% if route.note %}<br><span class="small">{{ route.note }}</span>{% endif %}
+        </span>
+        <span class="value nowrap">
+          {% if route.number %}
+            <a href="tel:{{ route.number }}">{{ route.number }}</a>
+          {% else %}
+            <span class="small muted">No number listed</span>
+          {% endif %}
+        </span>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  {% if help.also %}
+    <ul class="stack" style="margin-top:16px">
+      {% for line in help.also %}
+        <li>{{ line }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</div>
+
+{% endif %}
+
+{# ------------------------------------------------------------- what it is not #}
+
+<div class="card flat">
+  <h2>What this app is not</h2>
+
+  <ul class="stack">
+    <li><strong>A prototype.</strong> It was built for a competition and for demonstration. It is not a finished service.</li>
+    <li><strong>Not able to judge how serious something is.</strong> It cannot tell a small problem from a dangerous one, and it never tries to.</li>
+    <li><strong>Not a monitoring service.</strong> Nobody is watching these records. No one is alerted if a number changes, and no one will contact you.</li>
+    <li><strong>Not a replacement for a doctor.</strong> It does not diagnose, does not change a prescription, and does not tell you what to take.</li>
+    <li><strong>Not connected to anyone.</strong> It has no link to a hospital, a clinic, an ambulance service, or a family member.</li>
+  </ul>
+
+  {% if help.warning %}
+    <div class="notice warn" style="margin-top:16px;margin-bottom:0">
+      <strong>In the app's own words</strong>
+      <p style="margin-bottom:0">{{ help.warning }}</p>
+    </div>
+  {% endif %}
+
+  <p class="small" style="margin-top:16px;margin-bottom:0">
+    <strong>{{ help.app_does_not }}</strong>
+  </p>
+</div>
+
+{# ---------------------------------------------------------------- provenance #}
+
+<div class="card">
+  <h2>Where these numbers came from</h2>
+
+  <p class="small muted">
+    Every number on this page came from one of the sources below, taken from a public
+    Singapore government or public-healthcare page. The date beside each one is the day
+    the page was read. If a number matters to you, check it against the source yourself
+    rather than trusting this page.
+  </p>
+
+  {% if help.sources %}
+    <ul class="stack">
+      {% for s in help.sources %}
+        <li>
+          <span class="small">{{ s.publisher }} &mdash; </span>
+          {% if s.url %}
+            <a href="{{ s.url }}">{{ s.title }}</a>
+          {% else %}
+            {{ s.title }}
+          {% endif %}
+          <span class="small muted">(read on {{ s.retrieved_at }})</span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="small" style="margin-bottom:0">
+      No sources are recorded, which is why this page shows no numbers.
+    </p>
+  {% endif %}
+
+  <p class="small muted" style="margin-top:16px;margin-bottom:0">
+    Country these numbers apply to: {{ help.country }}.
+    Review state: {{ help.review_state }}.
+  </p>
+</div>
+
+{# ------------------------------------------------------------------- way back #}
+
+<div class="card">
+  <h2>Going back</h2>
+  <p>
+    Nothing on this page takes you away from the app. You can go back to your records
+    whenever you are ready, and nothing you saw here is stored or sent anywhere.
+  </p>
+  <div class="btn-row">
+    <a class="btn primary" href="/app">Back to my records</a>
+    <a class="btn ghost" href="/app/trends">See my numbers</a>
+  </div>
+</div>
+
+{% endblock %}

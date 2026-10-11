@@ -1,0 +1,575 @@
+{# M5: the printable page.
+
+   This file is the artefact most likely to be read as if a clinic had produced it, so
+   it states its own origin at the top and at the bottom, and every factual line
+   carries the record ids it came from so a reader can trace it back.
+
+   Deliberately absent:
+     - no forms, no buttons, no navigation beyond what base.html provides
+     - no verdicts, no targets compared unless the record itself carried one
+     - no invented numbers. Where data is missing, the page says it is missing.
+
+   The layout is print-first: everything is inside .card blocks so the print stylesheet
+   can keep each one on a single page, and interactive-only elements are not present at
+   all rather than hidden with .no-print.
+#}
+{% extends "base.html" %}
+
+{% block title %}Summary for your appointment - {{ app_name }}{% endblock %}
+
+{% block content %}
+
+{% set series = facts.readings.series %}
+{% set days_with_data = series | selectattr("has_data") | list | length %}
+
+{# ------------------------------------------------------------------- header #}
+
+<header>
+  <h1>Summary for your appointment</h1>
+
+  <p class="small">
+    {{ facts.meta.patient_label }},
+    age band {{ facts.meta.age_band }}.
+    Period covered: {{ facts.meta.period.days }} day(s), from
+    {{ facts.meta.period.from }} to {{ facts.meta.period.to }}.
+  </p>
+
+  <p class="small muted">
+    Put together on {{ facts.meta.generated_at[:10] }} by {{ facts.meta.generator }},
+    from the records stored in this app.
+  </p>
+
+  {% if facts.meta.all_simulated %}
+    <p><span class="sim-flag">All of this is simulated demo data</span></p>
+  {% endif %}
+
+  <div class="notice warn" role="note">
+    <strong>What this page is</strong>
+    <p>{{ facts.meta.disclaimer }}</p>
+  </div>
+
+  <p class="small muted">
+    Nothing on this page was sent to anyone. The patient printed it or showed it, on
+    their own decision.
+  </p>
+</header>
+
+<hr>
+
+{# ----------------------------------------------------------------- coverage #}
+
+<div class="card">
+  <h2>{{ facts.coverage.title }}</h2>
+
+  <div class="stat-row">
+    <span class="label">Days in this period</span>
+    <span class="value">{{ facts.coverage.window_days }}</span>
+  </div>
+  <div class="stat-row">
+    <span class="label">Days with at least one reading</span>
+    <span class="value">{{ facts.coverage.days_with_readings }}</span>
+  </div>
+  <div class="stat-row">
+    <span class="label">Days with no reading recorded</span>
+    <span class="value">{{ facts.coverage.days_without_readings }}</span>
+  </div>
+
+  <p class="small">{{ facts.coverage.statement }}</p>
+
+  <p class="small muted">
+    A day with no record means nothing was written down for that day. It does not
+    describe what happened, and a day with no record is not counted as a missed dose,
+    a missed reading, or anything else the patient did wrong.
+  </p>
+
+  {% if facts.coverage.missing_dates %}
+    <p class="small muted">
+      Days with no reading ({{ facts.coverage.days_without_readings }} in total):
+      {{ facts.coverage.missing_dates | join(", ") }}.
+    </p>
+  {% endif %}
+
+  {% if facts.coverage.record_ids %}
+    <p class="tiny muted">
+      record ids: {{ facts.coverage.record_ids | join(", ") }}
+    </p>
+  {% else %}
+    <p class="tiny muted">
+      record ids: none. No reading records fall inside this period.
+    </p>
+  {% endif %}
+</div>
+
+{# ----------------------------------------------------------------- readings #}
+
+<div class="card">
+  <h2>{{ facts.readings.title }}</h2>
+
+  {% if facts.readings.sufficient %}
+    <div class="stat-row">
+      <span class="label">Average of the top number (systolic)</span>
+      <span class="value">{{ facts.readings.mean_systolic }} <span class="tiny muted">mmHg</span></span>
+    </div>
+    <p class="small muted">
+      Average of {{ facts.readings.n }} reading(s), from
+      {{ facts.meta.period.from }} to {{ facts.meta.period.to }}.
+    </p>
+
+    {% if facts.readings.range_systolic[0] is not none %}
+      <p class="small muted">
+        Lowest recorded top number {{ facts.readings.range_systolic[0] }}, highest
+        {{ facts.readings.range_systolic[1] }}, across the same
+        {{ facts.readings.n }} reading(s). Both in mmHg.
+      </p>
+    {% endif %}
+
+    <div class="stat-row">
+      <span class="label">Average of the bottom number (diastolic)</span>
+      <span class="value">{{ facts.readings.mean_diastolic }} <span class="tiny muted">mmHg</span></span>
+    </div>
+    <p class="small muted">
+      Average of the same {{ facts.readings.n }} reading(s).
+    </p>
+
+    {% if facts.readings.range_diastolic[0] is not none %}
+      <p class="small muted">
+        Lowest recorded bottom number {{ facts.readings.range_diastolic[0] }}, highest
+        {{ facts.readings.range_diastolic[1] }}, across the same
+        {{ facts.readings.n }} reading(s). Both in mmHg.
+      </p>
+    {% endif %}
+  {% else %}
+    <p>
+      No average is shown for this period. {{ facts.readings.statement }}
+    </p>
+    <p class="small muted">
+      An average worked out from this few readings would not describe anything, so it
+      is left out rather than filled in. The date range above is the period that was
+      asked for.
+    </p>
+  {% endif %}
+
+  {% if facts.readings.sufficient %}
+    <p class="small">{{ facts.readings.statement }}</p>
+  {% endif %}
+
+  {% if facts.readings.revised_count > 0 %}
+    <p class="small muted">
+      {{ facts.readings.revised_count }} reading(s) in this period came in through a
+      correction. The figures above use the corrected values.
+    </p>
+  {% endif %}
+
+  {# Only rendered when the record itself carries a target with a named source. #}
+  {% set tc = facts.readings.target_comparison %}
+  {% if tc and tc.available %}
+    <div class="card flat">
+      <h3>A target recorded on the plan</h3>
+      <p class="small">
+        Top number recorded on the plan: {{ tc.target_systolic }} mmHg.
+        {% if tc.target_diastolic is not none %}
+          Bottom number recorded on the plan: {{ tc.target_diastolic }} mmHg.
+        {% endif %}
+      </p>
+      <p class="small">{{ tc.statement }}</p>
+      {# The comparison names an average, so the count it was worked out from has to
+         appear beside it. A bare "the average is 142.3" next to a target reads as a
+         verdict unless the reader can see how little it rests on. #}
+      <p class="small muted">
+        That average is the same average of {{ facts.readings.n }} reading(s) shown
+        above, over {{ facts.meta.period.from }} to {{ facts.meta.period.to }}. The
+        target was written down, not computed here, and this page does not say whether
+        the two are close enough to matter.
+      </p>
+      <p class="small muted">
+        Source of the target: {{ tc.target_source }}.
+      </p>
+    </div>
+  {% elif tc %}
+    <p class="small muted">{{ tc.reason }}</p>
+  {% else %}
+    <p class="small muted">
+      No target with a named source is recorded on the plan, so no comparison against
+      a target appears on this page.
+    </p>
+  {% endif %}
+
+  <h3>Recorded day by day</h3>
+
+  <svg class="chart"
+       viewBox="0 0 640 240"
+       role="img"
+       aria-label="Chart of the top and bottom numbers recorded on each day from {{ facts.meta.period.from }} to {{ facts.meta.period.to }}. {{ days_with_data }} of {{ series | length }} days have a reading. The line stops on days with no reading and a dashed marker shows where each gap is. The same numbers are listed in the table below."
+       data-series='{{ series | tojson }}'>
+    <title>Blood pressure recorded by day, {{ facts.meta.period.from }} to {{ facts.meta.period.to }}</title>
+  </svg>
+
+  <p class="small">
+    Top and bottom number recorded on each day, {{ facts.meta.period.from }} to
+    {{ facts.meta.period.to }}: {{ series | length }} day(s) in total,
+    {{ days_with_data }} with a reading and
+    {{ series | length - days_with_data }} with none. Where a day has no reading the
+    line stops and a dashed marker shows the gap. All values in mmHg.
+  </p>
+
+  <div class="legend">
+    <span class="key"><span class="swatch sys"></span> Top number (systolic)</span>
+    <span class="key"><span class="swatch dia"></span> Bottom number (diastolic)</span>
+    <span class="key"><span class="swatch gap"></span> Dashed marker: a day with no reading</span>
+  </div>
+
+  {% if facts.readings.record_ids %}
+    <p class="tiny muted">
+      record ids: {{ facts.readings.record_ids | join(", ") }}
+    </p>
+  {% else %}
+    <p class="tiny muted">
+      record ids: none for this period.
+    </p>
+  {% endif %}
+
+  <table>
+    <caption class="small muted">
+      One row for each of the {{ series | length }} day(s) from
+      {{ facts.meta.period.from }} to {{ facts.meta.period.to }}.
+    </caption>
+    <thead>
+      <tr>
+        <th scope="col">Day</th>
+        <th scope="col">Top number</th>
+        <th scope="col">Bottom number</th>
+        <th scope="col">Readings that day</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in series %}
+      <tr>
+        <td class="nowrap">{{ p.date }}</td>
+        {% if p.has_data %}
+          <td class="num">{{ p.systolic }}</td>
+          <td class="num">{{ p.diastolic }}</td>
+          <td>{{ p.n }} reading(s){% if p.had_correction %}
+            <span class="badge warn">corrected</span>{% endif %}</td>
+        {% else %}
+          <td class="muted">No reading</td>
+          <td class="muted">No reading</td>
+          <td class="muted">No record for this day</td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{# --------------------------------------------------------------- medication #}
+
+<div class="card">
+  <h2>{{ facts.medication.title }}</h2>
+
+  <p class="small muted">
+    These counts cover the period {{ facts.meta.period.from }} to
+    {{ facts.meta.period.to }} ({{ facts.meta.period.days }} day(s)). Each entry the
+    patient recorded is counted once. If more than one entry was made for the same
+    day, each of those entries is counted, so the counts below can add up to more
+    than the number of days in the period.
+  </p>
+
+  <div class="stat-row">
+    <span class="label">{{ facts.medication.labels.taken }}</span>
+    <span class="value">{{ facts.medication.counts.taken }}</span>
+  </div>
+  <div class="stat-row">
+    <span class="label">{{ facts.medication.labels.not_taken }}</span>
+    <span class="value">{{ facts.medication.counts.not_taken }}</span>
+  </div>
+  <div class="stat-row">
+    <span class="label">{{ facts.medication.labels.unsure }}</span>
+    <span class="value">{{ facts.medication.counts.unsure }}</span>
+  </div>
+  <div class="stat-row muted">
+    <span class="label">{{ facts.medication.labels.unrecorded }}</span>
+    <span class="value muted">{{ facts.medication.counts.unrecorded }}</span>
+  </div>
+
+  <p class="small muted">
+    The last line counts days with no record either way. It is kept apart from the
+    other three on purpose: a day with nothing written down is not a day the patient
+    reported skipping.
+  </p>
+
+  <p class="small">{{ facts.medication.statement }}</p>
+  <p class="small muted">{{ facts.medication.caution }}</p>
+
+  {% if facts.medication.unrecorded_days %}
+    <p class="small muted">
+      Days with no record either way ({{ facts.medication.unrecorded_days | length }}):
+      {{ facts.medication.unrecorded_days | join(", ") }}.
+    </p>
+  {% else %}
+    <p class="small muted">
+      Every day in this period has some record.
+    </p>
+  {% endif %}
+
+  {% if facts.medication.confirmed_medicines %}
+    <h3>Medicines listed in the record</h3>
+    <ul class="small">
+      {% for m in facts.medication.confirmed_medicines %}
+        <li>
+          {{ m.name }} -
+          {% if m.confirmed_by_user %}
+            confirmed by the patient.
+          {% else %}
+            not confirmed by the patient.
+          {% endif %}
+          {% if m.plan_instruction %}
+            Recorded on the plan as: {{ m.plan_instruction }}
+          {% else %}
+            No line on the plan names this medicine.
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="small muted">
+      No medicines are listed in this record.
+    </p>
+  {% endif %}
+
+  {% if facts.medication.reports %}
+    <p class="small muted">
+      {{ facts.medication.reports | length }} report(s) were recorded in this period.
+      Record ids:
+      {% for r in facts.medication.reports %}{{ r.record_ids | join(", ") }}{% if not loop.last %}, {% endif %}{% endfor %}.
+    </p>
+  {% else %}
+    <p class="small muted">
+      No medicine report falls inside this period.
+    </p>
+  {% endif %}
+
+  <p class="tiny muted">
+    record ids:
+    {%- set ns = namespace(ids=[]) -%}
+    {%- for r in facts.medication.reports -%}
+      {%- for rid in r.record_ids -%}
+        {%- set ns.ids = ns.ids + [rid] -%}
+      {%- endfor -%}
+    {%- endfor -%}
+    {% if ns.ids %} {{ ns.ids | join(", ") }}{% else %} none in this period{% endif %}
+  </p>
+</div>
+
+{# ------------------------------------------------------- reported by patient #}
+
+<div class="card">
+  <h2>{{ facts.reported_by_patient.title }}</h2>
+  <p class="small muted">{{ facts.reported_by_patient.intro }}</p>
+
+  <h3>How the patient said they felt</h3>
+  {% if facts.reported_by_patient.feelings %}
+    <ul>
+      {% for item in facts.reported_by_patient.feelings %}
+        <li>
+          <q>{{ item.text }}</q>
+          <span class="small muted nowrap">- recorded {{ item.date }}</span>
+          {% if item.record_ids %}
+            <span class="tiny muted nowrap">(record ids: {{ item.record_ids | join(", ") }})</span>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="small muted">
+      Nothing was recorded under this heading for this period.
+    </p>
+  {% endif %}
+
+  <h3>Notes written with a reading</h3>
+  {% if facts.reported_by_patient.notes %}
+    <ul>
+      {% for item in facts.reported_by_patient.notes %}
+        <li>
+          <q>{{ item.text }}</q>
+          <span class="small muted nowrap">- recorded {{ item.date }}</span>
+          {% if item.record_ids %}
+            <span class="tiny muted nowrap">(record ids: {{ item.record_ids | join(", ") }})</span>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="small muted">
+      Nothing was recorded under this heading for this period.
+    </p>
+  {% endif %}
+
+  <h3>What made it hard</h3>
+  {% if facts.reported_by_patient.difficulties %}
+    <ul>
+      {% for d in facts.reported_by_patient.difficulties %}
+        <li>
+          <q>{{ d.words }}</q>
+          <span class="small muted nowrap">- recorded {{ d.date }}</span>
+          <div class="small">
+            Category {{ d.category }}, {{ d.label }}. Status recorded as {{ d.status }}.
+          </div>
+          {% if d.record_ids %}
+            <span class="tiny muted">record ids: {{ d.record_ids | join(", ") }}</span>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+    <p class="small muted">
+      Where a category is marked as not confirmed by the patient, that wording is the
+      app's suggestion and not the patient's own words. The two are never merged here,
+      because they carry different weight.
+    </p>
+  {% else %}
+    <p class="small muted">
+      Nothing was recorded under this heading for this period.
+    </p>
+  {% endif %}
+</div>
+
+{# ------------------------------------------------------------ actions taken #}
+
+<div class="card">
+  <h2>{{ facts.actions_taken.title }}</h2>
+
+  {% if facts.actions_taken["items"] %}
+    <ul>
+      {% for item in facts.actions_taken["items"] %}
+        <li>
+          {{ item.title }}
+          <span class="small muted nowrap">- {{ item.date }}</span>
+          <div class="small muted">
+            Recorded as {{ item.status }}.
+            {% if item.basis_label %}Basis recorded: {{ item.basis_label }}.{% endif %}
+          </div>
+          {% if item.record_ids %}
+            <span class="tiny muted">record ids: {{ item.record_ids | join(", ") }}</span>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+    <p class="small muted">
+      These are choices the patient recorded making. They are not advice from this
+      app, and no one has checked them.
+    </p>
+  {% else %}
+    <p class="small muted">
+      Nothing was recorded under this heading for this period.
+    </p>
+  {% endif %}
+</div>
+
+{# ----------------------------------------------------------------- questions #}
+
+<div class="card">
+  <h2>{{ facts.questions.title }}</h2>
+
+  {# Only the questions the patient chose to include. A question left out stays in
+     the app and does not travel on the paper. #}
+  {% set included = facts.questions["items"] | selectattr("include") | list %}
+
+  {% if included %}
+    <ol>
+      {% for q in included %}
+        <li>
+          {{ q.text }}
+          <span class="tiny muted">
+            ({% if q.origin == "user" %}written by the patient{% else %}suggested by the app{% endif %}{% if q.record_ids %}; record ids: {{ q.record_ids | join(", ") }}{% endif %})
+          </span>
+        </li>
+      {% endfor %}
+    </ol>
+  {% elif facts.questions["items"] %}
+    <p>
+      No question is included on this printed summary. The patient has
+      {{ facts.questions["items"] | length }} question(s) kept in the app and chose not to
+      put them on this page.
+    </p>
+  {% else %}
+    <p>
+      No questions are written down. That is not a problem: they can be added in the
+      app before the appointment, or asked directly.
+    </p>
+  {% endif %}
+
+  <p class="small muted">
+    {{ included | length }} of {{ facts.questions["items"] | length }} question(s) in the
+    app appear on this page.
+  </p>
+</div>
+
+{# ---------------------------------------------------------------- care plan #}
+
+<div class="card">
+  <h2>{{ facts.care_plan.title }}</h2>
+
+  {% if facts.care_plan["items"] %}
+    <ul>
+      {% for item in facts.care_plan["items"] %}
+        <li>
+          {{ item.instruction }}
+          <div class="small muted">
+            Recorded from: {{ item.source_label }}.
+            {% if item.confirmed_by_user %}
+              Confirmed by the patient.
+            {% else %}
+              Not confirmed by the patient.
+            {% endif %}
+          </div>
+          {% if item.is_simulated %}
+            <span class="sim-flag">Simulated demo data</span>
+          {% endif %}
+          {% if item.record_ids %}
+            <span class="tiny muted">record ids: {{ item.record_ids | join(", ") }}</span>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+    <p class="small muted">
+      Each line above is a copy of what was written down, with where it came from.
+      Nothing on this page was added to the plan, changed, or stopped.
+    </p>
+  {% else %}
+    <p class="small muted">
+      No plan lines are recorded. Nothing was left out of this page.
+    </p>
+  {% endif %}
+</div>
+
+<hr>
+
+{# -------------------------------------------------------------------- close #}
+
+<div class="card">
+  <h2>About this page</h2>
+
+  <p class="small">
+    {{ facts.meta.disclaimer }}
+  </p>
+
+  <p class="small muted">
+    Prepared by {{ facts.meta.generator }} on {{ facts.meta.generated_at[:10] }} for
+    {{ facts.meta.patient_label }}, age band {{ facts.meta.age_band }}, covering
+    {{ facts.meta.period.from }} to {{ facts.meta.period.to }}
+    ({{ facts.meta.period.days }} day(s)).
+  </p>
+
+  <p class="small muted">
+    The record ids printed beside each item name the stored rows that item came from,
+    so any line on this page can be traced back to the record it was taken from. A
+    line with no record id is a line this page could not source, and it is shown as
+    missing rather than filled in.
+  </p>
+
+  <p class="small muted">
+    Nothing on this page was sent to anyone. It was printed or shown by the patient.
+    No appointment was made, changed, or cancelled by this app.
+  </p>
+</div>
+
+{% endblock %}

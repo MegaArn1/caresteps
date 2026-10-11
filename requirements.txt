@@ -1,0 +1,11 @@
+# CareSteps - deliberately minimal. Five direct dependencies; no frontend build step.
+#
+# Versions are pinned to the ones verified working in the build environment
+# (Python 3.11.7, 2026-10-11).
+fastapi==0.143.0
+uvicorn[standard]==0.54.0
+jinja2==3.1.6
+httpx==0.28.1
+python-multipart==0.0.20
+# Required by Starlette SessionMiddleware. Easy to miss because it is transitive.
+itsdangerous==2.2.0

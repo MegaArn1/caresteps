@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ app_name }}{% endblock %}</title>
+  <meta name="description" content="Everyday support for seniors managing blood pressure. Prototype.">
+  {# No external stylesheet, font, or script. A failed request on venue wifi must
+     not be able to break the page. #}
+  <link rel="stylesheet" href="/static/css/app.css">
+  {# Inline SVG favicon, percent-encoded. The angle brackets and quotes MUST be
+     encoded: a raw data URI containing < and > terminates the attribute early and
+     the parser then treats the rest of the SVG as document text. #}
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Crect%20width='100'%20height='100'%20rx='20'%20fill='%231f6f5c'/%3E%3Cpath%20d='M20%2052h16l8-20%2012%2040%208-20h16'%20fill='none'%20stroke='white'%20stroke-width='8'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3C/svg%3E">
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="/app">{{ app_name }}</a>
+    <nav class="main" aria-label="Main">
+      <a href="/app"        {% if request.url.path == '/app' %}aria-current="page"{% endif %}>Today</a>
+      <a href="/app/trends" {% if request.url.path == '/app/trends' %}aria-current="page"{% endif %}>My numbers</a>
+      <a href="/app/plan"   {% if request.url.path == '/app/plan' %}aria-current="page"{% endif %}>My plan</a>
+      <a href="/summary"    {% if request.url.path.startswith('/summary') %}aria-current="page"{% endif %}>Appointment</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+
+    {# A persistent, honest statement that this is a prototype with simulated data.
+       Placed at the top rather than buried, because a judge should not have to look
+       for it. #}
+    {% if not hide_prototype_banner %}
+    <div class="notice warn" role="note">
+      <strong>Prototype &mdash; not a medical service</strong>
+      <p class="small" style="margin-bottom:0">
+        This is a competition prototype. All patient records shown are
+        <strong>fictional</strong>. It cannot diagnose, cannot change a prescription,
+        and cannot contact anyone for you. If you need medical help, use the red bar
+        at the bottom of this page.
+      </p>
+    </div>
+    {% endif %}
+
+    {% if agent and agent.degraded and not hide_mode_banner %}
+    <div class="notice" role="status">
+      <strong>Limited mode</strong>
+      <p class="small" style="margin-bottom:0">
+        The assistant is not connected, so free-text questions are answered by a
+        simpler set of rules. Everything else works: you can still record readings,
+        see your numbers, prepare for your appointment, and use the help bar.
+        {% if agent.reason %}<span class="muted">({{ agent.reason }})</span>{% endif %}
+      </p>
+    </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </div>
+</main>
+
+{# The help path is fixed to every page and is never behind the model. #}
+<footer class="helpbar">
+  <div class="wrap">
+    <a href="/app/help">Need help now</a>
+    {% if emergency and emergency.number and emergency.verified %}
+      <a class="num" href="tel:{{ emergency.number }}">{{ emergency.label }} {{ emergency.number }}</a>
+    {% else %}
+      <span class="num">Call for help</span>
+    {% endif %}
+  </div>
+</footer>
+
+<script src="/static/js/app.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

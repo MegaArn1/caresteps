@@ -1,0 +1,322 @@
+{
+  "_audit": {
+    "date": "2026-10-11",
+    "scope": "Every statement in this file with enabled:true.",
+    "verification": "Each enabled statement was read again against the text of the page it cites, in an adversarial pass whose job was to find where the statement claims more than its source does. Four questions were asked of every statement: (1) does every claim in the sentence actually appear on the cited page; (2) has a cause, benefit or prevalence link been added that the page does not state; (3) does the sentence contain any instruction to take, continue, stop, skip or double a medicine, any administration detail, any steer toward combining medicines, or any numeric blood-pressure threshold presented as a judgement; (4) has anything been imported from an out-of-scope part of the page (dosing, missed doses, or a target belonging to a different patient group).",
+    "result": "Fourteen statements were rewritten. Ten of them are the statements named in the audit findings; the other four are the remaining drug-class statements (calcium channel blocker, ARB, ACE inhibitor, beta blocker), rewritten only so that the class wording matches the corrected diuretic statement. No statement had to be re-sourced and none had to be removed: every failure was a wording defect on the explanation side, and the page behind each one already supports the corrected sentence.",
+    "reworded": 14,
+    "resourced": 0,
+    "removed": 0,
+    "detail": [
+      {
+        "id": "edu_class_diuretic_purpose",
+        "change": "Dropped the unsupported alias 'water tablets' - the cited page never uses that term, and its only use of 'water' is the bullet about getting rid of excess water and salt. Also moved the group wording onto the page's own phrase, 'some common groups of high blood pressure medicines'."
+      },
+      {
+        "id": "edu_class_ccb_purpose",
+        "change": "Wording consistency only: 'one of the main groups' -> 'one of the common groups'. No other change."
+      },
+      {
+        "id": "edu_class_arb_purpose",
+        "change": "Wording consistency only: 'one of the main groups' -> 'one of the common groups'. No other change."
+      },
+      {
+        "id": "edu_class_ace_purpose",
+        "change": "Wording consistency only: 'one of the main groups' -> 'one of the common groups'. No other change."
+      },
+      {
+        "id": "edu_class_betablocker_purpose",
+        "change": "Wording consistency only: 'one of the main groups' -> 'one of the common groups'. No other change."
+      },
+      {
+        "id": "edu_multiple_medicines_common",
+        "change": "Removed the prevalence claim ('it is common to need more than one') - the page says you may need more than one. Removed 'so they can be used together', which was our inference that differing mechanisms are why the medicines are combined, and which also nudged the reader toward combining medicines. The statement now says you may need more than one type, that the groups work in different ways, and that which medicines you take is decided by your doctor."
+      },
+      {
+        "id": "edu_measure_same_time_same_arm",
+        "change": "Dropped the added benefit claim that being consistent makes a record easier to compare; the page gives the measurement instruction but no reason for it."
+      },
+      {
+        "id": "edu_measure_cuff_size",
+        "change": "Dropped the too-small/too-large mechanism, which the page does not state; the statement now carries only the page's own instruction to use the correct cuff size."
+      },
+      {
+        "id": "edu_measure_readings_vary",
+        "change": "Dropped 'a series of readings taken over time tells your doctor more than any single one', which is not on the page, together with the causal link drawn from it. The statement keeps the page's variation note and the page's own advice to measure at home regularly and record the readings for doctor's appointments."
+      },
+      {
+        "id": "edu_advice_follow_instruction",
+        "change": "Rewritten so that the app does not tell the reader to take a blood pressure medicine at all - the 'should be taken' clause was a take directive, and it was unconditional. The decision is now attributed to the reader's own doctor or pharmacist, and the sentence offers only the question to ask."
+      },
+      {
+        "id": "edu_advice_ask_pharmacist",
+        "change": "First sentence kept: the page does say to consult a doctor or pharmacist with questions and to know what you are taking and why. Replaced the unsupported 'bringing your medicines with you' with the page's actual claim - keep a written record of your medicines and show it to your doctor."
+      },
+      {
+        "id": "edu_help_often_no_symptoms",
+        "change": "Softened 'usually causes no symptoms at all' to the page's 'does not often produce symptoms'; the previous wording asserted near-universal absence of symptoms that the page does not claim."
+      },
+      {
+        "id": "edu_help_see_gp_if_persistently_above_usual",
+        "change": "Giddiness and headache are now presented as standalone reasons to see a GP, the way the page lists them, instead of being tied to a high reading - the old wording invented that coupling and could have told a reader with giddiness but usual readings not to seek care. Added the page's own severity split, so severe giddiness or a severe headache routes to the Emergency Department. This closes a safety-routing gap: no other fact in this file covered severe giddiness or severe headache."
+      },
+      {
+        "id": "edu_help_emergency_signs",
+        "change": "Replaced our broader 'a sudden change in alertness or consciousness' with the page's own wording, 'sudden confusion or disorientation'. The page does not use the words alertness, consciousness, unconscious or fainting."
+      }
+    ],
+    "deferred": [
+      "The audit offered American Heart Association guidance on cuff size as a replacement source for edu_measure_cuff_size. It was not registered: the sentence that would have needed it, the too-small/too-large mechanism, has been dropped instead of kept, so no new source is required.",
+      "The audit offered S5-singhealth-hypertension-management, already registered in sources.json, for the 'more than one reading' idea in edu_measure_readings_vary. The fact was not re-pointed at it: that idea comes from a page this fact does not cite, and re-pointing would add a claim the adversarial pass did not verify against the page actually cited.",
+      "Source-attribution correction (c) triggered nothing in this file: no statement credits a Singapore Heart Foundation page with not-smoking or quit-smoking language. The lifestyle statement is cited to a HealthHub page, not to S6-shf-elderly-bp, so it was left unchanged."
+    ]
+  },
+  "_about": "The knowledge base. Each entry is OUR OWN short paraphrase of a source in sources.json, plus the exact location in that source it came from. Nothing here is copied verbatim. Nothing here is dosing, missed-dose, switching or stopping guidance - those are handled by refusal rules, not by content. Entries with enabled:false are retained so the boundary of what is covered is visible rather than hidden.",
+  "_why_paraphrase": "Citing a source is not the same as being allowed to reproduce it. Each statement below summarizes a fact from the source in our own words; the source URL is shown to the user alongside it so they can read the original themselves.",
+  "facts": [
+    {
+      "id": "edu_amlodipine_purpose",
+      "source_id": "S4a-healthhub-amlodipine",
+      "topic": "medication_purpose",
+      "subject": "amlodipine",
+      "statement": "Amlodipine is a blood pressure medicine. It works by relaxing and widening your blood vessels, which brings your blood pressure down.",
+      "applies_to": "People prescribed amlodipine",
+      "review_state": "team_checked",
+      "enabled": true
+    },
+    {
+      "id": "edu_losartan_purpose",
+      "source_id": "S4b-healthhub-losartan",
+      "topic": "medication_purpose",
+      "subject": "losartan",
+      "statement": "Losartan is a blood pressure medicine. It blocks the action of a substance called angiotensin II, which normally makes your blood vessels narrower. Blocking it lets the vessels widen and your blood pressure come down.",
+      "applies_to": "People prescribed losartan",
+      "review_state": "team_checked",
+      "enabled": true
+    },
+    {
+      "id": "edu_class_ccb_purpose",
+      "source_id": "S2-healthhub-bp-medication",
+      "topic": "medication_purpose",
+      "subject": "calcium channel blocker",
+      "statement": "Calcium channel blockers are one of the common groups of blood pressure medicines. They stop calcium from entering the muscle cells of the heart and blood vessels, so the vessels relax and widen.",
+      "applies_to": "People prescribed a calcium channel blocker",
+      "review_state": "team_checked",
+      "enabled": true
+    },
+    {
+      "id": "edu_class_arb_purpose",
+      "source_id": "S2-healthhub-bp-medication",
+      "topic": "medication_purpose",
+      "subject": "angiotensin receptor blocker",
+      "statement": "ARBs, or angiotensin II receptor blockers, are one of the common groups of blood pressure medicines. They block angiotensin II at the blood vessel wall so the vessels do not narrow.",
+      "applies_to": "People prescribed an ARB",
+      "review_state": "team_checked",
+      "enabled": true
+    },
+    {
+      "id": "edu_class_ace_purpose",
+      "source_id": "S2-healthhub-bp-medication",
+      "topic": "medication_purpose",
+      "subject": "ACE inhibitor",
+      "statement": "ACE inhibitors are one of the common groups of blood pressure medicines. They stop the body from making angiotensin II, a substance that normally makes blood vessels narrow.",
+      "applies_to": "People prescribed an ACE inhibitor",
+      "review_state": "team_checked",
+      "enabled": true
+    },
+    {
+      "id": "edu_class_diuretic_purpose",
+      "source_id": "S2-healthhub-bp-medication",
+      "topic": "medication_purpose",
+      "subject": "diuretic",
+      "statement": "Diuretics are one of the common groups of blood pressure medicines. They help your body get rid of excess water and salt.",
+      "applies_to": "People prescribed a diuretic",
+      "review_state": "team_checked",
+      "enabled": true
+    },
+    {
+      "id": "edu_class_betablocker_purpose",
+      "source_id": "S2-healthhub-bp-medication",
+      "topic": "medication_purpose",
+      "subject": "beta blocker",
+      "statement": "Beta blockers are one of the common groups of blood pressure medicines. They slow your heart rate and reduce how much blood your heart pumps out.",
+      "applies_to": "People prescribed a beta blocker",
+      "review_state": "team_checked",
+      "enabled": true
+    },
+    {
+      "id": "edu_multiple_medicines_common",
+      "source_id": "S2-healthhub-bp-medication",
+      "topic": "medication_purpose",
+      "subject": null,
+      "statement": "There are many types of medicine that help to lower blood pressure, and you may need more than one type to keep your condition under control. The different groups work in different ways. Which medicines you take is decided by your doctor.",
+      "applies_to": "People on blood pressure treatment",
+      "review_state": "team_checked",
+      "enabled": true
+    },
+
+    {
+      "id": "edu_measure_same_time_same_arm",
+      "source_id": "S1-healthhub-hf-bp-monitoring",
+      "topic": "how_to_measure",
+      "subject": null,
+      "statement": "Measure your blood pressure at about the same time every day, using the same arm.",
+      "applies_to": "Anyone measuring blood pressure at home",
+      "review_state": "team_checked",
+      "enabled": true
+    },
+    {
+      "id": "edu_measure_cuff_size",
+      "source_id": "S1-healthhub-hf-bp-monitoring",
+      "topic": "how_to_measure",
+      "subject": null,
+      "statement": "Use the correct cuff size for accurate readings.",
+      "applies_to": "Anyone measuring blood pressure at home",
+      "review_state": "team_checked",
+      "enabled": true
+    },
+    {
+      "id": "edu_measure_before_coffee",
+      "source_id": "S1-healthhub-hf-bp-monitoring",
+      "topic": "how_to_measure",
+      "subject": null,
+      "statement": "Avoid coffee, cigarettes and hard exercise for 30 minutes before you measure.",
+      "applies_to": "Anyone measuring blood pressure at home",
+      "review_state": "team_checked",
+      "enabled": true
+    },
+    {
+      "id": "edu_measure_sitting_position",
+      "source_id": "S1-healthhub-hf-bp-monitoring",
+      "topic": "how_to_measure",
+      "subject": null,
+      "statement": "Sit upright with your back supported and both feet flat on the ground. Rest your forearm on a table with the palm facing up, and keep the cuff level with your heart.",
+      "applies_to": "Anyone measuring blood pressure at home",
+      "review_state": "team_checked",
+      "enabled": true
+    },
+    {
+      "id": "edu_measure_high_reading_repeat",
+      "source_id": "S1-healthhub-hf-bp-monitoring",
+      "topic": "how_to_measure",
+      "subject": null,
+      "statement": "If a reading seems high, rest for five minutes and measure again. If it is still high after repeating it three times, contact your nurse, doctor or case manager.",
+      "applies_to": "Anyone measuring blood pressure at home",
+      "review_state": "team_checked",
+      "enabled": true
+    },
+    {
+      "id": "edu_measure_which_number_is_which",
+      "source_id": "S1-healthhub-hf-bp-monitoring",
+      "topic": "how_to_measure",
+      "subject": null,
+      "statement": "The top number, the systolic, is the pressure when your heart contracts. The bottom number, the diastolic, is the pressure when your heart relaxes between beats.",
+      "applies_to": "Anyone measuring blood pressure at home",
+      "review_state": "team_checked",
+      "enabled": true
+    },
+    {
+      "id": "edu_measure_readings_vary",
+      "source_id": "S6-shf-elderly-bp",
+      "topic": "how_to_measure",
+      "subject": null,
+      "statement": "A blood pressure reading varies with what you are doing — your body position, breathing, emotional state, exercise and sleep. That is normal. It is worth measuring your blood pressure at home regularly and recording the readings for your doctor's appointments.",
+      "applies_to": "Anyone measuring blood pressure at home",
+      "review_state": "team_checked",
+      "enabled": true
+    },
+
+    {
+      "id": "edu_advice_follow_instruction",
+      "source_id": "S2-healthhub-bp-medication",
+      "topic": "adherence_support",
+      "subject": null,
+      "statement": "How a blood pressure medicine is taken is decided by your own doctor or pharmacist, not by this app. Where anything about your medicine is unclear to you, that is a good thing to ask them about.",
+      "applies_to": "People on blood pressure treatment",
+      "review_state": "team_checked",
+      "enabled": true
+    },
+    {
+      "id": "edu_advice_ask_pharmacist",
+      "source_id": "S2b-healthhub-know-your-medication",
+      "topic": "adherence_support",
+      "subject": null,
+      "statement": "It is reasonable to ask your pharmacist or doctor anything you are unsure about, including what a medicine is for and why you are taking it. Keeping a written record of your medicines can help you tell your doctor what you are taking.",
+      "applies_to": "People taking long-term medicines",
+      "review_state": "team_checked",
+      "enabled": true
+    },
+    {
+      "id": "edu_advice_lifestyle_general",
+      "source_id": "S4-healthhub-5-ways-lower-bp",
+      "topic": "adherence_support",
+      "subject": null,
+      "statement": "General measures that support blood pressure management include reducing salt, staying active, keeping a healthy weight, not smoking, and managing stress. For most people treatment is long-term.",
+      "applies_to": "Adults managing raised blood pressure",
+      "review_state": "team_checked",
+      "enabled": true
+    },
+
+    {
+      "id": "edu_help_often_no_symptoms",
+      "source_id": "S2b-singhealth-polyclinics-telemonitoring",
+      "topic": "when_to_seek_help",
+      "subject": null,
+      "statement": "High blood pressure often causes no noticeable symptoms, which is why it is sometimes called a silent condition. Feeling fine is not evidence that your blood pressure is fine, and this is exactly why keeping a record matters.",
+      "applies_to": "Adults with hypertension",
+      "review_state": "team_checked",
+      "enabled": true
+    },
+    {
+      "id": "edu_help_see_gp_if_persistently_above_usual",
+      "source_id": "S4-sgh-gpfirst-hbp",
+      "topic": "when_to_seek_help",
+      "subject": null,
+      "statement": "See your GP if your blood pressure readings are consistently higher than your usual. See your GP also if you have giddiness or a headache — but severe giddiness or a severe headache needs the Emergency Department instead.",
+      "applies_to": "Adults with hypertension",
+      "review_state": "team_checked",
+      "enabled": true
+    },
+    {
+      "id": "edu_help_ed_symptoms",
+      "source_id": "S2-moh-hbp",
+      "topic": "when_to_seek_help",
+      "subject": null,
+      "statement": "Go to the Emergency Department if you develop weakness or numbness, difficulty seeing, difficulty speaking or difficulty walking. These need to be checked urgently.",
+      "applies_to": "Adults with hypertension",
+      "review_state": "team_checked",
+      "enabled": true
+    },
+    {
+      "id": "edu_help_emergency_signs",
+      "source_id": "S3-moh-ed",
+      "topic": "when_to_seek_help",
+      "subject": null,
+      "statement": "Signs of a medical emergency include sudden or severe pain, including chest pain, difficulty breathing or shortness of breath, uncontrolled bleeding, and sudden confusion or disorientation.",
+      "applies_to": "General public in Singapore",
+      "review_state": "team_checked",
+      "enabled": true
+    },
+    {
+      "id": "edu_help_annual_review",
+      "source_id": "S4-healthhub-5-ways-lower-bp",
+      "topic": "when_to_seek_help",
+      "subject": null,
+      "statement": "High blood pressure should be reviewed by a doctor at least once a year, and more often for some people.",
+      "applies_to": "Adults with hypertension",
+      "review_state": "team_checked",
+      "enabled": true
+    },
+
+    {
+      "id": "edu_numeric_bands_disabled",
+      "source_id": "S5-singhealth-hypertension-management",
+      "topic": "when_to_seek_help",
+      "subject": null,
+      "statement": "PLACEHOLDER - NOT SHOWN. SingHealth publishes a grading table (normal below 130/80, high-normal 130-139/80-89, grade 1 140-159/90-99, grade 2 160+/100+). This app deliberately does not surface it. A prototype that tells an older adult their reading is 'grade 1 hypertension' is making a clinical statement, and an untrained user reading a grade against a single home measurement is likely to misunderstand it. The bands exist only as a reference for builders and are disabled.",
+      "applies_to": "Not shown to users",
+      "review_state": "team_checked",
+      "enabled": false
+    }
+  ]
+}

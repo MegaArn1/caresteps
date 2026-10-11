@@ -1,0 +1,485 @@
+{% extends "base.html" %}
+{% block title %}One difficulty - {{ app_name }}{% endblock %}
+
+{#
+  The most important page in the app.
+
+  What it has to get right:
+
+  1. A category the app proposed is rendered as a PROPOSAL until the person agrees.
+     Until /confirm-category is posted, nothing on this page treats the guess as
+     settled. That is the whole mechanism.
+  2. The support offered is specific to the stated reason. A different reason leads
+     somewhere different - if it did not, this app would just be a reminder.
+  3. Where the reason is a worry about a medicine, the help path comes FIRST and the
+     data collection comes second. Never the other way round.
+  4. Every button here records a choice, asks a question, changes the app's own
+     reminder, or explains what a recorded source says. None of them touch a
+     prescription.
+
+  Standing rule for this file: no dose change, no "this medicine caused that", no
+  advice to stop anything, at any point, in any branch.
+#}
+
+{% block content %}
+
+{% set status_word = {"open": "Open", "resolved": "Resolved", "parked": "Left for now"}.get(barrier.status, barrier.status | replace("_", " ") | capitalize) %}
+{% set status_class = {"open": "warn", "resolved": "ok", "parked": "neutral"}.get(barrier.status, "neutral") %}
+
+<h1>One thing that was difficult</h1>
+
+<div class="card">
+  <p class="small muted" style="margin-bottom:6px">In your words:</p>
+  <p style="font-size:22px; font-weight:600; margin-bottom:10px">
+    {{ barrier.user_words }}
+  </p>
+  <p class="muted small" style="margin-bottom:0">
+    Said on {{ barrier.created_at[:10] }}
+    {%- if barrier.related_event %} &middot; this came up about: {{ barrier.related_event }}{% endif %}
+  </p>
+</div>
+
+<p>
+  <span class="badge {{ status_class }}">{{ status_word }}</span>
+  {% if barrier.status == "parked" %}
+    <span class="small muted">You set this aside on purpose. The app will not raise it again.</span>
+  {% elif barrier.status == "resolved" %}
+    <span class="small muted">You marked this as sorted on {% if barrier.resolved_at %}{{ barrier.resolved_at[:10] }}{% else %}an earlier day{% endif %}.</span>
+  {% endif %}
+</p>
+
+{# ---------------------------------------------------------------------------
+   Category state. The two cases are rendered differently on purpose: an
+   unconfirmed guess must look like a guess.
+--------------------------------------------------------------------------- #}
+{% if barrier.category_confirmed %}
+
+  <p>
+    <span class="badge ok">You told us: {{ categories.get(barrier.category, barrier.category | replace("_", " ") | capitalize) }}</span>
+  </p>
+  <p class="muted small">
+    You picked this one yourself, so the app treats it as answered. You can still
+    change it below if your answer has changed.
+  </p>
+
+{% elif barrier.category %}
+
+  <div class="notice warn" role="status">
+    <strong>I think this might be: {{ categories.get(barrier.category, barrier.category | replace("_", " ") | capitalize) }} &mdash; but I am not sure. Please confirm or change it.</strong>
+    <p class="small" style="margin-bottom:0">
+      This is a suggestion the app made. It is stored as a suggestion, not as a fact,
+      and nothing here is treated as settled until you say which one it is. If it is
+      wrong, changing it takes one step and the help offered below will change with it.
+    </p>
+  </div>
+
+{% else %}
+
+  <div class="notice warn" role="status">
+    <strong>No reason has been given a name yet.</strong>
+    <p class="small" style="margin-bottom:0">
+      That is a complete answer on its own. The app has not picked one for you. If you
+      want to say more, you can choose below, and the help offered here will change to
+      match.
+    </p>
+  </div>
+
+{% endif %}
+
+{# ---------------------------------------------------------------------------
+   The correction form. This is the only path that can set a category as
+   confirmed, which is why it is on the page rather than behind a settings link.
+--------------------------------------------------------------------------- #}
+<div class="card flat">
+  <form method="post" action="/support/barrier/{{ barrier.id }}/confirm-category" data-guard>
+    <div class="field">
+      <label for="category">Which of these is closest?</label>
+      <p class="hint" id="category-hint">
+        Pick what fits. "I would rather not say" is a full answer and the app will
+        leave it alone.
+      </p>
+      <select id="category" name="category" aria-describedby="category-hint"
+              {% if not barrier.category %}required{% endif %}>
+        {% if not barrier.category %}
+          <option value="" disabled selected>Please choose one</option>
+        {% endif %}
+        {% for key, label in categories.items() %}
+          <option value="{{ key }}" {% if barrier.category == key %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="btn-row">
+      {% if barrier.category_confirmed %}
+        <button class="btn" type="submit">Change my answer</button>
+      {% else %}
+        <button class="btn primary" type="submit">Save my answer</button>
+      {% endif %}
+    </div>
+  </form>
+</div>
+
+{% if request.query_params.get("chosen") %}
+  <div class="notice ok" role="status">
+    <strong>Saved</strong>
+    <p class="small" style="margin-bottom:0">
+      That choice is now on your list, with the reason it was offered. Recording a
+      choice does not send it anywhere and does not change any prescription.
+    </p>
+  </div>
+{% endif %}
+
+{# ===========================================================================
+   Matching support.
+   Four branches, and the branch is chosen by the stated reason. This is the
+   differentiator: the same missing record becomes a different next step.
+   =========================================================================== #}
+
+<h2>Something that might help</h2>
+
+{% if explanation %}
+
+  {# "I do not know what this medicine is for" -> the answer itself, not a pointer
+     to an answer. Anything shown here comes from a recorded source. #}
+  <div class="card">
+    <h3 style="margin-top:0">{{ explanation.medicine_name }}</h3>
+
+    <p>{{ explanation.statement }}</p>
+
+    <dl class="stack" style="margin-bottom:12px">
+      {% if explanation.applies_to %}
+        <div class="stat-row">
+          <dt class="label small">Who this is written for</dt>
+          <dd class="small" style="margin:0">{{ explanation.applies_to }}</dd>
+        </div>
+      {% endif %}
+      <div class="stat-row">
+        <dt class="label small">Source</dt>
+        <dd class="small" style="margin:0; text-align:right">
+          {{ explanation.publisher }}.
+          <a href="{{ explanation.source_url }}" rel="noopener">{{ explanation.source_title }}</a>
+        </dd>
+      </div>
+      <div class="stat-row">
+        <dt class="label small">When this source was retrieved</dt>
+        <dd class="small" style="margin:0; text-align:right">
+          {% if explanation["source_retrieved_at"] %}
+            {{ explanation["source_retrieved_at"] }}
+          {% else %}
+            Missing on this entry. The app has no date recorded for it.
+          {% endif %}
+        </dd>
+      </div>
+    </dl>
+
+    <p>
+      {% set rs = explanation.review_state or explanation.get("source_review") %}
+      {% if rs == "clinician_reviewed" %}
+        <span class="badge ok">Reviewed by a clinician</span>
+      {% elif rs == "team_checked" %}
+        <span class="badge info">Checked by the project team, not by a clinician</span>
+      {% elif rs %}
+        <span class="badge warn">Not reviewed</span>
+      {% else %}
+        <span class="badge neutral">Review state not recorded</span>
+      {% endif %}
+    </p>
+
+    <p class="muted small" style="margin-bottom:0">
+      This is what the recorded source states about this medicine. It is not advice
+      about your dose, and it does not say whether this medicine is right for you. If
+      you want to talk it through, the question below goes on your list for the
+      pharmacist or doctor.
+    </p>
+  </div>
+
+  {# The remaining options stay reachable beside the explanation. Each is still a
+     real form, so the choice is actually saved. #}
+  {% if options %}
+    <div class="card flat">
+      <h3 style="margin-top:0">If it would still help</h3>
+      <div class="choices">
+        {% for opt in options %}
+          <form method="post" action="/support/barrier/{{ barrier.id }}/choose" data-guard>
+            <input type="hidden" name="action_id" value="{{ opt.id }}">
+            <input type="hidden" name="title" value="{{ opt.title }}">
+            <input type="hidden" name="basis_type" value="{{ opt.basis }}">
+            <input type="hidden" name="basis_id" value="{{ opt.id }}">
+            <input type="hidden" name="basis_label" value="{{ opt.title }}">
+            <button class="btn wide" type="submit">{{ opt.title }}</button>
+          </form>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+{% elif barrier.category == "running_out" %}
+
+  {# "I am running out" -> what is on the plan, read back. The app orders nothing. #}
+  {# Matched in the template, not in the route, so the rule is visible. It is a
+     word match on the recorded plan text and nothing more. #}
+  {% set plan_hits = [] %}
+  {% for p in plan %}
+    {% for kw in ["repeat", "prescription", "refill", "pharmacy", "supply", "medicine", "medication", "tablet", "capsule", "dose", "takes", "take "] %}
+      {% if kw in (p.instruction | lower) and p not in plan_hits %}
+        {% set _ = plan_hits.append(p) %}
+      {% endif %}
+    {% endfor %}
+  {% endfor %}
+
+  <div class="card">
+    <h3 style="margin-top:0">What is on your plan</h3>
+
+    {% if plan %}
+      {% set shown = plan_hits if plan_hits else plan %}
+      <p class="small muted">
+        {% if plan_hits %}
+          The lines below are the ones on your recorded plan that mention a repeat
+          prescription or a supply of medicine.
+        {% else %}
+          Nothing on your recorded plan mentions a repeat prescription, so the whole
+          plan is shown here instead of a filtered part of it.
+        {% endif %}
+      </p>
+
+      <div class="stack">
+        {% for p in shown %}
+          <div class="stat-row">
+            <div>
+              <span class="label">{{ p.instruction }}</span>
+              <span class="tiny muted">
+                from {{ p.source_label or p.source_type | replace("_", " ") }}
+                {%- if p.verified_by_user %}, confirmed by you{% endif %}
+                {%- if p.is_simulated %}, fictional demo record{% endif %}
+              </span>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+
+      <div class="notice warn" role="status">
+        <strong>No care plan is recorded</strong>
+        <p class="small" style="margin-bottom:0">
+          There is nothing on file to read back, so the app cannot say what your plan
+          covers. It will say that rather than fill the gap.
+        </p>
+      </div>
+
+    {% endif %}
+
+    <p class="muted small" style="margin-top:12px">
+      This app cannot order a repeat prescription, cannot request a refill, and
+      cannot contact a pharmacy or a clinic. Nothing has been sent on your behalf.
+      What it can do is record that you are running low and put a question on your
+      list so it is not forgotten at the next appointment.
+    </p>
+  </div>
+
+  {% if options %}
+    <div class="card flat">
+      <h3 style="margin-top:0">What would help here</h3>
+      <div class="choices">
+        {% for opt in options %}
+          <form method="post" action="/support/barrier/{{ barrier.id }}/choose" data-guard>
+            <input type="hidden" name="action_id" value="{{ opt.id }}">
+            <input type="hidden" name="title" value="{{ opt.title }}">
+            <input type="hidden" name="basis_type" value="{{ opt.basis }}">
+            <input type="hidden" name="basis_id" value="{{ opt.id }}">
+            <input type="hidden" name="basis_label" value="{{ opt.title }}">
+            <button class="btn wide" type="submit">{{ opt.title }}</button>
+          </form>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+{% elif barrier.category == "worried_side_effect" %}
+
+  {# Help first, data collection second. The order is the requirement. #}
+  <div class="notice alert" role="alert">
+    <strong>If you feel unwell, please check this first.</strong>
+    <p class="small">
+      The help page has the signs that mean getting medical help now, and how to
+      reach it. It is not behind anything here and it does not need any information
+      from you first.
+    </p>
+    <p class="small" style="margin-bottom:0">
+      <a class="btn danger" href="/app/help">Open the help page</a>
+      {% if emergency and emergency.number and emergency.verified %}
+        <a class="btn danger" href="tel:{{ emergency.number }}">{{ emergency.label }} {{ emergency.number }}</a>
+      {% endif %}
+    </p>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Then, if it would help</h3>
+    <p>
+      The app can write down what you noticed and when, in your own words, so it is
+      not lost before your next appointment. It can also put a question on your list
+      for the doctor or pharmacist.
+    </p>
+    <p class="muted small">
+      It will not say that a medicine caused what you noticed. Nobody can say that
+      from an app. It will not tell you to change a dose, and it will not tell you to
+      stop anything. Only a doctor or pharmacist can answer those.
+    </p>
+
+    {% if options %}
+      <div class="choices">
+        {% for opt in options %}
+          <form method="post" action="/support/barrier/{{ barrier.id }}/choose" data-guard>
+            <input type="hidden" name="action_id" value="{{ opt.id }}">
+            <input type="hidden" name="title" value="{{ opt.title }}">
+            <input type="hidden" name="basis_type" value="{{ opt.basis }}">
+            <input type="hidden" name="basis_id" value="{{ opt.id }}">
+            <input type="hidden" name="basis_label" value="{{ opt.title }}">
+            <button class="btn wide" type="submit">{{ opt.title }}</button>
+          </form>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="card flat">
+    <form method="post" action="/summary/question/add" data-guard>
+      <input type="hidden" name="origin" value="barrier">
+      <div class="field">
+        <label for="question_text">A question for the doctor or pharmacist</label>
+        <p class="hint" id="question-text-hint">
+          Write it however you would say it out loud. It stays on your list, and you
+          decide at the appointment whether to use it.
+        </p>
+        <textarea id="question_text" name="text" rows="3" required
+                  aria-describedby="question-text-hint"
+                  placeholder="I would like to ask about something I noticed since starting this medicine."></textarea>
+      </div>
+      <div class="btn-row">
+        <button class="btn wide" type="submit">Add this to my questions</button>
+      </div>
+    </form>
+  </div>
+
+{% else %}
+
+  {# The ordinary case: the options that match the stated reason, each one a real
+     form so the choice is saved rather than shown. #}
+  {% if options %}
+    <div class="choices">
+      {% for opt in options %}
+        <form method="post" action="/support/barrier/{{ barrier.id }}/choose" data-guard>
+          <input type="hidden" name="action_id" value="{{ opt.id }}">
+          <input type="hidden" name="title" value="{{ opt.title }}">
+          <input type="hidden" name="basis_type" value="{{ opt.basis }}">
+          <input type="hidden" name="basis_id" value="{{ opt.id }}">
+          <input type="hidden" name="basis_label" value="{{ opt.title }}">
+          <button class="btn wide" type="submit">{{ opt.title }}</button>
+        </form>
+      {% endfor %}
+    </div>
+    <p class="muted small">
+      Choosing one adds it to your list. It does not send anything anywhere, and it
+      does not change any prescription.
+    </p>
+  {% else %}
+    <div class="notice warn" role="status">
+      <strong>No options are recorded for this one</strong>
+      <p class="small" style="margin-bottom:0">
+        The app has nothing specific to offer for this reason yet. It would rather
+        say so than offer something unrelated.
+      </p>
+    </div>
+  {% endif %}
+
+{% endif %}
+
+{# ---------------------------------------------------------------------------
+   Already chosen for this entry. Status changes post to the action route.
+--------------------------------------------------------------------------- #}
+<h2>What you have chosen for this</h2>
+
+{% if actions %}
+
+  <div class="stack">
+    {% for a in actions %}
+      {% set a_word = {"chosen": "Chosen", "done": "Done", "dropped": "Set aside"}.get(a.status, a.status | capitalize) %}
+      {% set a_class = {"chosen": "info", "done": "ok", "dropped": "neutral"}.get(a.status, "neutral") %}
+
+      <div class="card">
+        <p style="margin-bottom:6px">
+          <strong>{{ a.title }}</strong>
+          <span class="badge {{ a_class }}">{{ a_word }}</span>
+        </p>
+        <p class="muted small" style="margin-bottom:10px">
+          Chosen on {{ a.created_at[:10] }}.
+          {% if a.basis_label %}Basis: {{ a.basis_label }}.{% endif %}
+          {% if a.basis_type == "education" %}From a recorded source.
+          {% elif a.basis_type == "care_plan" %}From what is on your plan.
+          {% else %}Your own choice.{% endif %}
+        </p>
+
+        {% if a.status == "chosen" %}
+          <form method="post" action="/support/action/{{ a.id }}/status" data-guard>
+            <div class="btn-row" style="margin-top:0">
+              <button class="btn" type="submit" name="status" value="done">Mark as done</button>
+              <button class="btn ghost" type="submit" name="status" value="dropped">Set this aside</button>
+            </div>
+          </form>
+        {% else %}
+          <form method="post" action="/support/action/{{ a.id }}/status" data-guard>
+            <div class="btn-row" style="margin-top:0">
+              <button class="btn ghost" type="submit" name="status" value="chosen">Put it back on the list</button>
+            </div>
+          </form>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+
+{% else %}
+
+  <div class="card">
+    <p class="muted small" style="margin-bottom:0">
+      Nothing has been chosen for this entry yet. Nothing needs to be.
+    </p>
+  </div>
+
+{% endif %}
+
+{# ---------------------------------------------------------------------------
+   Closing. Both are real, reasonable choices. "Leave this for now" is not a
+   failure state and is not styled as one.
+--------------------------------------------------------------------------- #}
+<h2>Where this goes next</h2>
+
+<div class="card">
+  <div class="btn-row" style="margin-top:0">
+    <form method="post" action="/support/barrier/{{ barrier.id }}/resolve" data-guard>
+      <button class="btn primary" type="submit">This is sorted now</button>
+    </form>
+    <form method="post" action="/support/barrier/{{ barrier.id }}/park" data-guard>
+      <button class="btn ghost" type="submit">Leave this for now</button>
+    </form>
+  </div>
+
+  <p class="muted small" style="margin-top:14px; margin-bottom:0">
+    Leaving it for now stops the app asking about it. That is a decision, not a
+    failure, and you can come back to it whenever you want. Nothing is deleted either
+    way, and this entry stays in your list with whatever you said.
+  </p>
+</div>
+
+<hr>
+
+<div class="btn-row">
+  <a class="btn ghost" href="/support/barriers">Back to all your entries</a>
+  <a class="btn ghost" href="/app/support">What has been difficult</a>
+</div>
+
+<p class="muted small">
+  This app records what you say, explains what a recorded source states, asks a
+  question on your behalf at your request, and changes when its own reminder appears.
+  It cannot change a prescription and cannot contact anyone. If you feel unwell, use
+  the red bar at the bottom of this page.
+</p>
+
+{% endblock %}

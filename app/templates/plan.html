@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% block title %}My plan - {{ app_name }}{% endblock %}
+
+{% block content %}
+<h1>My plan</h1>
+
+{# Say plainly what this page is, before showing anything. The reader must not think
+   the app has produced a new instruction. #}
+<div class="notice" role="note">
+  <strong>This page shows your plan as it was recorded</strong>
+  <p class="small">
+    Every line below is a copy of something that was written down, and each line
+    shows where it came from. This page does not add advice, does not change advice,
+    and does not decide anything. If a line looks wrong, bring it to your next
+    appointment and ask about it.
+  </p>
+</div>
+
+{% if not plan %}
+  <div class="card flat">
+    <h2>No plan is recorded</h2>
+    <p>
+      There are no plan lines saved for this record. That is not a problem and it is
+      not a judgement about you. It only means nothing has been written down here yet.
+    </p>
+    <p class="small muted">
+      Nothing is needed from you here, and nothing is missing that you have to go and
+      fill in. If you are not sure what your plan is, your doctor or nurse can tell
+      you. An empty page is a true answer: it means nothing has been recorded yet.
+    </p>
+    <div class="btn-row">
+      <a class="btn" href="/summary">Prepare for my appointment</a>
+      <a class="btn ghost" href="/app">Back to today</a>
+    </div>
+  </div>
+{% else %}
+
+  <p class="small muted">
+    {{ plan|length }} plan line{% if plan|length != 1 %}s{% endif %} recorded on this
+    page.
+  </p>
+
+  {% for item in plan %}
+  <div class="card">
+    <h2>{{ item.instruction }}</h2>
+
+    {# Three separate questions, kept separate. Did the person confirm it. Did the
+       team check it against something. Did a clinician review it. Collapsing these
+       into one tick would overstate what is known. #}
+    <div class="stack">
+      {% if item.verified_by_user %}
+        <span class="badge ok">Confirmed by you</span>
+      {% else %}
+        <span class="badge neutral">Not confirmed by you</span>
+      {% endif %}
+      {% if item.verified_by_team %}
+        <span class="badge ok">Checked by the team</span>
+      {% else %}
+        <span class="badge warn">Not checked by the team</span>
+      {% endif %}
+      {% if item.reviewed_by_clinician %}
+        <span class="badge neutral">Reviewed by a clinician</span>
+      {% else %}
+        <span class="badge neutral">Not clinically reviewed</span>
+      {% endif %}
+    </div>
+
+    <p class="small muted" style="margin-top:10px">
+      These are three different questions. A line can be confirmed by you and still
+      not have been checked by the team, and checked by the team without a doctor
+      having read it.
+    </p>
+
+    <hr>
+
+    <dl class="stat-row" style="display:block">
+      <dt class="label">Where this came from</dt>
+      <dd class="small" style="margin:4px 0 0 0">{{ item.source_label }}</dd>
+    </dl>
+
+    {% if item.effective_date %}
+    <div class="stat-row">
+      <span class="label">Date on the record</span>
+      <span class="value small nowrap">{{ item.effective_date[:10] }}</span>
+    </div>
+    {% endif %}
+
+    {% if item.source_type == 'demo_fictional' %}
+    <p style="margin-top:12px">
+      <span class="sim-flag">Fictional plan - written for this prototype, not real medical advice</span>
+    </p>
+    {% elif item.source_type == 'user_reported' %}
+    <p class="small muted" style="margin-top:12px">
+      You told us this. It is kept in your words.
+    </p>
+    {% elif item.source_type == 'app_education' %}
+    <p class="small muted" style="margin-top:12px">
+      This came from a written source in the app. The source is named above.
+    </p>
+    {% elif item.source_type == 'clinician_given' %}
+    <p class="small muted" style="margin-top:12px">
+      This was given by a clinician. It is written here as it was recorded, and this
+      page does not check it or change it.
+    </p>
+    {% else %}
+    <p class="small muted" style="margin-top:12px">
+      The place this line came from is not one this page recognises, so nothing is
+      claimed about it here. The origin is named above as it was recorded.
+    </p>
+    {% endif %}
+
+    {% if item.notes %}
+    <p class="small muted" style="margin-top:12px">Note on the record: {{ item.notes }}</p>
+    {% endif %}
+
+    {# The target block. Shown only when a target was actually recorded. #}
+    {% if item.target_systolic %}
+      <div class="card flat" style="margin-top:12px;margin-bottom:0">
+        <h3>A blood pressure target recorded on this line</h3>
+        <div class="stat-row">
+          <span class="label">Top number (systolic)</span>
+          <span class="value">{{ item.target_systolic }} <span class="tiny muted">mmHg</span></span>
+        </div>
+        {% if item.target_diastolic %}
+        <div class="stat-row">
+          <span class="label">Bottom number (diastolic)</span>
+          <span class="value">{{ item.target_diastolic }} <span class="tiny muted">mmHg</span></span>
+        </div>
+        {% endif %}
+        {% if item.target_source %}
+        <p class="small muted" style="margin-top:10px">
+          Source of this target: {{ item.target_source }}.
+        </p>
+        <p class="small muted">
+          This is a number that was recorded, together with where it came from. It is
+          not an assessment of how you are doing.
+        </p>
+        {% else %}
+        <p class="small muted" style="margin-top:10px">
+          No source is recorded for this target, so we cannot say where the number
+          came from. Ask about it at your next appointment.
+        </p>
+        {% endif %}
+      </div>
+    {% else %}
+      <p class="small muted" style="margin-top:12px">
+        No personal target is recorded on this line, so none is shown. The app does not
+        supply a target number of its own.
+      </p>
+    {% endif %}
+  </div>
+  {% endfor %}
+
+{% endif %}
+
+{# The medicines recorded alongside the plan. Kept short, and it links out rather than
+   duplicating the medicines page. #}
+{% if medications %}
+<hr>
+<h2>Medicines recorded on this record</h2>
+<p class="small muted">
+  This is a list of names only, and it is the whole list recorded for you, not only the
+  ones that appear on a plan line. Each one says whether it has a plan line. This page
+  does not say how much to take, and it does not say to change anything.
+</p>
+{% for med in medications %}
+<div class="card">
+  <h3>{{ med.name }}{% if med.generic_name %} <span class="small muted">({{ med.generic_name }})</span>{% endif %}</h3>
+  <div class="stack">
+    {% if med.confirmed_by_user %}
+      <span class="badge ok">Confirmed by you</span>
+    {% else %}
+      <span class="badge neutral">Not confirmed by you</span>
+    {% endif %}
+    {% if med.plan_instruction %}
+      <span class="badge info">Has a line on your plan</span>
+    {% else %}
+      <span class="badge neutral">No line on your plan</span>
+    {% endif %}
+  </div>
+  {% if med.plan_instruction %}
+    <p class="small" style="margin-top:10px">From your plan: {{ med.plan_instruction }}</p>
+  {% endif %}
+  {% if med.has_explanation %}
+    <p class="small muted" style="margin-top:10px">
+      An explanation of what this medicine is for is available.
+    </p>
+  {% else %}
+    <p class="small muted" style="margin-top:10px">
+      There is no explanation for this medicine in the app yet.
+    </p>
+  {% endif %}
+</div>
+{% endfor %}
+<div class="btn-row">
+  <a class="btn" href="/app/medicines">See what my medicines are for</a>
+</div>
+{% endif %}
+
+<hr>
+<p class="small muted">
+  This page only repeats what was written down, and says where each line came from.
+  It does not check the lines, does not change them, and does not decide anything about
+  your health. If a line here is not what you expected, that is worth asking about
+  rather than acting on.
+</p>
+<div class="btn-row">
+  <a class="btn ghost" href="/app">Back to today</a>
+  <a class="btn ghost" href="/summary">Prepare for my appointment</a>
+</div>
+{% endblock %}

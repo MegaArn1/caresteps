@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}What has been difficult? - {{ app_name }}{% endblock %}
+
+{#
+  The open question.
+
+  Order matters here and it is deliberate:
+
+    1. open free text first, so the person's own wording exists before any
+       category is shown to them,
+    2. categories second, as a way to help the app respond - never as a test,
+    3. "I would rather not say" present from the first render, in the same list,
+       with the same weight as every other option.
+
+  No radio is pre-selected. Nothing is checked until the person checks it.
+
+  What this page sends, and what each field means to the server:
+
+    user_words     the person's own wording, required and stored verbatim
+    category       the option chosen here, or "" if none was
+    confirmed      "1" only when the person picked the option themselves on this
+                   page. /support/record stores a category with
+                   category_confirmed=1 and proposed_by="user" only when this
+                   arrives set; anything else is kept as a proposal and rendered
+                   differently until the person agrees to it.
+    related_event  the reason the app asked, echoed back for provenance
+#}
+
+{% block content %}
+
+<h1>What has been difficult?</h1>
+
+<div class="card">
+  <p>
+    You do not have to explain. If you would like to, tell me what got in the way.
+  </p>
+  <p>
+    You can also skip this page entirely. Skipping costs nothing here, it is not
+    recorded as a difficulty, and the app will not bring it up again unless you do.
+  </p>
+  <p class="muted small" style="margin-bottom:0">
+    Whatever you write is kept in your own words, in your own record. It is not
+    shared with anyone.
+  </p>
+</div>
+
+<div class="btn-row">
+  {# A real element, so skipping works even before any script runs. #}
+  <a class="btn ghost" href="/app" onclick="if (history.length > 1) { history.back(); return false; }">
+    Skip this and go back
+  </a>
+</div>
+
+{% if reason %}
+  <div class="notice" role="status">
+    <strong>Why the app is asking now</strong>
+    <p class="small" style="margin-bottom:0">{{ reason }}</p>
+  </div>
+{% endif %}
+
+<form method="post" action="/support/record" data-guard>
+
+  <div class="field">
+    <label for="user_words">In your own words</label>
+    <p class="hint" id="user_words_hint">
+      Something has to be written here for the entry to be saved. Short is fine.
+      "The cuff would not go on" is a complete answer. If you would rather not put
+      anything in writing, use "Skip this and go back" above instead.
+    </p>
+    <textarea id="user_words" name="user_words" rows="4" required
+              aria-describedby="user_words_hint"
+              placeholder="What got in the way?"></textarea>
+  </div>
+
+  <fieldset style="border:0; padding:0; margin:0 0 18px">
+    <legend style="font-weight:600; font-size:18px; padding:0; margin-bottom:6px">
+      If it helps, which of these is closest?
+    </legend>
+    <p class="hint" id="category_hint" style="margin-bottom:6px">
+      Pick one, or pick none. If you pick one, the app uses it to offer something
+      that fits. If it is not right, you can change it on the next screen while it
+      is still easy to fix.
+    </p>
+
+    <div class="choices" role="radiogroup" aria-describedby="category_hint">
+
+      <label class="cat-choice" for="cat-forgot">
+        <input type="radio" id="cat-forgot" name="category_pick" value="forgot">
+        <span>{{ categories.get("forgot", "I forgot to record or take it") }}</span>
+      </label>
+
+      <label class="cat-choice" for="cat-difficulty_using">
+        <input type="radio" id="cat-difficulty_using" name="category_pick" value="difficulty_using">
+        <span>{{ categories.get("difficulty_using", "It is hard for me to do it") }}</span>
+      </label>
+
+      <label class="cat-choice" for="cat-unclear_purpose">
+        <input type="radio" id="cat-unclear_purpose" name="category_pick" value="unclear_purpose">
+        <span>{{ categories.get("unclear_purpose", "I do not know what this medicine is for") }}</span>
+      </label>
+
+      <label class="cat-choice" for="cat-worried_side_effect">
+        <input type="radio" id="cat-worried_side_effect" name="category_pick" value="worried_side_effect">
+        <span>{{ categories.get("worried_side_effect", "I am worried it is causing a problem") }}</span>
+      </label>
+
+      <label class="cat-choice" for="cat-running_out">
+        <input type="radio" id="cat-running_out" name="category_pick" value="running_out">
+        <span>{{ categories.get("running_out", "I am running out of it") }}</span>
+      </label>
+
+      <label class="cat-choice" for="cat-other">
+        <input type="radio" id="cat-other" name="category_pick" value="other">
+        <span>{{ categories.get("other", "Something else") }}</span>
+      </label>
+
+      {# Presented last, styled identically, and never described as a last resort. #}
+      <label class="cat-choice" for="cat-declined_to_say">
+        <input type="radio" id="cat-declined_to_say" name="category_pick" value="declined_to_say">
+        <span>{{ categories.get("declined_to_say", "I would rather not say") }}</span>
+      </label>
+
+    </div>
+
+  </fieldset>
+
+  {# What the server reads. Both start empty, so an unanswered category is stored
+     as "not answered" rather than as a guess - and so a category is only ever
+     marked as the person's own choice when they actually picked it here. #}
+  <input type="hidden" name="category" id="category-value" value="">
+  <input type="hidden" name="confirmed" id="confirmed-value" value="">
+  <input type="hidden" name="related_event" value="{{ reason }}">
+
+  <div class="btn-row">
+    <button class="btn primary wide" type="submit">Save this</button>
+  </div>
+
+</form>
+
+<div class="notice" role="note">
+  <strong>This app does not act on your medicine</strong>
+  <p class="small" style="margin-bottom:0">
+    It can record what you say, explain what a recorded source states, and change
+    when it asks you to record. It cannot change a dose, cannot stop a medicine, and
+    cannot contact your clinic or pharmacy. If you feel unwell, use the red bar at the
+    bottom of this page.
+  </p>
+</div>
+
+<script>
+  (function () {
+    "use strict";
+    /* Mirrors the chosen radio into the two values the server reads, and clears
+       them again if the same option is tapped a second time - so "pick none" stays
+       reachable after a mis-tap.
+
+       "confirmed" is set only on a pick made here. Free text alone never sets it,
+       which is what keeps "the person told us" and "the app guessed" separate in
+       storage. The shared .cat-choice rules live in app.css. */
+    var out = document.getElementById("category-value");
+    var confirmed = document.getElementById("confirmed-value");
+    var radios = document.querySelectorAll('input[name="category_pick"]');
+    if (!out || !radios.length) return;
+
+    Array.prototype.forEach.call(radios, function (r) {
+      r.addEventListener("click", function () {
+        if (r.dataset.wasChecked === "1") {
+          r.checked = false;
+          r.dataset.wasChecked = "0";
+          out.value = "";
+          if (confirmed) confirmed.value = "";
+          return;
+        }
+        Array.prototype.forEach.call(radios, function (o) { o.dataset.wasChecked = "0"; });
+        r.dataset.wasChecked = "1";
+        out.value = r.value;
+        if (confirmed) confirmed.value = "1";
+      });
+      r.addEventListener("change", function () {
+        out.value = r.checked ? r.value : "";
+        if (confirmed) confirmed.value = r.checked ? "1" : "";
+      });
+    });
+  })();
+</script>
+
+{% endblock %}

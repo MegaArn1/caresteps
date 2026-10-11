@@ -1,0 +1,28 @@
+# CareSteps - keep secrets and generated state out of the repository.
+#
+# The Handbook requires complete source via GitHub. Neither the demo database nor
+# any credential belongs in that repository.
+
+# Local environment
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.env
+.env.*
+
+# The demo database is REBUILT with `make seed`, never committed. It contains only
+# fictional rows, but committing a database is a bad habit to ship in an example.
+caresteps.db
+caresteps.db-wal
+caresteps.db-shm
+
+# The database in the project root is the default; allow the dir to exist.
+!caresteps.db.gitkeep
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/

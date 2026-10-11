@@ -1,0 +1,183 @@
+{
+  "version": "1",
+  "_about": "Clarification gates. These do not refuse anything - they notice that the input is underspecified and ask before acting. A wrong confident answer is usually a question that was answered too early.",
+  "rules": [
+    {
+      "id": "clarify_missing_reading_fields",
+      "kind": "clarify",
+      "enabled": true,
+      "severity": "info",
+      "review_state": "team_checked",
+      "reason": "A reading was mentioned without both numbers, so nothing can be saved yet.",
+      "patterns": [
+        "my blood pressure was",
+        "my bp was",
+        "blood pressure reading",
+        "took my blood pressure",
+        "checked my blood pressure",
+        "measured my blood pressure"
+      ],
+      "exclude_patterns": ["/"],
+      "sources": ["S1-healthhub-bp-medication"],
+      "options": [
+        {"id": "enter_reading", "label": "Enter the two numbers", "action": "open_reading_form"},
+        {"id": "skip", "label": "Not now", "action": "dismiss"}
+      ],
+      "patient_message": "I can save that for you. What were the two numbers on the screen - the top one and the bottom one?",
+      "notes": "The exclude pattern '/' is intentional and does not match natural prose: it keeps this rule from firing on raw structured input that already contains values. The real guard is the caller, which skips this gate when the payload already parses into a complete draft. It is kept here so the intent is visible in the rule data rather than hidden in code."
+    },
+    {
+      "id": "clarify_ambiguous_medicine",
+      "kind": "clarify",
+      "enabled": true,
+      "severity": "info",
+      "review_state": "team_checked",
+      "reason": "The user referred to a medicine without naming it, and the profile has more than one, so there is no safe way to pick one.",
+      "patterns": [
+        "my pill",
+        "my tablet",
+        "the medicine",
+        "my medication",
+        "my medicine",
+        "that medicine",
+        "that medication",
+        "one of my tablets",
+        "my blood pressure pill"
+      ],
+      "exclude_patterns": [
+        "my medication list",
+        "my medicine list",
+        "all my medications",
+        "all my medicines",
+        "running out",
+        "running low",
+        "running short",
+        "nearly out",
+        "almost out",
+        "finished my",
+        "need a refill",
+        "need more",
+        "left in the box",
+        "collect my",
+        "collecting my",
+        "forgot",
+        "forget",
+        "missed",
+        "took my",
+        "taken my",
+        "did not take",
+        "didn't take",
+        "i took"
+      ],
+      "sources": ["S2-healthhub-know-your-medication"],
+      "options": [
+        {"id": "pick_from_list", "label": "Choose from your list", "action": "open_medication_picker"},
+        {"id": "skip", "label": "Not now", "action": "dismiss"}
+      ],
+      "patient_message": "I want to make sure I explain the right one. Which medicine do you mean?",
+      "notes": "Only fires when the caller has more than one confirmed medicine, and the caller passes context to say so. Asking 'which medicine?' when the profile has exactly one is needless friction for a 70-year-old user."
+    },
+    {
+      "id": "clarify_unknown_purpose_refused",
+      "kind": "clarify",
+      "enabled": true,
+      "severity": "info",
+      "review_state": "team_checked",
+      "reason": "The user asked what a medicine is for, but did not say which one.",
+      "patterns": [
+        "what is this medicine for",
+        "what is this medication for",
+        "what is this tablet for",
+        "what is this pill for",
+        "why am i taking this",
+        "what does this medicine do",
+        "what does this medication do"
+      ],
+      "exclude_patterns": [],
+      "sources": ["S1-healthhub-bp-medication"],
+      "options": [
+        {"id": "pick_from_list", "label": "Choose from your list", "action": "open_medication_picker"},
+        {"id": "skip", "label": "Not now", "action": "dismiss"}
+      ],
+      "patient_message": "I can explain that. Which medicine would you like to know about?",
+      "notes": "Distinct from boundary_stop_medication: this is a legitimate explanation request, and M2 exists precisely to answer it well."
+    },
+    {
+      "id": "clarify_vague_feeling",
+      "kind": "clarify",
+      "enabled": true,
+      "severity": "info",
+      "review_state": "team_checked",
+      "reason": "The user said something felt wrong without saying what. Offering a short structured list gives the patient a way to express it without typing.",
+      "patterns": [
+        "i don't feel well",
+        "i dont feel well",
+        "not feeling well",
+        "i feel unwell",
+        "feeling unwell",
+        "i feel off",
+        "something is wrong",
+        "i feel strange"
+      ],
+      "exclude_patterns": [],
+      "sources": ["S2-healthhub-know-your-medication"],
+      "options": [
+        {"id": "head", "label": "My head or vision", "action": "probe_head"},
+        {"id": "chest", "label": "My chest or breathing", "action": "probe_chest"},
+        {"id": "weak", "label": "Weakness or numbness", "action": "probe_weak"},
+        {"id": "tummy", "label": "Tummy or dizziness", "action": "probe_tummy"},
+        {"id": "other", "label": "Something else", "action": "probe_free"},
+        {"id": "skip", "label": "Rather not say", "action": "dismiss"}
+      ],
+      "patient_message": "I am sorry you are feeling unwell. Can you point to what feels wrong? You can also skip this.",
+      "notes": "Ordered so the help path stays reachable: each option leads to a probe that re-enters the red-flag gate. Note the 'rather not say' option - M3 requires that the user can always decline without being nagged."
+    },
+    {
+      "id": "clarify_when_reading_taken",
+      "kind": "clarify",
+      "enabled": true,
+      "severity": "info",
+      "review_state": "team_checked",
+      "reason": "A reading was mentioned without a time, and measured-at is recorded separately from entered-at, so it cannot be defaulted silently.",
+      "patterns": [
+        "blood pressure just now",
+        "blood pressure a while ago",
+        "blood pressure this morning",
+        "blood pressure earlier",
+        "reading just now",
+        "reading a while ago",
+        "reading this morning",
+        "reading earlier",
+        "took my blood pressure",
+        "measured my blood pressure",
+        "checked my blood pressure"
+      ],
+      "exclude_patterns": [
+        "forgot",
+        "forget",
+        "missed",
+        "tablet",
+        "pill",
+        "medication",
+        "medicine"
+      ],
+      "sources": ["S1-healthhub-bp-medication"],
+      "options": [
+        {"id": "now", "label": "Just now", "action": "set_measured_now"},
+        {"id": "this_morning", "label": "This morning", "action": "set_measured_morning"},
+        {"id": "yesterday", "label": "Yesterday", "action": "set_measured_yesterday"},
+        {"id": "pick_time", "label": "Choose a time", "action": "open_time_picker"}
+      ],
+      "patient_message": "Thank you. When did you take that reading?",
+      "notes": "Every pattern carries explicit reading context. An earlier version keyed on bare time words ('yesterday', 'this morning'), which hijacked unrelated messages - 'I forgot my tablet yesterday' was answered with a question about blood pressure timing. A time word only means a reading when the message is actually about a reading.",
+      "history": [
+        {
+          "changed": "2026-10-11",
+          "from": "bare time phrases: just now, a while ago, this morning, earlier today, yesterday",
+          "to": "reading-scoped phrases only, plus medication exclude patterns",
+          "why": "Observed false positive during end-to-end testing: 'I forgot my tablet yesterday' was routed to a blood-pressure timing question instead of a medication report."
+        }
+      ]
+    }
+  ]
+}

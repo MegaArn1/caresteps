@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Record a reading - {{ app_name }}{% endblock %}
+
+{% block content %}
+
+{# Re-render after a rejected submit passes back `values` so nothing typed is lost.
+   It is absent on a normal visit, so it is defaulted rather than assumed. #}
+{% set v = values or {} %}
+
+<h1>Record a blood pressure reading</h1>
+
+<p class="muted">
+  Two numbers from your monitor. The rest is optional.
+</p>
+
+<div class="notice" role="status" aria-live="polite">
+  <strong>Nothing is saved yet</strong>
+  <p class="small">
+    Nothing is saved until you check it on the next screen.
+  </p>
+</div>
+
+{% if error %}
+<div class="notice alert" role="alert">
+  <strong>This was not saved. Please check the form.</strong>
+  <p class="small">{{ error }}</p>
+</div>
+{% endif %}
+
+<form method="post" action="/readings/prepare" data-guard>
+
+  <div class="bp-inputs">
+    <div class="field">
+      <label for="systolic">Top number (systolic)</label>
+      <p class="hint" id="systolic-hint">The first number on the monitor.</p>
+      <input type="number"
+             id="systolic"
+             name="systolic"
+             inputmode="numeric"
+             min="0" max="400" step="1"
+             value="{{ v.get('systolic') or '' }}"
+             aria-describedby="systolic-hint"
+             {% if field == 'systolic' %}aria-invalid="true"{% endif %}
+             required>
+    </div>
+    <div class="field">
+      <label for="diastolic">Bottom number (diastolic)</label>
+      <p class="hint" id="diastolic-hint">The second number on the monitor.</p>
+      <input type="number"
+             id="diastolic"
+             name="diastolic"
+             inputmode="numeric"
+             min="0" max="400" step="1"
+             value="{{ v.get('diastolic') or '' }}"
+             aria-describedby="diastolic-hint"
+             {% if field == 'diastolic' %}aria-invalid="true"{% endif %}
+             required>
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="measured_at">When did you take it?</label>
+    <p class="hint" id="measured_at-hint">
+      You can change this if you took it earlier.
+    </p>
+    <input type="datetime-local"
+           id="measured_at"
+           name="measured_at"
+           value="{{ (v.get('measured_at') or now or '')[:16] }}"
+           aria-describedby="measured_at-hint">
+  </div>
+
+  <div class="field">
+    <label for="pulse">Pulse (optional)</label>
+    <p class="hint" id="pulse-hint">
+      Beats per minute, if your monitor shows it. Leave it blank if it does not.
+    </p>
+    <input type="number"
+           id="pulse"
+           name="pulse"
+           inputmode="numeric"
+           min="0" max="300" step="1"
+           value="{{ v.get('pulse') or '' }}"
+           aria-describedby="pulse-hint">
+  </div>
+
+  <div class="field">
+    <label for="user_feeling">How were you feeling? (optional)</label>
+    <p class="hint" id="user_feeling-hint">
+      Your own words are fine. You can leave this blank.
+    </p>
+    <textarea id="user_feeling"
+              name="user_feeling"
+              rows="2"
+              aria-describedby="user_feeling-hint">{{ v.get('user_feeling') or '' }}</textarea>
+  </div>
+
+  <div class="field">
+    <label for="note">Anything else to add? (optional)</label>
+    <p class="hint" id="note-hint">
+      For example, which arm you used, or what you were doing first.
+    </p>
+    <textarea id="note"
+              name="note"
+              rows="2"
+              aria-describedby="note-hint">{{ v.get('note') or '' }}</textarea>
+  </div>
+
+  <div class="btn-row">
+    <button type="submit" class="btn primary wide">Check and save</button>
+    <a class="btn ghost wide" href="/app">Cancel</a>
+  </div>
+
+  <p class="tiny muted">
+    Cancel takes you back to the start. Nothing you typed here is stored.
+  </p>
+</form>
+
+{% if recent %}
+<div class="card">
+  <h2>Already recorded</h2>
+  <p class="small muted">
+    Readings you recorded as measured in the last 3 days.
+  </p>
+  <table>
+    <caption class="small muted" style="text-align:left; padding-bottom:8px">
+      Up to 5 readings measured in the last 3 days, most recent first.
+    </caption>
+    <thead>
+      <tr>
+        <th scope="col">Date</th>
+        <th scope="col">Top</th>
+        <th scope="col">Bottom</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in recent[:5] %}
+      <tr>
+        <td>{{ r.measured_at[:16] | replace('T', ' ') }}</td>
+        <td class="num">{{ r.systolic }}</td>
+        <td class="num">{{ r.diastolic }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if recent | length > 5 %}
+  <p class="small muted">
+    Showing 5 of the {{ recent | length }} readings measured in the last 3 days. The
+    rest are on the history page.
+  </p>
+  {% endif %}
+</div>
+{# `recent` comes from a real query on every path that renders this template. An empty
+   list therefore means the last three days were looked at and were empty - not that
+   nobody looked. #}
+{% else %}
+<div class="card flat">
+  <h2>Already recorded</h2>
+  <p class="small muted" role="status">
+    No readings measured in the last 3 days. That is not a problem. You can record one
+    above.
+  </p>
+</div>
+{% endif %}
+
+{% endblock %}

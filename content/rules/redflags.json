@@ -1,0 +1,236 @@
+{
+  "version": "1",
+  "_about": "Emergency and urgent triggers. HIGHEST PRIORITY gate - evaluated before boundaries and before the model. Every rule cites a Singapore source. Review state is 'team_checked', meaning a team member read the source; NO clinician has reviewed these rules. That is stated plainly in the app and in the evaluation notes.",
+  "_deliberate_omissions": [
+    "No numeric blood pressure threshold appears anywhere in this file. MOH's own high blood pressure page states no mmHg cut-off, so inventing 180/120 would be a fabrication with real consequences. A very high reading with NO symptoms therefore does not trigger this gate; the app reports the number and its source without interpreting it.",
+    "This is not a triage system. It does not rank severity, estimate probability, or clear anyone. A no-match result means only that no configured phrase was found, and the app says so.",
+    "'exclude_patterns' exist because these phrases appear in safe contexts too. A rule that fires on 'my chest pain is better today' would train the user to ignore it."
+  ],
+  "rules": [
+    {
+      "id": "redflag_chest_pain",
+      "kind": "red_flag",
+      "enabled": true,
+      "severity": "emergency",
+      "review_state": "team_checked",
+      "reason": "Chest pain is named by MOH as a sign of a medical emergency and by MOH as a reason to call 995.",
+      "patterns": [
+        "chest pain",
+        "pain in my chest",
+        "chest is tight",
+        "chest feels tight",
+        "tightness in my chest",
+        "pressure in my chest",
+        "crushing chest",
+        "pain in chest"
+      ],
+      "exclude_patterns": [
+        "no chest pain",
+        "without chest pain",
+        "not chest pain"
+      ],
+      "sources": ["S3-moh-ed", "S10-moh-995-symptoms"],
+      "patient_message": "Chest pain needs to be checked right away. Please call 995 now, or ask someone near you to call for them. Do not wait to see if it passes, and do not drive yourself.",
+      "notes": "MOH lists 'sudden or severe pain including chest pain' among the seven signs of a medical emergency, and lists 'sudden onset of chest pain' as a reason to call 995."
+    },
+    {
+      "id": "redflag_breathlessness",
+      "kind": "red_flag",
+      "enabled": true,
+      "severity": "emergency",
+      "review_state": "team_checked",
+      "reason": "Breathing difficulty is named by MOH as an emergency sign and by SCDF as a life-threatening example warranting 995.",
+      "patterns": [
+        "cannot breathe",
+        "can't breathe",
+        "cant breathe",
+        "difficulty breathing",
+        "trouble breathing",
+        "struggling to breathe",
+        "shortness of breath",
+        "short of breath",
+        "gasping",
+        "breathless"
+      ],
+      "exclude_patterns": [
+        "no shortness of breath",
+        "without shortness of breath",
+        "not short of breath"
+      ],
+      "sources": ["S3-moh-ed", "S1-scdf-ems"],
+      "patient_message": "Being unable to breathe properly needs help immediately. Please call 995 now, or ask someone nearby to call for you. Sit upright and stay as calm as you can while you wait.",
+      "notes": "SCDF names 'breathlessness' among the life-threatening examples warranting a 995 call."
+    },
+    {
+      "id": "redflag_stroke_signs",
+      "kind": "red_flag",
+      "enabled": true,
+      "severity": "emergency",
+      "review_state": "team_checked",
+      "reason": "Weakness, numbness, difficulty seeing, speaking or walking are the exact symptoms MOH and SingHealth list as reasons to go to the Emergency Department. These are stroke-type signs and are time-critical.",
+      "patterns": [
+        "weakness on one side",
+        "numbness on one side",
+        "face is drooping",
+        "drooping face",
+        "slurred speech",
+        "difficulty speaking",
+        "trouble speaking",
+        "cannot speak",
+        "can't speak",
+        "difficulty seeing",
+        "trouble seeing",
+        "sudden blurred vision",
+        "double vision",
+        "lost my vision",
+        "difficulty walking",
+        "trouble walking",
+        "cannot walk",
+        "can't walk",
+        "sudden weakness",
+        "sudden numbness",
+        "one arm went weak",
+        "one leg went weak"
+      ],
+      "exclude_patterns": [
+        "no weakness",
+        "no numbness",
+        "no difficulty speaking",
+        "no slurred speech"
+      ],
+      "sources": ["S2-moh-hbp", "S4-sgh-gpfirst-hbp"],
+      "patient_message": "These signs need to be checked immediately - they can mean a stroke, and every minute matters. Please call 995 now, or have someone call for you. Do not wait, and do not drive yourself.",
+      "notes": "MOH and SingHealth list the same set: weakness and/or numbness, difficulty seeing, difficulty speaking, difficulty walking. Recorded for the summary as a symptom the patient reported, never as a diagnosis."
+    },
+    {
+      "id": "redflag_consciousness",
+      "kind": "red_flag",
+      "enabled": true,
+      "severity": "emergency",
+      "review_state": "team_checked",
+      "reason": "Loss of consciousness and confusion are named by SCDF as life-threatening examples and by MOH as a reason to call 995.",
+      "patterns": [
+        "fainted",
+        "passed out",
+        "blacked out",
+        "lost consciousness",
+        "unconscious",
+        "not responding",
+        "confused",
+        "suddenly confused",
+        "drowsy all of a sudden",
+        "very drowsy",
+        "cannot wake",
+        "can't wake",
+        "unresponsive"
+      ],
+      "exclude_patterns": [
+        "not confused",
+        "no confusion",
+        "did not faint",
+        "didn't faint"
+      ],
+      "sources": ["S1-scdf-ems", "S10-moh-995-symptoms"],
+      "patient_message": "Losing consciousness or becoming suddenly confused is a medical emergency. Please call 995 now, or ask someone nearby to call for you. If the person is unresponsive and not breathing normally, tell the operator immediately.",
+      "notes": "MOH lists 'sudden onset of ... drowsiness or confusion' among reasons to call 995. SCDF lists loss of consciousness."
+    },
+    {
+      "id": "redflag_severe_bleeding",
+      "kind": "red_flag",
+      "enabled": true,
+      "severity": "emergency",
+      "review_state": "team_checked",
+      "reason": "Uncontrolled bleeding is named by MOH as an emergency sign and by SCDF as a life-threatening example.",
+      "patterns": [
+        "heavy bleeding",
+        "bleeding a lot",
+        "won't stop bleeding",
+        "wont stop bleeding",
+        "cannot stop the bleeding",
+        "can't stop the bleeding",
+        "coughing up blood",
+        "vomiting blood",
+        "blood in my vomit"
+      ],
+      "exclude_patterns": [],
+      "sources": ["S3-moh-ed", "S1-scdf-ems"],
+      "patient_message": "Bleeding that will not stop needs help now. Please call 995, or get someone to take you to the Emergency Department. Press firmly on the area with a clean cloth while you wait.",
+      "notes": ""
+    },
+    {
+      "id": "redflag_mouth_lips_colour",
+      "kind": "red_flag",
+      "enabled": true,
+      "severity": "emergency",
+      "review_state": "team_checked",
+      "reason": "HealthHub's self-medication page lists blue or purple discolouration of the lips and a change in level of consciousness among symptoms needing immediate medical attention.",
+      "patterns": [
+        "lips turning blue",
+        "lips are turning blue",
+        "lips have turned blue",
+        "lips turned blue",
+        "lips turn blue",
+        "lips are blue",
+        "lips going blue",
+        "lips turned purple",
+        "lips turning purple",
+        "lips are purple",
+        "blue lips",
+        "purple lips",
+        "mouth is turning blue",
+        "face is turning blue",
+        "skin turning blue",
+        "fingertips turning blue",
+        "blue around the lips"
+      ],
+      "exclude_patterns": [],
+      "sources": ["S6-healthhub-selfmed"],
+      "patient_message": "Discolouration of the lips can mean not enough oxygen. Please call 995 now.",
+      "notes": "HealthHub flags its own list as not exhaustive, which is consistent with this app's stance that a no-match is not a clearance."
+    },
+    {
+      "id": "redflag_seizure",
+      "kind": "red_flag",
+      "enabled": true,
+      "severity": "emergency",
+      "review_state": "team_checked",
+      "reason": "Seizure is listed by SCDF among life-threatening examples warranting a 995 call.",
+      "patterns": ["seizure", "fitting", "convulsion", "had a fit"],
+      "exclude_patterns": ["no seizure", "not a seizure"],
+      "sources": ["S1-scdf-ems"],
+      "patient_message": "A seizure needs emergency help. Please call 995 now. Do not put anything in the person's mouth, and move hard objects away from them.",
+      "notes": ""
+    },
+    {
+      "id": "redflag_fall_head_injury",
+      "kind": "red_flag",
+      "enabled": true,
+      "severity": "urgent",
+      "review_state": "team_checked",
+      "reason": "A fall with a head injury in an older adult warrants prompt assessment rather than waiting. Classified urgent rather than emergency because the source material names falls with injury among conditions a GP can assess, while head injury can deteriorate.",
+      "patterns": [
+        "hit my head",
+        "banged my head",
+        "fell and hit my head",
+        "head injury"
+      ],
+      "exclude_patterns": [],
+      "sources": ["S4-sgh-gpfirst-hbp", "S3-moh-ed"],
+      "patient_message": "Please get this checked today rather than waiting - a head injury after a fall should be looked at, especially if you take blood pressure medicine. If you become drowsy, confused, or vomit, call 995 instead. You can call NurseFirst on 6262 6262 to ask where to go.",
+      "notes": "Deliberately worded so the escalation path stays open: the urgent message itself names the emergency trigger to watch for. This is the 'dynamic reassessment' idea at the level of a single message."
+    },
+    {
+      "id": "redflag_fever_with_confusion",
+      "kind": "red_flag",
+      "enabled": false,
+      "severity": "urgent",
+      "review_state": "pending_review",
+      "reason": "Would cover fever combined with confusion in an older adult. Left DISABLED: a fever threshold and a definition of confusion both need clinical input, and the combination rule would need testing against real presentations. Shipping it now would mean shipping a threshold nobody verified.",
+      "patterns": [],
+      "exclude_patterns": [],
+      "sources": ["S6-healthhub-selfmed"],
+      "patient_message": "",
+      "notes": "Kept in the file, disabled, so the demo can show that the app distinguishes 'rule not present' from 'rule present but not yet safe to enable'. The loader requires a source even for a disabled rule, so it cannot be quietly switched on later without one."
+    }
+  ]
+}

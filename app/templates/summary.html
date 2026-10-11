@@ -1,0 +1,649 @@
+{# M5: preview and edit screen for the visit summary.
+
+   Rules that shape every line below:
+     1. Nothing here is sent, booked, ordered or shared. The page says so twice.
+     2. No number appears without the count or the window it came from.
+     3. Nothing here is a verdict. Two recorded numbers are described as two numbers.
+     4. The patient's own words are quoted, never interpreted, and are always marked
+        as reported by the patient rather than as a finding.
+     5. A day with no record is a question, not a failure.
+
+   Every section the user may remove carries a toggle. The route toggles rather than
+   removes, so the same button is labelled "Remove from summary" or "Put back in the
+   summary" according to the session state passed in at the top.
+#}
+{% extends "base.html" %}
+
+{% block title %}Before your appointment - {{ app_name }}{% endblock %}
+
+{% block content %}
+
+{% set omitted_paths = request.session.get("summary_omitted") or [] %}
+{% set series = facts.readings.series %}
+{% set days_with_data = series | selectattr("has_data") | list | length %}
+
+{# A single, consistent control. Parameters are passed explicitly rather than read
+   from the enclosing scope, so the control behaves the same wherever it is placed. #}
+{% macro omit_control(path, section_name, days, omitted_paths) %}
+  <div class="btn-row no-print">
+    <form method="post" action="/summary/omit?key={{ path }}">
+      <input type="hidden" name="days" value="{{ days }}">
+      {% if path in omitted_paths %}
+        <button class="btn ghost" type="submit"
+                aria-label="Put the section {{ section_name }} back into the summary">
+          Put back in the summary
+        </button>
+      {% else %}
+        <button class="btn ghost" type="submit"
+                aria-label="Remove the section {{ section_name }} from the summary">
+          Remove from summary
+        </button>
+      {% endif %}
+    </form>
+  </div>
+{% endmacro %}
+
+<h1>Before your appointment</h1>
+
+<p>
+  This page collects what was written down in your record so that you can look it
+  over, choose what to keep, and then print it or show it on the screen.
+</p>
+<p>
+  You decide what is included. Nothing on this page is sent anywhere, to anyone.
+</p>
+
+{# A confirmation after a save. role="status" so it is announced without stealing
+   focus. #}
+{% if request.query_params.get("saved") %}
+  <div class="notice ok" role="status">
+    <strong>This version was saved into your record</strong>
+    <p>
+      A copy of this summary was stored with today's date, so you can compare it
+      with your data later. Nothing was sent to anyone, and no appointment was
+      made or changed.
+    </p>
+  </div>
+{% endif %}
+
+{# The disclaimer, exactly as it is written in the code. Not re-worded here. #}
+<div class="notice warn" role="note">
+  <strong>What this page is</strong>
+  <p>{{ facts.meta.disclaimer }}</p>
+</div>
+
+{% if facts.meta.all_simulated %}
+  <p><span class="sim-flag">All of this is simulated demo data</span></p>
+{% endif %}
+
+<p>
+  Period covered: {{ facts.meta.period.days }} day(s), from
+  {{ facts.meta.period.from }} to {{ facts.meta.period.to }}.
+  Prepared for {{ facts.meta.patient_label }}, age band {{ facts.meta.age_band }}.
+</p>
+<p class="small muted">
+  Put together on {{ facts.meta.generated_at[:10] }} by
+  {{ facts.meta.generator }} from the records stored in this app.
+</p>
+
+<div class="card flat no-print">
+  <h2>You can take parts out</h2>
+  <p>
+    Each section below has a button that removes it from the summary. Removing is not
+    permanent: the section stays on this screen so you can put it back.
+  </p>
+  <p class="small muted">
+    Removing a section takes it out of the printed version only. It does not delete
+    anything from your record, and it does not change what is stored.
+  </p>
+</div>
+
+{# ----------------------------------------------------------------- coverage #}
+
+<section aria-labelledby="h-coverage">
+  <div class="card">
+    <h2 id="h-coverage">{{ facts.coverage.title }}</h2>
+
+    {% if "coverage" in omitted_paths %}
+      <p><span class="badge neutral">Left out of the printed version</span></p>
+    {% endif %}
+
+    <div class="stat-row">
+      <span class="label">Days in this period</span>
+      <span class="value">{{ facts.coverage.window_days }}</span>
+    </div>
+    <div class="stat-row">
+      <span class="label">Days with at least one reading</span>
+      <span class="value">{{ facts.coverage.days_with_readings }}</span>
+    </div>
+    <div class="stat-row">
+      <span class="label">Days with no reading recorded</span>
+      <span class="value">{{ facts.coverage.days_without_readings }}</span>
+    </div>
+
+    <p class="small">{{ facts.coverage.statement }}</p>
+
+    <p class="small muted">
+      A day with no record means nothing was written down for that day. It does not
+      say what happened that day, and no dose is counted as missed because of it.
+    </p>
+
+    {% if facts.coverage.missing_dates %}
+      <details>
+        <summary>Show the {{ facts.coverage.days_without_readings }} day(s) with no reading</summary>
+        <p class="small muted">
+          These dates are the days inside {{ facts.meta.period.from }} to
+          {{ facts.meta.period.to }} with no reading.
+        </p>
+        <ul class="small">
+          {% for d in facts.coverage.missing_dates %}
+            <li>{{ d }}</li>
+          {% endfor %}
+        </ul>
+      </details>
+    {% endif %}
+  </div>
+</section>
+
+{# ----------------------------------------------------------------- readings #}
+
+<section aria-labelledby="h-readings">
+  <div class="card">
+    <h2 id="h-readings">{{ facts.readings.title }}</h2>
+
+    {% if facts.readings.sufficient %}
+      <div class="stat-row">
+        <span class="label">Top number, average (systolic)</span>
+        <span class="value">{{ facts.readings.mean_systolic }} <span class="tiny muted">mmHg</span></span>
+      </div>
+      <p class="small muted">
+        Worked out from the {{ facts.readings.n }} reading(s) recorded between
+        {{ facts.meta.period.from }} and {{ facts.meta.period.to }}.
+      </p>
+      {% if facts.readings.range_systolic[0] is not none %}
+        <p class="small muted">
+          The lowest recorded top number was {{ facts.readings.range_systolic[0] }} and
+          the highest was {{ facts.readings.range_systolic[1] }}, across those
+          {{ facts.readings.n }} reading(s). Both in mmHg.
+        </p>
+      {% endif %}
+
+      <div class="stat-row">
+        <span class="label">Bottom number, average (diastolic)</span>
+        <span class="value">{{ facts.readings.mean_diastolic }} <span class="tiny muted">mmHg</span></span>
+      </div>
+      {% if facts.readings.range_diastolic[0] is not none %}
+        <p class="small muted">
+          The lowest recorded bottom number was {{ facts.readings.range_diastolic[0] }} and
+          the highest was {{ facts.readings.range_diastolic[1] }}, across those
+          {{ facts.readings.n }} reading(s). Both in mmHg.
+        </p>
+      {% endif %}
+    {% else %}
+      <div class="notice" role="status">
+        <strong>No average is shown for this period</strong>
+        <p>{{ facts.readings.statement }}</p>
+        <p class="small">
+          Rather than show a number worked out from too little, this page shows no
+          average at all. Anything that was recorded still appears in your record.
+        </p>
+      </div>
+    {% endif %}
+
+    {# Only when an average is shown. When it is not, the same sentence is already
+       inside the notice above and would otherwise appear twice in a row. #}
+    {% if facts.readings.sufficient %}
+      <p class="small">{{ facts.readings.statement }}</p>
+    {% endif %}
+
+    {% if facts.readings.revised_count > 0 %}
+      <p class="small muted">
+        {{ facts.readings.revised_count }} reading(s) in this period came in through a
+        correction. The figures above use the corrected values.
+      </p>
+    {% endif %}
+
+    {# The target comparison is shown only when the record itself carries a target
+       with a named source. Otherwise nothing is rendered, because there is nothing
+       to compare against. #}
+    {% set tc = facts.readings.target_comparison %}
+    {% if tc %}
+      {% if tc.available %}
+        <div class="card flat">
+          <h3>A target recorded on your plan</h3>
+          <div class="stat-row">
+            <span class="label">Top number recorded on the plan</span>
+            <span class="value num">{{ tc.target_systolic }} <span class="tiny muted">mmHg</span></span>
+          </div>
+          {% if tc.target_diastolic is not none %}
+            <div class="stat-row">
+              <span class="label">Bottom number recorded on the plan</span>
+              <span class="value num">{{ tc.target_diastolic }} <span class="tiny muted">mmHg</span></span>
+            </div>
+          {% endif %}
+          <p class="small">{{ tc.statement }}</p>
+          <p class="small muted">
+            The average above is the average of the {{ facts.readings.n }} reading(s)
+            in this period. The target was recorded on your plan from this source:
+            {{ tc.target_source }}.
+          </p>
+        </div>
+      {% else %}
+        <p class="small muted">{{ tc.reason }}</p>
+      {% endif %}
+    {% else %}
+      <p class="small muted">
+        No target with a named source is recorded on your plan, so no comparison with
+        a target is shown anywhere on this page.
+      </p>
+    {% endif %}
+
+    <h3>Day by day</h3>
+
+    <svg class="chart"
+         viewBox="0 0 640 240"
+         role="img"
+         aria-label="Chart of the top and bottom numbers recorded on each day from {{ facts.meta.period.from }} to {{ facts.meta.period.to }}. {{ days_with_data }} of {{ series | length }} days have a reading. Days with no reading are marked with a dashed line and the line stops there. The text below describes the same chart."
+         data-series='{{ series | tojson }}'>
+      <title>Blood pressure recorded by day, {{ facts.meta.period.from }} to {{ facts.meta.period.to }}</title>
+    </svg>
+
+    <p class="small">
+      This chart shows the top number and the bottom number recorded on each day.
+      It runs from {{ facts.meta.period.from }} to {{ facts.meta.period.to }}, which is
+      {{ series | length }} day(s). {{ days_with_data }} of those day(s) have a reading,
+      and {{ series | length - days_with_data }} day(s) have none. When a day has no
+      reading the line stops, and a dashed marker shows where the gap is. All values
+      are in mmHg.
+    </p>
+    <p class="small muted">
+      If the chart does not appear, nothing is missing:
+      <a href="/app/trends">the same numbers are listed day by day on My numbers</a>.
+    </p>
+
+    <div class="legend">
+      <span class="key"><span class="swatch sys"></span> Top number (systolic)</span>
+      <span class="key"><span class="swatch dia"></span> Bottom number (diastolic)</span>
+      <span class="key"><span class="swatch gap"></span> Dashed marker: a day with no reading</span>
+    </div>
+  </div>
+</section>
+
+{# --------------------------------------------------------------- medication #}
+
+<section aria-labelledby="h-medication">
+  <div class="card">
+    <h2 id="h-medication">Medication - what the patient reported</h2>
+
+    <p class="small muted">
+      These counts cover the {{ facts.meta.period.days }} day(s) from
+      {{ facts.meta.period.from }} to {{ facts.meta.period.to }}. More than one answer
+      can be recorded on the same day, so the first three counts are answers, not
+      days. The last line counts days with no record.
+    </p>
+
+    <div class="stat-row">
+      <span class="label">{{ facts.medication.labels.taken }}</span>
+      <span class="value">{{ facts.medication.counts.taken }}</span>
+    </div>
+    <div class="stat-row">
+      <span class="label">{{ facts.medication.labels.not_taken }}</span>
+      <span class="value">{{ facts.medication.counts.not_taken }}</span>
+    </div>
+    <div class="stat-row">
+      <span class="label">{{ facts.medication.labels.unsure }}</span>
+      <span class="value">{{ facts.medication.counts.unsure }}</span>
+    </div>
+    <div class="stat-row muted">
+      <span class="label">{{ facts.medication.labels.unrecorded }}</span>
+      <span class="value muted">{{ facts.medication.counts.unrecorded }}</span>
+    </div>
+
+    <p class="small muted">
+      The last line is kept apart from the others on purpose. It counts days with no
+      record either way, which is not the same as a day reported as not taken.
+    </p>
+
+    <p>{{ facts.medication.statement }}</p>
+    <p class="small muted">{{ facts.medication.caution }}</p>
+
+    {% if facts.medication.unrecorded_days %}
+      <details>
+        <summary>Show the {{ facts.medication.counts.unrecorded }} day(s) with no record either way</summary>
+        <ul class="small">
+          {% for d in facts.medication.unrecorded_days %}
+            <li>{{ d }}</li>
+          {% endfor %}
+        </ul>
+        <p class="small muted">
+          A day with no record is a question, not a missed dose. It only means nothing
+          was written down.
+        </p>
+      </details>
+    {% endif %}
+
+    {% if facts.medication.confirmed_medicines %}
+      <h3>Medicines listed in the record</h3>
+      <ul class="small">
+        {% for m in facts.medication.confirmed_medicines %}
+          <li>
+            {{ m.name }}
+            {% if m.confirmed_by_user %}
+              <span class="badge ok">Confirmed by the patient</span>
+            {% else %}
+              <span class="badge neutral">Not confirmed by the patient</span>
+            {% endif %}
+            {% if m.plan_instruction %}
+              <span class="small muted">From the plan: {{ m.plan_instruction }}</span>
+            {% else %}
+              <span class="small muted">No line on the plan for this one.</span>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="small muted">
+        No medicines are listed in this record.
+      </p>
+    {% endif %}
+
+    <p class="small muted">
+      {{ facts.medication.reports | length }} medicine report(s) were recorded in this
+      period, each one in the patient's own words.
+    </p>
+  </div>
+</section>
+
+{# -------------------------------------------------------- reported by patient #}
+
+<section aria-labelledby="h-reported">
+  <div class="card">
+    <h2 id="h-reported">{{ facts.reported_by_patient.title }}</h2>
+    <p class="small muted">{{ facts.reported_by_patient.intro }}</p>
+
+    <h3>How the patient said they felt</h3>
+
+    {% if facts.reported_by_patient.feelings %}
+      <ul>
+        {% for item in facts.reported_by_patient.feelings %}
+          <li>
+            <q>{{ item.text }}</q>
+            <span class="small muted nowrap">- recorded {{ item.date }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="small muted">
+        Nothing was written down under this heading for this period.
+      </p>
+    {% endif %}
+
+    <p class="small muted">
+      These are the patient's own words. They have not been rewritten, and they are
+      not a finding by anyone.
+    </p>
+
+    {{ omit_control("reported_by_patient.feelings", "how the patient said they felt", days, omitted_paths) }}
+
+    <hr>
+
+    <h3>Notes written down with a reading</h3>
+
+    {% if facts.reported_by_patient.notes %}
+      <ul>
+        {% for item in facts.reported_by_patient.notes %}
+          <li>
+            <q>{{ item.text }}</q>
+            <span class="small muted nowrap">- recorded {{ item.date }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="small muted">
+        Nothing was written down under this heading for this period.
+      </p>
+    {% endif %}
+
+    {{ omit_control("reported_by_patient.notes", "notes written with a reading", days, omitted_paths) }}
+
+    <hr>
+
+    <h3>What made it hard</h3>
+
+    {% if facts.reported_by_patient.difficulties %}
+      <ul>
+        {% for d in facts.reported_by_patient.difficulties %}
+          <li>
+            <q>{{ d.words }}</q>
+            <span class="small muted nowrap">- recorded {{ d.date }}</span>
+            <div class="stack small">
+              {# The category is sometimes the patient's own and sometimes a
+                 suggestion from the app. The two are labelled differently and never
+                 merged, because they do not carry the same weight. #}
+              <span class="cat-chip {% if d.category_confirmed %}confirmed{% else %}proposed{% endif %}">
+                {{ d.category }} - {{ d.label }}
+              </span>
+              <span class="badge neutral">Status recorded as {{ d.status }}</span>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+      <p class="small muted">
+        A category marked as not confirmed by the patient is the app's suggestion, not
+        the patient's own words. It is kept separate so nothing is put in the
+        patient's mouth.
+      </p>
+    {% else %}
+      <p class="small muted">
+        Nothing was written down under this heading for this period.
+      </p>
+    {% endif %}
+
+    {{ omit_control("reported_by_patient.difficulties", "what made it hard", days, omitted_paths) }}
+  </div>
+</section>
+
+{# ------------------------------------------------------------ actions taken #}
+
+<section aria-labelledby="h-actions">
+  <div class="card">
+    <h2 id="h-actions">{{ facts.actions_taken.title }}</h2>
+
+    {% if facts.actions_taken["items"] %}
+      <ul>
+        {% for item in facts.actions_taken["items"] %}
+          <li>
+            {{ item.title }}
+            <span class="small muted nowrap">- {{ item.date }}</span>
+            <div class="small muted">
+              Recorded as {{ item.status }}.
+              {% if item.basis_label %}Basis recorded: {{ item.basis_label }}.{% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+      <p class="small muted">
+        These are choices the patient made, in their own words. They are not advice
+        from this app and they have not been checked by anyone.
+      </p>
+    {% else %}
+      <p class="small muted">
+        Nothing was recorded under this heading for this period.
+      </p>
+    {% endif %}
+
+    {{ omit_control("actions_taken.items", "what the patient chose to do", days, omitted_paths) }}
+  </div>
+</section>
+
+{# ----------------------------------------------------------------- questions #}
+
+<section aria-labelledby="h-questions">
+  <div class="card">
+    <h2 id="h-questions">Questions to ask</h2>
+
+    <p class="small muted">
+      A question marked as included appears on the printed summary. A question left
+      out stays in the app for later.
+    </p>
+
+    {% if questions %}
+      <ul>
+        {% for q in questions %}
+          <li>
+            {{ q.text }}
+            <div class="small muted">
+              {% if q.origin == "user" %}
+                Written by the patient.
+              {% else %}
+                Suggested by the app.
+              {% endif %}
+            </div>
+            <div class="stack small">
+              {% if q.include_in_summary %}
+                <span class="badge ok">Included in the summary</span>
+              {% else %}
+                <span class="badge neutral">Not in the summary</span>
+              {% endif %}
+            </div>
+
+            <div class="btn-row no-print">
+              <form method="post" action="/summary/question/{{ q.id }}/include">
+                <input type="hidden" name="include" value="{% if q.include_in_summary %}0{% else %}1{% endif %}">
+                {% if q.include_in_summary %}
+                  <button class="btn ghost" type="submit"
+                          aria-label="Leave this question out of the summary: {{ q.text }}">
+                    Leave this one out
+                  </button>
+                {% else %}
+                  <button class="btn ghost" type="submit"
+                          aria-label="Put this question into the summary: {{ q.text }}">
+                    Include this one
+                  </button>
+                {% endif %}
+              </form>
+              <form method="post" action="/summary/question/{{ q.id }}/delete">
+                <button class="btn ghost" type="submit"
+                        aria-label="Delete this question from the app: {{ q.text }}">
+                  Delete this question
+                </button>
+              </form>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>
+        No questions are written down at the moment. That is not a problem. If
+        something has been on your mind, you can write it below and it will be added
+        to the list.
+      </p>
+    {% endif %}
+
+    <p class="small muted">
+      {{ questions | length }} question(s) in this list.
+    </p>
+
+    <form method="post" action="/summary/question/add" class="no-print">
+      <div class="field">
+        <label for="new-question">Add a question to ask at your appointment</label>
+        <p class="hint" id="new-question-hint">
+          Write it in your own words. You can change it or delete it later. Nothing is
+          sent to anyone.
+        </p>
+        <input type="text" id="new-question" name="text" required
+               aria-describedby="new-question-hint">
+      </div>
+      <input type="hidden" name="origin" value="user">
+      <div class="btn-row">
+        <button class="btn primary" type="submit">Add this question</button>
+      </div>
+    </form>
+
+    {{ omit_control("questions.items", "questions to ask", days, omitted_paths) }}
+  </div>
+</section>
+
+{# ---------------------------------------------------------------- care plan #}
+
+<section aria-labelledby="h-plan">
+  <div class="card">
+    <h2 id="h-plan">{{ facts.care_plan.title }}</h2>
+
+    {% if facts.care_plan["items"] %}
+      <ul>
+        {% for item in facts.care_plan["items"] %}
+          <li>
+            {{ item.instruction }}
+            <div class="small muted">
+              Recorded from: {{ item.source_label }}.
+            </div>
+            <div class="stack small">
+              {% if item.confirmed_by_user %}
+                <span class="badge ok">Confirmed by the patient</span>
+              {% else %}
+                <span class="badge neutral">Not confirmed by the patient</span>
+              {% endif %}
+              {% if item.is_simulated %}
+                <span class="sim-flag">Simulated demo data</span>
+              {% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+      <p class="small muted">
+        These lines are copies of what was written down. This page does not add advice
+        and does not change any line.
+      </p>
+    {% else %}
+      <p class="small muted">
+        No plan lines are recorded at the moment. Nothing was left out.
+      </p>
+    {% endif %}
+  </div>
+</section>
+
+<hr>
+
+{# ----------------------------------------------------------------- finish #}
+
+<div class="card flat">
+  <h2>Print it or show it</h2>
+  <p>
+    Nothing is sent to anyone. You print it or show it yourself.
+  </p>
+  <p class="small muted">
+    The printed version leaves out any section you removed above. It keeps the numbers
+    and the caveats, because a summary with the numbers taken out would be misleading
+    in the other direction.
+  </p>
+
+  <div class="btn-row">
+    <a class="btn primary" href="/summary/print" target="_blank" rel="noopener">
+      Print or save as PDF
+    </a>
+    <a class="btn ghost" href="/app">Back to today</a>
+  </div>
+  <p class="small muted">
+    The print button opens a new tab. Nothing is sent in the background.
+  </p>
+
+  <hr>
+
+  <form method="post" action="/summary/save">
+    <input type="hidden" name="days" value="{{ days }}">
+    <div class="btn-row">
+      <button class="btn" type="submit">Save this version</button>
+    </div>
+  </form>
+  <p class="small muted">
+    Saving keeps a copy inside this app, with the date, so you can look back at what
+    you printed. It does not send it anywhere and it does not book anything.
+  </p>
+</div>
+
+<p class="small muted">
+  {{ facts.meta.disclaimer }}
+</p>
+
+{% endblock %}

@@ -1,0 +1,78 @@
+{
+  "country": "Singapore",
+  "review_state": "team_checked",
+  "retrieved_at": "2026-10-11",
+  "_about": "Local emergency and urgent-care configuration. Every entry traces to a Singapore government or public-healthcare source. Deliberately contains NO blood-pressure numbers: MOH's own high blood pressure page states no numeric threshold, so this app must not invent one. See docs/content-provenance.md.",
+  "_review_note": "team_checked means a team member read the source and recorded it. It does NOT mean a clinician reviewed it. Clinician review is outstanding and is recorded as such in the trace page.",
+  "primary": {
+    "number": "995",
+    "label": "Emergency ambulance (SCDF)",
+    "use_for": "Life-threatening emergencies only.",
+    "source_ref": "S1-scdf-ems"
+  },
+  "what_to_say": [
+    "Say exactly where you are, including the block and unit number, or the nearest landmark.",
+    "Say what is happening and when it started.",
+    "Say how old the person is and what long-term medicines they take.",
+    "Stay on the line and follow the instructions you are given."
+  ],
+  "other_routes": [
+    {
+      "id": "non_emergency_ambulance",
+      "number": "1777",
+      "label": "Non-emergency ambulance",
+      "note": "SCDF has stated this hotline ceases from 1 January 2027. Confirm before relying on it.",
+      "source_ref": "S1-scdf-ems"
+    },
+    {
+      "id": "emergency_sms",
+      "number": "70995",
+      "label": "Emergency SMS",
+      "note": "For people who are deaf, hard of hearing, or have speech difficulty. The sender provides details by text.",
+      "source_ref": "S1-scdf-ems"
+    },
+    {
+      "id": "nursefirst",
+      "number": "6262 6262",
+      "label": "NurseFirst helpline",
+      "note": "Staffed by emergency-trained nurses who advise on the right care option. When a 995 call is assessed as not life-threatening it may be transferred here. It does not replace 995 if the person gets worse.",
+      "source_ref": "S9-moht-nursefirst"
+    }
+  ],
+  "also": [
+    "For a condition that is not an emergency, a GP or polyclinic is the usual route.",
+    "MOH advises bringing identification, medical documents, and a list of your medicines with doses.",
+    "If you are not sure whether it is an emergency, it is reasonable to call and ask."
+  ],
+  "warning": "This app cannot assess how serious a situation is, and cannot contact anyone for you. The numbers above come from published Singapore sources; always check them yourself if you are relying on them in an emergency.",
+  "sources": [
+    {
+      "id": "S1-scdf-ems",
+      "publisher": "Singapore Civil Defence Force (SCDF)",
+      "title": "Emergency Medical Services",
+      "url": "https://www.scdf.gov.sg/home/about-scdf/emergency-medical-services",
+      "retrieved_at": "2026-10-11"
+    },
+    {
+      "id": "S2-moh-hbp",
+      "publisher": "Ministry of Health, Singapore",
+      "title": "High blood pressure",
+      "url": "https://www.moh.gov.sg/seeking-healthcare/getting-medical-help/conditions/high-blood-pressure/",
+      "retrieved_at": "2026-10-11"
+    },
+    {
+      "id": "S3-moh-ed",
+      "publisher": "Ministry of Health, Singapore",
+      "title": "When to visit the hospital for emergencies",
+      "url": "https://www.moh.gov.sg/seeking-healthcare/getting-medical-help/visiting-the-hospital-for-emergencies/",
+      "retrieved_at": "2026-10-11"
+    },
+    {
+      "id": "S9-moht-nursefirst",
+      "publisher": "MOH Office for Healthcare Transformation (MOHT)",
+      "title": "Transforming Pre-Hospital Emergency Care",
+      "url": "https://www.moht.com.sg/blog/transforming-pre-hospital-emergency-care/",
+      "retrieved_at": "2026-10-11"
+    }
+  ]
+}

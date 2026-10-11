@@ -1,0 +1,268 @@
+{% extends "base.html" %}
+
+{% block title %}My records &middot; {{ app_name }}{% endblock %}
+
+{% block content %}
+
+<h1>My records</h1>
+
+{# Two timestamps, stated plainly. This is the point most likely to confuse, so it is
+   at the top rather than in a footnote. #}
+<div class="notice">
+  <strong>Each record has two times</strong>
+  <p class="small" style="margin-bottom:0">
+    One is when you measured it. The other is when you entered it here. These can be
+    different. For example, you might measure at night and write it down the next
+    morning. Both times are kept, and both are shown below.
+  </p>
+</div>
+
+<div class="btn-row no-print">
+  <a class="btn primary" href="/readings/new">Record a reading</a>
+  <a class="btn ghost" href="/app/trends">See my numbers</a>
+</div>
+
+{% if readings %}
+
+  <p class="muted small">
+    Showing {{ readings|length }} record{{ '' if readings|length == 1 else 's' }} from the
+    last 60 days, newest first. This count includes older versions that were later
+    corrected, so it may be larger than the number of measurements.
+  </p>
+
+  <div class="card" style="overflow-x:auto">
+    <table>
+      <caption class="small muted" style="text-align:left;padding-bottom:8px">
+        Blood pressure records. Top and bottom are in millimetres of mercury, shown as
+        &ldquo;top over bottom&rdquo;. Pulse is beats per minute.
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Date measured</th>
+          <th scope="col">Top</th>
+          <th scope="col">Bottom</th>
+          <th scope="col">Pulse</th>
+          <th scope="col">Record</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for r in readings %}
+        <tr{% if r.superseded_by %} class="superseded"{% endif %}>
+
+          {# measured_at is an ISO timestamp; the first 16 characters are the date and
+             time to the minute, which is the precision the person recorded. #}
+          <td class="nowrap">
+            {{ r.measured_at[:10] }}<br>
+            <span class="small muted">{{ r.measured_at[11:16] if r.measured_at|length > 15 else '' }}</span>
+          </td>
+
+          <td class="num">{{ r.systolic }}</td>
+          <td class="num">{{ r.diastolic }}</td>
+
+          <td class="num">
+            {% if r.pulse %}{{ r.pulse }}{% else %}<span class="muted small">Not recorded</span>{% endif %}
+          </td>
+
+          <td>
+            {% if r.superseded_by %}
+              {# The older version of a corrected record. The word carries the meaning;
+                 the colour and the strike-through only reinforce it. #}
+              <span class="badge neutral">Corrected later</span>
+              <div class="small muted" style="margin-top:6px">
+                A newer version of this record exists. This one is kept, not deleted.
+              </div>
+            {% elif r.entered_source == 'correction' %}
+              <span class="badge warn">Corrected</span>
+              <div class="small muted" style="margin-top:6px">
+                This is the corrected version.
+              </div>
+            {% else %}
+              <span class="badge ok">Saved</span>
+            {% endif %}
+
+            {# entered_at is deliberately described, not just printed, because it is the
+               timestamp people mistake for the measurement time. #}
+            <div class="small muted" style="margin-top:6px">
+              Entered {{ r.entered_at[:10] }}
+              {{ r.entered_at[11:16] if r.entered_at|length > 15 else '' }}
+              {% if r.entered_source == 'nl_draft' %}(from a conversation){% endif %}
+            </div>
+          </td>
+        </tr>
+
+        {% set note_text = ((r.user_feeling or '') ~ ' ' ~ (r.note or ''))|trim %}
+        {% if note_text %}
+        <tr{% if r.superseded_by %} class="superseded"{% endif %}>
+          <td colspan="5" class="note small">
+            <strong>You noted:</strong> {{ note_text }}
+          </td>
+        </tr>
+        {% endif %}
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Changes to these records</h2>
+  <p class="small muted">
+    If you correct a record, the app does not overwrite the first one. It adds a new
+    version and keeps the first, so the change is visible to you and to anyone you show
+    this to. The list below shows every record that has more than one version.
+  </p>
+
+  {# A record with a chain longer than 1 is one that was corrected at least once. #}
+  {% set ns = namespace(any_multi=false) %}
+  {% for r in readings %}{% if r.chain and r.chain|length > 1 %}{% set ns.any_multi = true %}{% endif %}{% endfor %}
+
+  {% if ns.any_multi %}
+    {% set ns2 = namespace(seen=[]) %}
+    {% for r in readings %}
+      {# One block per chain, not one per row. Both rows of a correction share the
+         same chain list, so the chain is described once, at its first version. #}
+      {% if r.chain and r.chain|length > 1
+            and r.chain[0].id not in ns2.seen %}
+      {% set ns2.seen = ns2.seen + [r.chain[0].id] %}
+      <div class="card">
+        <details>
+          <summary>See changes &mdash; measured {{ r.chain[0].measured_at[:10] }}</summary>
+
+          <p class="small">
+            This record has {{ r.chain|length }} versions. Version 1 is the first one you
+            entered. Nothing was removed when the later version was added. The version
+            marked <strong>current</strong> is the one the app uses in your numbers.
+          </p>
+
+          <ol class="stack">
+            {% for v in r.chain %}
+            <li>
+              <div class="stat-row">
+                <span class="label">
+                  Version {{ loop.index }}
+                  {% if not v.superseded_by %}
+                    <span class="badge ok">current</span>
+                  {% else %}
+                    <span class="badge neutral">kept, not used</span>
+                  {% endif %}
+                </span>
+                <span class="value">{{ v.systolic }} / {{ v.diastolic }}</span>
+              </div>
+              <p class="small muted" style="margin:6px 0 0">
+                Top {{ v.systolic }}, bottom {{ v.diastolic }},
+                pulse {% if v.pulse %}{{ v.pulse }}{% else %}not recorded{% endif %}.
+                Measured {{ v.measured_at[:10] }}
+                {{ v.measured_at[11:16] if v.measured_at|length > 15 else '' }}.
+                Entered {{ v.entered_at[:10] }}
+                {{ v.entered_at[11:16] if v.entered_at|length > 15 else '' }}
+                {% if v.entered_source == 'correction' %}(as a correction){% endif %}.
+                {% if v.note %}<span class="muted">You noted: {{ v.note }}</span>{% endif %}
+              </p>
+            </li>
+            {% endfor %}
+          </ol>
+        </details>
+      </div>
+      {% endif %}
+    {% endfor %}
+  {% else %}
+    <div class="card flat">
+      <p class="small" style="margin-bottom:0">
+        No record has been corrected yet. If you ever correct one, that change will
+        appear here, with both the old and the new version.
+      </p>
+    </div>
+  {% endif %}
+
+  <h2>Correct a record</h2>
+  <p class="small muted">
+    Open the record you want to change. The first version is kept either way, so you
+    cannot lose what you already entered.
+  </p>
+
+  {% for r in readings %}
+    {% if not r.superseded_by %}
+    <div class="card">
+      <details>
+        <summary>Correct this reading &mdash; measured {{ r.measured_at[:10] }}</summary>
+
+        <p class="small">
+          Currently stored as top {{ r.systolic }}, bottom {{ r.diastolic }},
+          pulse {% if r.pulse %}{{ r.pulse }}{% else %}not recorded{% endif %}.
+          When you save a correction, this version is kept and a new version is added.
+        </p>
+
+        <form method="post" action="/readings/{{ r.id }}/correct" data-guard>
+
+          <div class="bp-inputs">
+            <div class="field">
+              <label for="systolic-{{ r.id }}">Top number</label>
+              <input type="number" id="systolic-{{ r.id }}" name="systolic"
+                     inputmode="numeric" min="40" max="300" required
+                     value="{{ r.systolic }}"
+                     aria-describedby="systolic-hint-{{ r.id }}">
+              <p class="hint" id="systolic-hint-{{ r.id }}">The first number, in millimetres of mercury.</p>
+            </div>
+            <div class="field">
+              <label for="diastolic-{{ r.id }}">Bottom number</label>
+              <input type="number" id="diastolic-{{ r.id }}" name="diastolic"
+                     inputmode="numeric" min="20" max="200" required
+                     value="{{ r.diastolic }}"
+                     aria-describedby="diastolic-hint-{{ r.id }}">
+              <p class="hint" id="diastolic-hint-{{ r.id }}">The second number.</p>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="pulse-{{ r.id }}">Pulse <span class="hint" style="display:inline">(beats per minute, or leave empty)</span></label>
+            <input type="number" id="pulse-{{ r.id }}" name="pulse"
+                   inputmode="numeric" min="20" max="250"
+                   value="{{ r.pulse if r.pulse else '' }}"
+                   aria-describedby="pulse-hint-{{ r.id }}">
+            <p class="hint" id="pulse-hint-{{ r.id }}">Leave this empty if you did not measure a pulse. An empty box is a real answer here.</p>
+          </div>
+
+          <div class="field">
+            <label for="note-{{ r.id }}">What changed, in your own words</label>
+            <textarea id="note-{{ r.id }}" name="note" rows="3"
+                      aria-describedby="note-hint-{{ r.id }}"
+                      placeholder="For example: I typed the bottom number wrong."></textarea>
+            <p class="hint" id="note-hint-{{ r.id }}">Optional. If you leave it empty, the app writes a short standard line instead.</p>
+          </div>
+
+          <p class="small">The time it was measured is not changed by a correction. Only the numbers and your note are added.</p>
+
+          <div class="btn-row">
+            <button class="btn primary" type="submit">Save the correction</button>
+          </div>
+        </form>
+      </details>
+    </div>
+    {% endif %}
+  {% endfor %}
+
+  <p class="small muted">
+    Older versions do not appear in the list above, because there is nothing to correct
+    on them any more. They are still stored, and still shown in the change history
+    further up this page.
+  </p>
+
+{% else %}
+
+  {# The empty state. A missing record is a question, not a failure. #}
+  <div class="card flat">
+    <h2>There are no records yet</h2>
+    <p>
+      Nothing has been written down in the last 60 days. That is not a problem, and it
+      is not something you need to catch up on.
+    </p>
+    <p class="small muted">
+      If you have a reading written on paper somewhere, you can add it now and set the
+      time to when you measured it. If you would rather not, that is also fine.
+    </p>
+    <div class="btn-row">
+      <a class="btn primary" href="/readings/new">Record a reading</a>
+    </div>
+  </div>
+
+{% endif %}
+
+{% endblock %}

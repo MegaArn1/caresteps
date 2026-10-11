@@ -1,0 +1,535 @@
+{# The transparency page.
+   Audience: a judge, and a technical reviewer. Everything here is generated from the
+   running system, not written by hand.
+
+   Four house rules shape every line below:
+     1. No clinical verdict. The page describes what the system is configured to do,
+        never what a person's numbers mean.
+     2. No claim to read the model's mind. The audit log records tool calls and rule
+        decisions. The sentence saying so is on the page, not only in a comment.
+     3. No credential is displayed and none is reachable from this context. The status
+        dict carries a yes/no flag for the key by design.
+     4. Where something is absent, it is described as absent, and never as a zero.
+#}
+{% extends "base.html" %}
+
+{% block title %}How this app works &middot; {{ app_name }}{% endblock %}
+
+{% block content %}
+
+<h1>How this app works</h1>
+
+<p>
+  This page shows what the assistant is actually allowed to do, which rules run before
+  it answers, and what it did while you were using it. Everything below is read out of
+  the running system. None of it is typed in by hand, so it cannot drift away from how
+  the app really behaves.
+</p>
+
+{# ------------------------------------------------------------------ 1. status #}
+
+<h2>Is a model connected</h2>
+
+<div class="card">
+  {% if meta.llm.live %}
+    <p>
+      <span class="badge ok">Connected</span>
+      <span class="small muted">Free-text questions are answered by a language model.</span>
+    </p>
+  {% else %}
+    <p>
+      <span class="badge warn">Not connected</span>
+      <span class="small muted">Free-text questions are answered by the simple rule set.</span>
+    </p>
+  {% endif %}
+
+  <div class="stat-row">
+    <span class="label">Provider configured</span>
+    <span class="value">{{ 'Yes' if meta.llm.configured else 'No' }}</span>
+  </div>
+
+  <div class="stat-row">
+    <span class="label">Attempting live model calls</span>
+    <span class="value">{{ 'Yes' if meta.llm.live else 'No' }}</span>
+  </div>
+
+  <div class="stat-row">
+    <span class="label">Model name</span>
+    <span class="value">
+      {% if meta.llm.model %}{{ meta.llm.model }}{% else %}<span class="muted small">Not set</span>{% endif %}
+    </span>
+  </div>
+
+  <div class="stat-row">
+    <span class="label">Endpoint host</span>
+    <span class="value">
+      {% if meta.llm.base_url_host %}{{ meta.llm.base_url_host }}{% else %}<span class="muted small">Not set</span>{% endif %}
+    </span>
+  </div>
+
+  <div class="stat-row">
+    <span class="label">API key present</span>
+    <span class="value">{{ 'yes' if meta.llm.api_key_present else 'no' }}</span>
+  </div>
+
+  <div class="stat-row">
+    <span class="label">Most tool calls in one reply</span>
+    <span class="value">{{ meta.max_tool_rounds }}</span>
+  </div>
+
+  <p class="small muted" style="margin-top:10px">
+    The key itself is never read onto this page. The app reports only whether one is
+    present, which is all a reviewer needs to explain why the assistant is or is not
+    connected.
+  </p>
+
+  {% if meta.llm.degraded and meta.llm.reason %}
+    <div class="notice warn" role="status">
+      <strong>Why it is not connected</strong>
+      <p class="small" style="margin-bottom:0">{{ meta.llm.reason }}</p>
+    </div>
+  {% endif %}
+</div>
+
+{# ------------------------------------------------------------------ 2. prompt #}
+
+<h2>The instructions given to the model</h2>
+
+<div class="card">
+  <div class="stat-row">
+    <span class="label">Prompt set version</span>
+    <span class="value">{{ meta.prompt.version }}</span>
+  </div>
+  <div class="stat-row">
+    <span class="label">Fingerprint (SHA-256, first 12 characters)</span>
+    <span class="value small">{{ meta.prompt.sha256_prefix }}</span>
+  </div>
+  <div class="stat-row">
+    <span class="label">Characters in the main instruction block</span>
+    <span class="value">{{ meta.prompt.system_prompt_chars }}</span>
+  </div>
+
+  <p class="small" style="margin-top:12px">
+    The fingerprint is a short hash of the whole prompt set. It lets a reviewer confirm
+    which prompt produced a given line in the log below, without the prompt text having
+    to be copied into the log itself. If the prompt changes, this value changes with it.
+  </p>
+</div>
+
+{# ------------------------------------------------------------------- 3. rules #}
+
+<h2>Rules that run before the model does</h2>
+
+<div class="card">
+  <p class="small">
+    Rule set version {{ meta.rules.version }}. It holds {{ meta.rules.total }} rule(s) in
+    total: {{ meta.rules.enabled }} switched on, and {{ meta.rules.held_for_review }}
+    present but switched off. Held-back rules are listed too, on purpose. Showing a rule
+    that exists and is turned off is how the app proves it tells the difference between
+    having no rule and having a rule it has chosen not to run.
+  </p>
+
+  {% if meta.rules.problems %}
+    <div class="notice alert" role="alert">
+      <strong>Rules that were refused at load time</strong>
+      <p class="small">
+        A rule may not run without a named source. These were dropped by the loader
+        because they declared none, so they cannot fire at all.
+      </p>
+      <ul class="small" style="margin-bottom:0">
+        {% for p in meta.rules.problems %}
+          <li>{{ p }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% else %}
+    <div class="notice ok" role="status">
+      <strong>No rule was refused at load time</strong>
+      <p class="small" style="margin-bottom:0">
+        Every rule in the set carries at least one named source.
+      </p>
+    </div>
+  {% endif %}
+
+  {% if meta.rules.rules %}
+    <details open>
+      <summary>All {{ meta.rules.total }} rule(s), switched-off ones first</summary>
+
+      <table>
+        <caption class="small muted" style="text-align:left;padding-bottom:8px">
+          One row per rule. Switched-off rules are grouped at the top so they are hard to
+          miss. "Sources" lists the identifiers of the published documents the rule is
+          tied to.
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Rule</th>
+            <th scope="col">Group</th>
+            <th scope="col">Running</th>
+            <th scope="col">Severity</th>
+            <th scope="col">Review</th>
+            <th scope="col">Sources</th>
+          </tr>
+        </thead>
+        <tbody>
+          {# sort(attribute='enabled') puts False before True: off rules lead. #}
+          {% for r in meta.rules.rules|sort(attribute='enabled') %}
+            <tr>
+              <td>
+                <span class="nowrap">{{ r.id }}</span>
+                {% if r.reason and not r.enabled %}
+                  <br><span class="tiny muted">{{ r.reason }}</span>
+                {% endif %}
+              </td>
+              <td class="nowrap small">{{ r.kind }}</td>
+              <td>
+                {% if r.enabled %}
+                  <span class="badge ok">On</span>
+                {% else %}
+                  <span class="badge warn">Off</span>
+                {% endif %}
+              </td>
+              <td class="nowrap small">
+                {% if r.severity == 'emergency' %}
+                  <span class="badge alert">Emergency</span>
+                {% elif r.severity == 'urgent' %}
+                  <span class="badge alert">Urgent</span>
+                {% elif r.severity == 'high' %}
+                  <span class="badge warn">High</span>
+                {% elif r.severity == 'medium' %}
+                  <span class="badge info">Medium</span>
+                {% else %}
+                  <span class="badge neutral">{{ r.severity }}</span>
+                {% endif %}
+              </td>
+              <td class="nowrap small">
+                {% if r.review_state == 'team_checked' %}
+                  <span class="badge info">Team checked</span>
+                {% else %}
+                  <span class="badge neutral">{{ r.review_state }}</span>
+                {% endif %}
+              </td>
+              <td class="tiny">
+                {% if r.sources %}
+                  {% for s in r.sources %}<span class="cat-chip">{{ s }}</span>{% endfor %}
+                {% else %}
+                  <span class="muted">None listed</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <p class="tiny muted">
+        "Team checked" means a member of the team read the source and wrote it down. It
+        does not mean a clinician has reviewed it. Clinician review is outstanding.
+      </p>
+    </details>
+  {% else %}
+    <div class="notice warn" role="status">
+      <strong>No rules were loaded</strong>
+      <p class="small" style="margin-bottom:0">
+        The rule set is empty, so no rule ran before the model. That is stated here
+        rather than left as a blank table.
+      </p>
+    </div>
+  {% endif %}
+</div>
+
+{# ------------------------------------------------------------------- 4. tools #}
+
+<h2>What the assistant is allowed to do</h2>
+
+<div class="card">
+  <p class="small">
+    These are the only actions the assistant can take. Each one is a named function with
+    fixed inputs. Anything outside this list cannot be requested, because it was never
+    offered to the model in the first place.
+  </p>
+
+  {% if meta.tools %}
+    {% for t in meta.tools %}
+      <details>
+        <summary>{{ t.name }}</summary>
+        <p class="small">{{ t.description }}</p>
+
+        <div class="stat-row">
+          <span class="label">Inputs</span>
+          <span class="value small">
+            {% if t.parameters %}
+              {% for p in t.parameters %}<span class="cat-chip">{{ p }}</span>{% endfor %}
+            {% else %}
+              <span class="muted">None</span>
+            {% endif %}
+          </span>
+        </div>
+
+        <div class="stat-row">
+          <span class="label">Must always be supplied</span>
+          <span class="value small">
+            {% if t.required %}
+              {% for p in t.required %}<span class="cat-chip confirmed">{{ p }}</span>{% endfor %}
+            {% else %}
+              <span class="muted">None</span>
+            {% endif %}
+          </span>
+        </div>
+      </details>
+    {% endfor %}
+  {% else %}
+    <div class="notice warn" role="status">
+      <strong>No tools are registered</strong>
+      <p class="small" style="margin-bottom:0">
+        The assistant has no actions available, so it can only reply in text.
+      </p>
+    </div>
+  {% endif %}
+</div>
+
+{# ---------------------------------------------------------------- 5. degraded #}
+
+<h2>If the model is not available</h2>
+
+<div class="card">
+  <p class="small">
+    This is what the app is written to do when no model is connected. It is not a
+    description of a failure. It is the fallback path, and it is exercised on purpose.
+  </p>
+
+  <h3>Still works</h3>
+  {% if meta.degraded.available %}
+    <ul class="small">
+      {% for item in meta.degraded.available %}
+        <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="small muted">Nothing is listed as available.</p>
+  {% endif %}
+
+  <h3>Not available</h3>
+  {% if meta.degraded.unavailable %}
+    <ul class="small">
+      {% for item in meta.degraded.unavailable %}
+        <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="small muted">Nothing is listed as unavailable.</p>
+  {% endif %}
+
+  {% if meta.degraded.guarantee %}
+    <div class="notice" role="status">
+      <strong>The guarantee for this mode</strong>
+      <p class="small" style="margin-bottom:0">{{ meta.degraded.guarantee }}</p>
+    </div>
+  {% endif %}
+</div>
+
+{# --------------------------------------------------------------- 6. audit log #}
+
+<h2>What it did while you were using it</h2>
+
+<div class="card">
+  <p class="small">
+    Every tool call and every rule decision is written down as it happens. Newest first.
+    The log for this session holds {{ events|length }} line(s).
+  </p>
+
+  <div class="notice" role="note">
+    <strong>What this log is, and what it is not</strong>
+    <p class="small" style="margin-bottom:0">
+      These lines are tool calls and rule decisions. They are not a claim to read the
+      model's internal reasoning. The app records what it was asked to do and what came
+      back, and nothing more. If a line is missing, it means the app took no such action,
+      not that a value was zero.
+    </p>
+  </div>
+
+  {% if events %}
+    <details open>
+      <summary>Session log, {{ events|length }} line(s)</summary>
+      <div style="overflow-x:auto">
+        <table>
+          <caption class="small muted" style="text-align:left;padding-bottom:8px">
+            Times are shown to the second. "Outcome" is what the action returned:
+            ok means it completed, refused means the app declined to run it for that
+            turn, error means it failed, skipped means it was considered and not run.
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Time</th>
+              <th scope="col">What kind</th>
+              <th scope="col">Tool or rule</th>
+              <th scope="col">Outcome</th>
+              <th scope="col">Mode</th>
+              <th scope="col">Rule set</th>
+              <th scope="col">Detail</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for e in events %}
+              <tr>
+                <td class="nowrap small">{{ e.created_at[:19].replace('T', ' ') if e.created_at else 'Not recorded' }}</td>
+                <td class="nowrap small">
+                  {% if e.kind == 'tool_call' %}Tool call
+                  {% elif e.kind == 'tool_result' %}Tool result
+                  {% elif e.kind == 'safety_route' %}Safety rule
+                  {% elif e.kind == 'llm_call' %}Model call
+                  {% elif e.kind == 'error' %}Error
+                  {% else %}{{ e.kind }}{% endif %}
+                </td>
+                <td class="nowrap small">{{ e.tool_name if e.tool_name else 'Not applicable' }}</td>
+                <td class="nowrap">
+                  {% if e.result_status == 'ok' %}
+                    <span class="badge ok">ok</span>
+                  {% elif e.result_status == 'refused' %}
+                    <span class="badge alert">refused</span>
+                  {% elif e.result_status == 'error' %}
+                    <span class="badge alert">error</span>
+                  {% elif e.result_status == 'skipped' %}
+                    <span class="badge neutral">skipped</span>
+                  {% elif e.result_status %}
+                    <span class="badge neutral">{{ e.result_status }}</span>
+                  {% else %}
+                    <span class="muted small">Not recorded</span>
+                  {% endif %}
+                </td>
+                <td class="nowrap small">
+                  {% if e.mode == 'live' %}Model
+                  {% elif e.mode == 'degraded' %}Rule set
+                  {% elif e.mode == 'safety' %}Safety path
+                  {% elif e.mode %}{{ e.mode }}
+                  {% else %}<span class="muted">Not recorded</span>{% endif %}
+                </td>
+                <td class="nowrap small">
+                  {% if e.rule_version %}{{ e.rule_version }}{% else %}<span class="muted">&mdash;</span>{% endif %}
+                </td>
+                <td class="tiny">
+                  {% if e.detail %}{{ e.detail }}{% else %}<span class="muted">No detail recorded</span>{% endif %}
+                  {% if e.source_ids %}
+                    <br><span class="muted">Sources returned: {{ e.source_ids | replace('[', '') | replace(']', '') | replace('"', '') | replace(',', ', ') }}</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </details>
+  {% else %}
+    <div class="notice" role="status">
+      <strong>Nothing has been logged in this session yet</strong>
+      <p class="small" style="margin-bottom:0">
+        No tool call and no rule decision has been recorded for this browser session, so
+        there is nothing to show. This is an empty log, not a zero.
+      </p>
+    </div>
+  {% endif %}
+</div>
+
+{# ------------------------------------------------------------- 7. help path #}
+
+<h2>The emergency number on this app</h2>
+
+<div class="card">
+  <p class="small">
+    The number in the red bar at the bottom of every page is read from a reviewed
+    configuration file, not written into the code. If the configuration has no source,
+    the app says it cannot confirm the number instead of printing a number that looks
+    right.
+  </p>
+
+  <div class="stat-row">
+    <span class="label">Number shown on the help bar</span>
+    <span class="value">
+      {% if emergency and emergency.number and emergency.verified %}
+        {{ emergency.number }}
+      {% elif emergency and emergency.number %}
+        <span class="muted small">Recorded, but not confirmed</span>
+      {% else %}
+        <span class="muted small">No number confirmed</span>
+      {% endif %}
+    </span>
+  </div>
+
+  <div class="stat-row">
+    <span class="label">What it is for</span>
+    <span class="value small">
+      {% if emergency and emergency.label %}{{ emergency.label }}{% else %}<span class="muted">Not set</span>{% endif %}
+    </span>
+  </div>
+
+  <div class="stat-row">
+    <span class="label">Country</span>
+    <span class="value small">
+      {% if emergency and emergency.country %}{{ emergency.country }}{% else %}<span class="muted">Not set</span>{% endif %}
+    </span>
+  </div>
+
+  <div class="stat-row">
+    <span class="label">Traced to a named source</span>
+    <span class="value">
+      {% if emergency and emergency.verified %}
+        <span class="badge ok">Yes</span>
+      {% else %}
+        <span class="badge warn">No</span>
+      {% endif %}
+    </span>
+  </div>
+
+  <div class="stat-row">
+    <span class="label">Configuration review state</span>
+    <span class="value small">
+      {% if emergency and emergency.review_state %}{{ emergency.review_state }}{% else %}<span class="muted">Not recorded</span>{% endif %}
+    </span>
+  </div>
+
+  <div class="stat-row">
+    <span class="label">Sources read for this number</span>
+    <span class="value">
+      {% if emergency and emergency.sources %}
+        {{ emergency.sources|length }}
+        <span class="small muted">source(s) listed below</span>
+      {% else %}
+        <span class="muted small">None on record</span>
+      {% endif %}
+    </span>
+  </div>
+
+  {% if emergency and emergency.sources %}
+    <details>
+      <summary>Where the number comes from</summary>
+      <ul class="small">
+        {% for s in emergency.sources %}
+          <li>
+            {{ s.publisher }}, <em>{{ s.title }}</em>.<br>
+            <a href="{{ s.url }}">{{ s.url }}</a>
+            {% if s.retrieved_at %}<br><span class="tiny muted">Read on {{ s.retrieved_at }}</span>{% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    </details>
+  {% else %}
+    <p class="small muted">
+      No source is attached to this configuration, so the app does not present the number
+      as confirmed.
+    </p>
+  {% endif %}
+
+  {% if emergency and emergency.app_does_not %}
+    <div class="notice warn" role="note">
+      <strong>What this app does not do</strong>
+      <p class="small" style="margin-bottom:0">{{ emergency.app_does_not }}</p>
+    </div>
+  {% endif %}
+</div>
+
+{# ------------------------------------------------------------------- back out #}
+
+<div class="btn-row no-print">
+  <a class="btn primary" href="/app">Back to today</a>
+</div>
+
+{% endblock %}

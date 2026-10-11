@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block title %}My medicines - {{ app_name }}{% endblock %}
+
+{% block content %}
+<h1>My medicines</h1>
+
+<div class="notice" role="note">
+  <strong>This page explains what a medicine is for</strong>
+  <p class="small">
+    It does not tell you how much to take. It does not tell you what to do about a
+    missed dose. It does not tell you to change, stop or start anything. Those
+    questions belong with your doctor or your pharmacist, and asking them is the
+    right thing to do, not a nuisance.
+  </p>
+  <p class="small">
+    Every explanation below comes from a written source that is named next to it. If
+    there is no explanation for a medicine, this page says so instead of guessing.
+  </p>
+</div>
+
+{% if not medications %}
+<div class="card flat">
+  <h2>No medicines are recorded</h2>
+  <p>
+    There are no medicine names saved for this record. That is not a problem. It
+    only means nothing has been written down here yet.
+  </p>
+  <p class="small muted">
+    If you take medicines, you can add them from your plan or bring the list from
+    your pharmacy to your next appointment and add them afterwards.
+  </p>
+  <div class="btn-row">
+    <a class="btn" href="/app/plan">Go to my plan</a>
+    <a class="btn ghost" href="/app">Back to today</a>
+  </div>
+</div>
+{% else %}
+
+<p class="small muted">
+  {{ medications|length }} medicine{% if medications|length != 1 %}s{% endif %}
+  recorded on this page.
+</p>
+
+{% for med in medications %}
+<div class="card">
+  <h2>{{ med.name }}</h2>
+  {% if med.generic_name %}
+    <p class="small muted" style="margin-top:-6px">
+      Also known as {{ med.generic_name }}.
+    </p>
+  {% endif %}
+
+  <div class="stack">
+    {% if med.confirmed_by_user %}
+      <span class="badge ok">Confirmed by you</span>
+    {% else %}
+      <span class="badge neutral">Not confirmed by you</span>
+    {% endif %}
+  </div>
+
+  {% if med.fact %}
+    <p class="small" style="margin-top:14px;font-size:20px">{{ med.fact.statement }}</p>
+
+    <div class="card flat" style="margin-top:12px;margin-bottom:0">
+      <h3>Where this came from</h3>
+      <p class="small" style="margin-bottom:6px">
+        {{ med.fact.publisher }}
+      </p>
+      <p class="small" style="margin-bottom:6px">
+        <a href="{{ med.fact.source_url }}">{{ med.fact.source_title }}</a>
+      </p>
+      {% if med.fact.source_retrieved_at %}
+        <p class="small muted" style="margin-bottom:6px">
+          Retrieved {{ med.fact.source_retrieved_at[:10] }}.
+        </p>
+      {% else %}
+        <p class="small muted" style="margin-bottom:6px">
+          The date this source was retrieved is not recorded for this entry.
+        </p>
+      {% endif %}
+
+      {# One word, not only a colour. #}
+      {% if med.fact.review_state == 'clinician_reviewed' %}
+        <span class="badge ok">Reviewed by a clinician</span>
+      {% elif med.fact.review_state == 'team_checked' %}
+        <span class="badge info">Checked by the team, not by a clinician</span>
+      {% elif med.fact.review_state == 'unreviewed' %}
+        <span class="badge warn">Not yet reviewed</span>
+      {% else %}
+        <span class="badge neutral">Review state not recorded</span>
+      {% endif %}
+
+      <p class="small muted" style="margin-top:10px;margin-bottom:0">
+        "Checked by the team" means a team member read the source. It does not mean a
+        doctor checked it.
+      </p>
+    </div>
+  {% else %}
+    <div class="notice warn" role="status" style="margin-top:14px;margin-bottom:0">
+      <strong>There is no vetted explanation for this medicine yet</strong>
+      <p class="small">
+        There is no written source recorded for {{ med.name }}, so nothing is written
+        here for it. Instead, you can add it to your questions and ask a pharmacist
+        at your next visit.
+      </p>
+      <form method="post" action="/summary/question/add" style="margin-top:12px">
+        <input type="hidden" name="origin" value="user">
+        <div class="field">
+          <label for="med-q-{{ loop.index }}">Question to ask about {{ med.name }}</label>
+          <p class="hint" id="med-q-hint-{{ loop.index }}">
+            This is filled in for you. Change the words if you want to.
+          </p>
+          <input type="text" id="med-q-{{ loop.index }}" name="text"
+                 value="What is {{ med.name }} for?"
+                 aria-describedby="med-q-hint-{{ loop.index }}">
+        </div>
+        <div class="btn-row" style="margin-top:0">
+          <button class="btn primary" type="submit">Add to my questions for the pharmacist</button>
+        </div>
+      </form>
+      <p class="small muted" style="margin-top:10px;margin-bottom:0">
+        This adds a question to your own list. It does not send anything to anyone.
+      </p>
+    </div>
+  {% endif %}
+
+  {% if med.plan_instruction %}
+    <hr>
+    <h3>From your plan</h3>
+    <p class="small muted" style="margin-bottom:6px">
+      This is your own plan text, copied here. It is separate from the explanation
+      above, which comes from a written source.
+    </p>
+    <p style="margin-bottom:0">{{ med.plan_instruction }}</p>
+  {% endif %}
+</div>
+{% endfor %}
+
+{% endif %}
+
+<hr>
+
+<h2>What this app can explain</h2>
+<p class="small muted">
+  These are the medicines, and the groups of medicines, that have a written source
+  in the app. Each one is a subject a source describes; the source itself is shown
+  on the medicine it belongs to above.
+</p>
+
+{% if all_facts %}
+  {% set named = all_facts | selectattr("subject") | list %}
+  {% set general = all_facts | rejectattr("subject") | list %}
+
+  {% if named %}
+    <div>
+      {% for f in named %}
+        <span class="cat-chip">{{ f.subject }}</span>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="small muted">No medicines are named yet in this prototype.</p>
+  {% endif %}
+
+  {# Entries that are about medicines in general carry no name to list. They are
+     shown by their statement rather than dropped, so what the app holds stays
+     visible. #}
+  {% if general %}
+    <ul class="small muted" style="margin-top:12px">
+      {% for f in general %}
+        <li>{{ f.statement }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% else %}
+  <p class="small muted">No subjects are available in this prototype yet.</p>
+{% endif %}
+
+<p class="small muted" style="margin-top:12px">
+  A medicine that is not on this list, or not on your plan, is not guessed at. The
+  app says it could not match the name, offers no explanation, and offers to help you
+  ask a pharmacist instead. A wrong answer is worse than no answer.
+</p>
+
+<div class="notice" role="note">
+  <strong>I will not guess.</strong>
+  <p class="small" style="margin-bottom:0">
+    If a medicine is not in the list above or is not on your plan, I will say so and
+    help you ask a pharmacist.
+  </p>
+</div>
+
+<div class="btn-row">
+  <a class="btn ghost" href="/app/plan">Back to my plan</a>
+  <a class="btn ghost" href="/summary">Prepare for my appointment</a>
+</div>
+{% endblock %}

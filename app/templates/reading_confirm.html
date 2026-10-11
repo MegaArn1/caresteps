@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Check this before saving - {{ app_name }}{% endblock %}
+
+{% block content %}
+
+<h1>Check this before saving</h1>
+
+<p class="muted">
+  This is what will be stored. Nothing has been saved yet.
+</p>
+
+<div class="card">
+  <h2>What you entered</h2>
+
+  <div class="stat-row">
+    <span class="label">When the reading was taken</span>
+    <span class="value" style="font-size:19px">
+      {{ draft.measured_at[:16] | replace('T', ' ') }}
+    </span>
+  </div>
+
+  <div class="stat-row">
+    <span class="label">Top number (systolic)</span>
+    <span class="value big-number" aria-label="Top number, systolic, {{ draft.systolic }}">
+      {{ draft.systolic }}
+    </span>
+  </div>
+
+  <div class="stat-row">
+    <span class="label">Bottom number (diastolic)</span>
+    <span class="value big-number" aria-label="Bottom number, diastolic, {{ draft.diastolic }}">
+      {{ draft.diastolic }}
+    </span>
+  </div>
+
+  {% if draft.pulse %}
+  <div class="stat-row">
+    <span class="label">Pulse</span>
+    <span class="value" aria-label="Pulse, {{ draft.pulse }} beats per minute">
+      {{ draft.pulse }} <span class="unit muted small">beats per minute</span>
+    </span>
+  </div>
+  {% else %}
+  <div class="stat-row">
+    <span class="label">Pulse</span>
+    <span class="value muted small">Not entered (this field is optional)</span>
+  </div>
+  {% endif %}
+
+  <p class="small muted" style="margin-bottom:0">
+    Written as {{ draft.systolic }} over {{ draft.diastolic }}.
+    The units a home monitor uses are millimetres of mercury, usually shown as mmHg.
+  </p>
+</div>
+
+{% if draft.user_feeling or draft.note %}
+<div class="card">
+  <h2>Your own words</h2>
+
+  {% if draft.user_feeling %}
+  <div class="stat-row">
+    <span class="label">How you were feeling</span>
+  </div>
+  <p>{{ draft.user_feeling }}</p>
+  {% endif %}
+
+  {% if draft.note %}
+  <div class="stat-row">
+    <span class="label">Anything else you added</span>
+  </div>
+  <p>{{ draft.note }}</p>
+  {% endif %}
+
+  <p class="small muted" style="margin-bottom:0">
+    Stored exactly as you typed it. This is what you said, not a finding or a
+    diagnosis.
+  </p>
+</div>
+{% endif %}
+
+{% if draft.concerns %}
+  {% for c in draft.concerns %}
+  <div class="notice warn" role="status">
+    {% if loop.first %}<strong>Please check this</strong>{% endif %}
+    <p class="small">{{ c }}</p>
+  </div>
+  {% endfor %}
+
+  <div class="notice ok" role="status">
+    <strong>You can still save this</strong>
+    <p class="small">
+      These are only checks to catch a typing mistake. If the numbers are right, you
+      can save them.
+    </p>
+  </div>
+{% else %}
+<div class="notice ok" role="status">
+  <strong>No checks were raised</strong>
+  <p class="small">
+    These are checks to catch a typing mistake. Nothing was raised here. That says
+    nothing about what the numbers mean.
+  </p>
+</div>
+{% endif %}
+
+<form method="post" action="/readings/confirm" data-guard>
+  <div class="btn-row">
+    <button type="submit" class="btn primary wide">Yes, save this reading</button>
+  </div>
+</form>
+
+<form method="post" action="/readings/cancel">
+  <div class="btn-row">
+    <button type="submit" class="btn ghost wide">No, go back</button>
+  </div>
+  <p class="tiny muted">
+    Going back saves nothing. Nothing you entered has been stored, and the entry form
+    will open again.
+  </p>
+</form>
+
+<p>
+  <span class="sim-flag">
+    Simulated demo data. This reading is stored as a fictional record in a
+    competition prototype, not as a patient record.
+    {% if draft.entered_source %}Entered by: {{ draft.entered_source }}.{% endif %}
+  </span>
+</p>
+
+<p class="small muted">
+  Saving does not tell anyone else, does not contact a clinic, and does not alert a
+  doctor. It only adds this reading to your own list.
+</p>
+
+{% endblock %}

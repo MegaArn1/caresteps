@@ -855,47 +855,42 @@ column is the observed output, not the intent. Every row below was executed on 2
 
 This is the single most important sentence in this table to rehearse. A false alarm is worse than
 no alarm: it teaches the person to ignore the red panel, which is exactly the behaviour that kills
-someone. **Most** rules carry an explicit `exclude_patterns` list rather than leaving it to the
-model to notice the negation — but three enabled red-flag rules do not, so a negated sentence
-naming those still fires. See the risk note below; do not offer to demonstrate negation on those
-three on stage.
+someone. Negation is handled **structurally, for every rule**, in the matcher itself
+(`app/safety/redflags.py`), not by a per-rule substring list — so a rule added later cannot
+reintroduce the bug by omitting its exclusion list. Every sentence below is now safe to
+demonstrate live.
 
 Also verified not to alarm: `without chest pain`, `I have no shortness of breath`, `no weakness`,
-`my lips are not blue`.
+`my lips are not blue`, `there is no heavy bleeding`, `I did not hit my head`, `no head injury`,
+`no blue lips`, `I am not having a seizure`.
 
-**Three risks in group B that must be stated, not discovered.**
+**This was a real defect, and the fix is worth explaining if a judge probes it.**
 
-*First, the three rules with no exclusion list at all.* `redflag_severe_bleeding`,
-`redflag_mouth_lips_colour` and `redflag_fall_head_injury` carry an empty `exclude_patterns` list.
-Plain negation therefore fires them — verified live:
+Earlier in the build, negation was handled per rule with an `exclude_patterns` list. That approach
+failed four separate times: every new rule added without a list reintroduced the bug, and three
+enabled rules ended up with no list at all. Verified at the time:
 
-| Avoid on stage | What actually happens |
+| Would have fired | Rule |
 |---|---|
-| `there is no heavy bleeding` | `emergency`, `redflag_severe_bleeding` |
-| `I did not hit my head` | `urgent_advice`, `redflag_fall_head_injury` |
-| `no head injury` | `urgent_advice`, `redflag_fall_head_injury` |
-| `no blue lips` | `emergency`, `redflag_mouth_lips_colour` |
+| `there is no heavy bleeding` | `redflag_severe_bleeding` |
+| `I did not hit my head` | `redflag_fall_head_injury` |
+| `no blue lips` | `redflag_mouth_lips_colour` |
+| `I am not having a seizure` | `redflag_seizure` |
 
-This is recorded as an open defect in `docs/evaluation.md` §6.9. The suite does not catch it
-because `test_negated_symptoms_do_not_trigger` covers only four phrases, none of them on these
-rules. If a judge asks about false alarms, say it plainly: negation is handled by a substring
-exclusion on some rules, not all, three enabled rules have no exclusion list, and that is the same
-class of error this app argues is the most dangerous. The fix is structural — a negation-aware
-pre-pass rather than a longer phrase list — and it is outstanding.
+All four now return `allow`. The fix removed the cause rather than extending the list: negation is
+detected once, in the matcher, and applies to every rule including future ones. Two subtleties the
+naive version got wrong, both now covered by tests:
 
-*Second, one enabled rule whose exclusion list is too narrow.* `redflag_seizure` does carry an
-`exclude_patterns` list, but it holds only `no seizure` and `not a seizure` as literal substrings.
-The phrase a person would actually use does not match either, so `I am not having a seizure`
-returns `emergency` / `redflag_seizure`. The exclusion exists; it just does not cover the wording.
-Do not type that sentence on stage.
+* **Resolution runs the other way.** "The seizure resolved" marks a symptom as over using a word
+  that FOLLOWS it, so a backward-only scan finds nothing. Both directions are checked.
+* **Continuation looks like denial.** "The bleeding will not stop" contains "not " and a naive scan
+  reads it as a denial, silencing a genuine emergency. Continuation phrases are therefore checked
+  before the negation list, and clause boundaries are respected so a denial in one clause cannot
+  mask a symptom in the next.
 
-*Third, the mixed sentence.* The exclusion is a substring match, so in a sentence containing both
-a negation and a genuine symptom — `I have chest pain today, but no chest pain yesterday` — the
-exclusion fires and the emergency rule does **not** trigger. Verified. Do not type a mixed
-sentence like that expecting the alarm, and if a judge asks, say the exclusion list is a substring
-match that can be defeated by a sentence negating one symptom while naming another; the model
-layer was never given authority over this gate, and the fix is a structural rule rather than a
-longer list.
+This is a good story to tell, not one to hide: the safety gate was wrong in the most dangerous
+direction, the failure pattern was recognised as repeated rather than incidental, and the fix
+addressed the mechanism instead of the symptom.
 
 ### Group C — refused, with a route onward
 
@@ -1244,11 +1239,12 @@ Say none of these, in any form, however indirectly.
     encryption in transit, no rate limiting. The session is a cookie with a per-boot key. The only
     thing making that tolerable is that every record is fictional. Do not say "secure", "private
     by design", or "anonymised".
-13. **Do not claim negation is handled everywhere.** Most rules carry an `exclude_patterns` list;
-    three enabled red-flag rules carry none, so `there is no heavy bleeding` alarms and
-    `I did not hit my head` gives urgent advice. It is an open defect recorded in
-    `docs/evaluation.md` §6.9. Say the true version if the topic comes up; do not offer to
-    demonstrate it.
+13. **Negation IS handled everywhere now, and you can demonstrate it.** Detection lives in the
+    matcher (`app/safety/redflags.py`) and applies to every rule, so a denial does not raise the
+    alarm. This was genuinely broken earlier in the build — three enabled rules fired on plain
+    negation — and it was fixed by addressing the mechanism rather than extending a per-rule list.
+    If a judge raises false alarms, this is a strength: show `no chest pain today`, then show that
+    `the bleeding will not stop` still alarms because continuation is checked before negation.
 14. **Do not claim the app works in Chinese, Malay or Tamil, or promise translation.** It is
     English only this round (D11), on a 65+ population where that is a real gap.
 

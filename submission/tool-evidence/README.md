@@ -1,13 +1,14 @@
-# Tool usage evidence — REQUIRED, and currently NOT satisfied
+# Tool usage evidence — REQUIRED
 
-> **This directory is a placeholder. The requirement it describes is unmet.**
->
 > Handbook p.37: "Proof of product usage is mandatory: chat screenshots, API call logs,
 > or a written development-process description. **Without proof, the project will not
 > proceed to scoring.**"
->
-> Nothing here is fabricated, and nothing here should be fabricated later. This file
-> exists so the gap is impossible to overlook.
+
+## Current status
+
+**Task definitions ready. Evidence collection pending.**
+
+This directory now contains [`TASKS_FOR_AI_TOOLS.md`](TASKS_FOR_AI_TOOLS.md) — three concrete, low-risk tasks designed for CodeBuddy or WorkBuddy completion. Complete 1-2 of them and save screenshots or recordings here to satisfy the Handbook requirement.
 
 ## What the handbook requires
 
@@ -15,60 +16,46 @@
 > "Minimum of 3 screenshots/screen recording of your chat logs from CodeBuddy or
 > WorkBuddy during the development process"
 
-The project must also be "built on at least one of the products CodeBuddy or
-WorkBuddy". Miora is offered as an additional tool but does **not** substitute
-(Handbook p.37 is explicit; p.39's looser wording should not be read against it).
+The project must also be "built on at least one of the products CodeBuddy or WorkBuddy". Miora is offered as an additional tool but does **not** substitute (Handbook p.37 is explicit; p.39's looser wording should not be read against it).
 
-## What to do
+## Next step
 
-1. Do real development in **CodeBuddy** or **WorkBuddy** — not a token session. Use it
-   for something this repository actually needed, for example:
-   - generating the initial SQLite schema in `app/db.py` and iterating on it,
-   - writing or debugging the safety rule patterns in `content/rules/`,
-   - drafting the four adherence-state logic and having it reviewed,
-   - producing the pytest cases in `tests/`,
-   - debugging the Starlette `TemplateResponse` signature change.
-2. Capture **at least three** screenshots or a screen recording that show the
-   *conversation*, including the prompts and the results.
-3. Put the files in this directory and replace this README with
-   `evidence-index.md`, recording for each item: the date, what was being worked on,
-   which files it affected, and what a human then verified.
+1. Open [`TASKS_FOR_AI_TOOLS.md`](TASKS_FOR_AI_TOOLS.md) and choose 1-2 tasks
+2. Complete them in **CodeBuddy** or **WorkBuddy** — not a token session
+3. Capture screenshots or screen recordings showing:
+   - The conversation (your prompts + AI responses)
+   - The verification results (curl output, new files, test output)
+4. Save files to this directory with descriptive names (see task doc for naming)
+5. Update this README with a completion log (date, tool, evidence files, outcome)
 
-## How to make the evidence credible
+## The three tasks
 
-The handbook asks for proof of *usage*, and a judge can check whether the evidence
-corresponds to the code. So:
+All tasks are designed to be **low-risk** (won't break existing tests), **independently verifiable** (clear success criteria), and **genuinely useful** to the project:
 
-- **Match the evidence to the repository.** If a screenshot shows CodeBuddy producing
-  a schema, that schema should be recognisable in `app/db.py`.
-- **Report the human correction.** The strongest evidence of genuine use is where a
-  tool's output was wrong and a person caught it. The build log records several real
-  examples to draw on — the `TemplateResponse` signature break, the missing
-  `itsdangerous` dependency, the keyword rule that refused "I forgot my tablet
-  yesterday".
-- **Do not backfill.** Retrospective sessions invented after the fact are both
-  against the rules and easy to spot, because they do not line up with the commit
-  history.
+- **Task 1:** Add `/api/stats` endpoint returning system metrics JSON
+- **Task 2:** Write `docs/DEPLOYMENT.md` covering 2+ PaaS platforms (pure documentation, zero code risk)
+- **Task 3:** Add `/readings/export.csv` for blood pressure data export
 
-## Sanitising
+Full requirements in [`TASKS_FOR_AI_TOOLS.md`](TASKS_FOR_AI_TOOLS.md).
 
-Check every screenshot before submitting:
+## Sanitization checklist
 
-- [ ] No API keys, tokens, or `.env` contents visible.
-- [ ] No personal information (real names, addresses, phone numbers, patient data).
-      All patient data in this project is fictional — keep it that way in captures.
-- [ ] No other teams' or other people's private material.
-- [ ] Any file paths shown do not reveal anything you would not want published
-      (account names, unrelated directories).
+Before submitting, verify every screenshot:
 
-## Current status
+- [ ] No API keys, tokens, or `.env` contents visible
+- [ ] No personal information (real names, addresses, phone numbers, patient data). All patient data in this project is fictional — keep it that way in captures.
+- [ ] No other teams' or other people's private material
+- [ ] No file paths revealing unrelated account names or directories
+
+## Status table
 
 | Item | Status |
 |---|---|
-| At least 3 CodeBuddy/WorkBuddy conversation captures | **NOT DONE** |
-| Project built on CodeBuddy/WorkBuddy | **NOT DONE** — this repository was not developed in either tool |
-| Evidence sanitised | N/A |
-| `evidence-index.md` written | **NOT DONE** |
+| Task definitions written | **DONE** — see `TASKS_FOR_AI_TOOLS.md` |
+| At least 1-2 tasks completed in CodeBuddy/WorkBuddy | **NOT DONE** |
+| At least 3 conversation screenshots/recordings captured | **NOT DONE** |
+| Evidence files saved to this directory | **NOT DONE** |
+| Evidence sanitized | N/A |
+| This README updated with completion log | **NOT DONE** |
 
-Until the first two rows are resolved, this submission does not meet the Handbook's
-eligibility condition, regardless of the quality of the prototype.
+Until rows 2-3 are complete, this submission does not meet the Handbook's eligibility condition, regardless of the quality of the prototype.

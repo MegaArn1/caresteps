@@ -10,11 +10,26 @@ Competition submission materials for the Tencent Cloud AI Singapore Hackathon 20
 | `cover_16x9_1920x1080.png` | Cover image, true 16:9 | Required | Generated |
 | `cover_380x216.png` | Cover image at the exact size the handbook names | Required | Generated |
 | `cover_16x9_1280x720.png` | Cover image, mid size | — | Generated |
-| [`diagrams/`](diagrams/) | Architecture + trust-boundary diagrams (handbook, Healthcare track) | Required | Generated |
+| [`diagrams/`](diagrams/) | Architecture + trust-boundary diagrams (Healthcare track list) | Named by the track; see the note below | Generated |
 | [`tool-evidence/`](tool-evidence/README.md) | CodeBuddy/WorkBuddy conversation history | **Required — blocks scoring** | **NOT DONE** |
 | Demo video, 5–8 minutes | Project overview, core features, build reflection | Optional (recommended) | **NOT DONE** |
 | Online project link | Live demo URL; optional but earns bonus points | Optional | **NOT DONE** |
-| Source code | Complete source via GitHub | Required | In this repository |
+| Source code | Complete source via GitHub | Required | **In this repository, not yet pushed.** No git remote is configured, so nothing is on GitHub yet |
+
+## On the word "required" above
+
+The Healthcare track's "The Solution Should Include" list names an architecture diagram
+covering architecture, trust boundaries and key design trade-offs. That list carries a
+footnote: "The features listed above are provided as guidance only." So the diagram is not
+one of the handbook's four Required submission items — those are the project description,
+the CodeBuddy/WorkBuddy conversation history, the cover image, and the source code.
+
+The handbook's own submission table does have a row for "Other Requirements as per the
+Challenge Statement", which is how a track-level item becomes expected rather than merely
+suggested. The distinction matters here because the project's whole argument is that a
+reader can check what we claim: labelling a guidance item as Required would be the same
+class of overstatement as the ones corrected in `docs/BUILD_LOG.md`. Both diagrams exist
+and are committed either way.
 
 ## Regenerating the diagrams
 

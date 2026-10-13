@@ -10,10 +10,27 @@ Competition submission materials for the Tencent Cloud AI Singapore Hackathon 20
 | `cover_16x9_1920x1080.png` | Cover image, true 16:9 | Required | Generated |
 | `cover_380x216.png` | Cover image at the exact size the handbook names | Required | Generated |
 | `cover_16x9_1280x720.png` | Cover image, mid size | — | Generated |
+| [`diagrams/`](diagrams/) | Architecture + trust-boundary diagrams (handbook, Healthcare track) | Required | Generated |
 | [`tool-evidence/`](tool-evidence/README.md) | CodeBuddy/WorkBuddy conversation history | **Required — blocks scoring** | **NOT DONE** |
 | Demo video, 5–8 minutes | Project overview, core features, build reflection | Optional (recommended) | **NOT DONE** |
 | Online project link | Live demo URL; optional but earns bonus points | Optional | **NOT DONE** |
 | Source code | Complete source via GitHub | Required | In this repository |
+
+## Regenerating the diagrams
+
+```bash
+make diagrams      # needs Mermaid CLI + a Chrome it can drive
+```
+
+The two diagrams are not drawn by hand. They are Mermaid blocks inside
+[`../docs/architecture.md`](../docs/architecture.md), extracted and rendered by
+`scripts/make_diagrams.py`. Editing the diagram in the document and re-running the
+target is what keeps the picture and the prose from disagreeing — which matters here,
+because the prose around each diagram explains what the reader should notice in it.
+
+The rendered PNGs are committed, so a judge never has to run this. Unlike the cover,
+this target has a real external dependency (Mermaid CLI plus a headless browser), so it
+is deliberately kept out of `make setup`.
 
 ## Regenerating the cover
 

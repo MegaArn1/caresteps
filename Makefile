@@ -9,7 +9,7 @@ VENV := .venv
 BIN := $(VENV)/bin
 PORT ?= 8000
 
-.PHONY: help setup seed run run-live test test-fast reset clean db-shell demo-check
+.PHONY: help setup seed run run-live test test-fast reset clean db-shell demo-check diagrams
 
 help:
 	@echo "CareSteps - available targets:"
@@ -20,6 +20,7 @@ help:
 	@echo "  make run-live   Serve, expecting LLM_* to be configured"
 	@echo "  make test       Run the test suite"
 	@echo "  make demo-check Check every demo case reproduces (the evaluation run)"
+	@echo "  make diagrams   Re-render the architecture diagrams (needs mmdc)"
 	@echo "  make reset      Delete the database"
 	@echo "  make db-shell   Open sqlite3 against the database"
 	@echo ""
@@ -58,6 +59,12 @@ test-fast: $(BIN)/python
 
 demo-check: $(BIN)/python
 	$(BIN)/python -m scripts.demo_check
+
+# Unlike everything else here, this target has an external dependency (Mermaid CLI
+# plus a Chrome it can drive). It is kept out of `setup` deliberately: the submission
+# ships the rendered PNGs, so a judge never needs to run this.
+diagrams: $(BIN)/python
+	$(BIN)/python scripts/make_diagrams.py
 
 reset:
 	rm -f caresteps.db caresteps.db-wal caresteps.db-shm

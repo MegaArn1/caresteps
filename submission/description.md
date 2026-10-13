@@ -12,8 +12,9 @@
 ## A note on what this document is
 
 Everything below is checkable in the repository at the paths given. This is a competition
-prototype, built in five days by our team. Where we do not have evidence, we say so rather
-than argue around it. Three limits apply to the whole document:
+prototype, built by our team between 2026-10-11 and 2026-10-14; `docs/BUILD_LOG.md` records
+every phase of it, including the ones that went wrong. Where we do not have evidence, we say
+so rather than argue around it. Three limits apply to the whole document:
 
 1. **The system has not been clinically validated and has not been clinically reviewed.**
    Every safety rule and every health fact is marked `team_checked`, which means one of us
@@ -28,9 +29,15 @@ than argue around it. Three limits apply to the whole document:
    built and none is claimed.
 
 All patient data in the repository is fictional. The tables that hold a patient's own
-records each carry an `is_simulated` column and every seeded row sets it to 1; the shared
-knowledge, conversation and audit tables do not carry the column, because seeded content
-and session logs are not attributed to a person. The demo patient, Mdm Tan, is not a real
+records each carry an `is_simulated` column and every seeded row sets it to 1. The shared
+conversation and audit tables do not carry the column at all, because session logs are not
+attributed to a person.
+
+`education_source` is the one table that carries the column *and* is not patient data: its
+seeded rows set it to 0, because those rows are real published pages rather than fixtures.
+`education_fact` does not carry it. An earlier version of this paragraph said the knowledge
+tables did not carry the column, which was wrong for `education_source` — see the data-model
+table below, where it is listed under "Knowledge". The demo patient, Mdm Tan, is not a real
 person, and her care plan was written by us for this prototype.
 
 ---
@@ -287,8 +294,11 @@ Two points we want to be judged on here:
   appointment list. Two are deliberately different: sharing without consent points at the
   app's own manual share, and diagnosis requests set no `offer_question`, because the
   thing to do there is see a professional rather than queue a question. The disabled
-  contact-change rule is the one exception to the pattern, and having no settled redirect
-  is part of why it is held back.
+  contact-change rule does carry a redirect (`"support"`); it is held back for a different
+  reason, recorded in its own `reason` field — it would let a user change which number the
+  app shows for emergencies, and that depends on an emergency-number configuration we have
+  not had confirmed. An earlier version of this paragraph said it had no settled redirect,
+  which its file contradicts.
 
 | Rule id | Kind | Enabled | Review state |
 |---|---|---|---|
@@ -463,7 +473,7 @@ repository.
 | Education facts | 24 total, 23 enabled | `content/education/facts.json` |
 | Sentences rewritten after adversarial content review | 14 (10 named defects plus 4 for consistency) | `_audit` block in `content/education/facts.json` |
 | Demo history | 14 days, readings on 10 days, 4 days with no reading, one corrected reading, one backfilled report, 2 derived unrecorded medication days | `make seed`, then `/trends` |
-| Live model endpoint exercised | **Never** | `docs/BUILD_LOG.md`, "Known limitations" |
+| Live model endpoint exercised | **Never** | `docs/BUILD_LOG.md`, the section titled 已知局限与未验证项 ("Known limitations and unverified items") |
 | Clinical review completed | **None** | Every enabled rule and every fact has `review_state = team_checked`; no entry anywhere is `clinician_reviewed`. The two disabled rules are `pending_review` |
 
 The advertised number we will not put in this table is an adherence percentage. The app
@@ -523,8 +533,10 @@ We are stating this prominently because it is a hard requirement and it is curre
 missing.
 
 - The evidence is being collected separately from this document and will be placed in
-  `submission/tool-evidence/`. That folder currently holds only a README describing the
-  requirement and what a credible capture would have to show; it contains no evidence yet.
+  `submission/tool-evidence/`. That folder currently holds two documents and no evidence:
+  a README describing the requirement and what a credible capture would have to show, and
+  `TASKS_FOR_AI_TOOLS.md`, which specifies three concrete, low-risk tasks a CodeBuddy or
+  WorkBuddy session could complete without touching the tested paths.
 - It requires real development activity performed in CodeBuddy or WorkBuddy, with at least
   three pieces of evidence (screenshots or recordings) that correspond to code actually
   present in this repository.
@@ -543,7 +555,7 @@ missing.
 | Project title | Provided |
 | Short blurb under 10 words | Provided (7 words) |
 | Cover image, 16:9, handbook recommends 380x216 px | **Generated but not finally selected.** `scripts/make_cover.py` has been run and produced three files in `submission/`: `cover_16x9_1920x1080.png`, `cover_16x9_1280x720.png` (true 16:9) and `cover_380x216.png` (the handbook's stated pixel size). Which one the form wants has not been confirmed |
-| Demo video | **Not yet recorded.** See `docs/BUILD_LOG.md`, "Next steps" |
+| Demo video | **Not yet recorded.** See `docs/BUILD_LOG.md`, the section titled 下一步 ("Next steps") |
 | CodeBuddy / WorkBuddy usage evidence (hard gate, Handbook p.37) | **OUTSTANDING.** See the section above |
 | Demo walkthrough script | Provided above; rehearsal not yet done |
 | Architecture and trust-boundary diagrams | **Rendered.** `submission/diagrams/architecture-system.png` and `architecture-trust-boundaries.png`, generated by `make diagrams` from the Mermaid blocks in `docs/architecture.md`. The prose describing both is in that document, sections 1 and 2 |

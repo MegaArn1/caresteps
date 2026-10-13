@@ -116,7 +116,7 @@ ignored; every `record_id` in the summary resolves to a plausible row.
 Command run from the project root:
 
 ```bash
-cd /mnt/d/personal_Profiles/files/NTU学系资料/Trimester1/Tencent_Hackathon/caresteps
+cd caresteps        # or wherever you cloned it
 .venv/bin/python -m pytest tests/ -q
 ```
 
@@ -576,8 +576,7 @@ or testing.
 
 ## 7. How to reproduce
 
-From the project root
-(`/mnt/d/personal_Profiles/files/NTU学系资料/Trimester1/Tencent_Hackathon/caresteps`):
+From the project root (the directory containing `Makefile` and `app/`):
 
 ```bash
 # 1. Environment (creates .venv, installs the pinned dependencies)

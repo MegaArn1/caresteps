@@ -40,8 +40,15 @@ noticed only by a human reading JSON.
 | File | Tests | What it covers |
 |---|---|---|
 | `tests/test_data_integrity.py` | 34 | M1/M2 record lifecycle, deduplication, corrections, provenance, barrier handling, knowledge-base integrity |
-| `tests/test_safety.py` | 40 | M6 boundary cases, gate ordering, rule-file integrity, emergency configuration |
+| `tests/test_degraded_and_output.py` | 45 | The degraded conversation layer, intent routing, number extraction, `check_output`, `_safety_context` |
+| `tests/test_demo_flow.py` | 19 | Routes a demonstration depends on, driven over HTTP: demo reset, summary omission, emergency-number gating |
+| `tests/test_safety.py` | 44 | M6 boundary cases, gate ordering, rule-file integrity, emergency configuration |
 | `tests/test_stats_and_summary.py` | 23 | M4/M5 statistics, gap handling, summary fact tables, forbidden clinical claims |
+
+The five files sum to the total: 34 + 45 + 19 + 44 + 23 = 165. This table listed three
+files and a `test_safety.py` figure of 40 until an audit compared it against
+`pytest --collect-only`; the missing two files accounted for 61 tests that the old table
+left unexplained against its own stated total.
 
 **`test_data_integrity.py`** — the claim under test is that the record can be trusted.
 
@@ -125,13 +132,13 @@ Observed output (this run; the timing varies with machine load — see below):
 ```
 ........................................................................ [ 74%]
 .........................                                                [100%]
-162 passed in 11.74s
+165 passed in 11.74s
 ```
 
 | Metric | Value |
 |---|---|
-| Tests collected | 162 |
-| Tests passed | **162** |
+| Tests collected | 165 |
+| Tests passed | **165** |
 | Tests failed | 0 |
 | Tests skipped / xfail | 0 |
 | Wall-clock runtime | ~5.3–6.7 s across repeated runs on this machine |
@@ -504,7 +511,7 @@ limitations rather than achievements:
 
 ### 6.7 What a pass rate is not
 
-**The figure "162 passed" is the number of automated checks that pass against a fixed set of
+**The figure "165 passed" is the number of automated checks that pass against a fixed set of
 inputs. It is NOT a clinical accuracy figure.** It is not a sensitivity, specificity, or
 diagnostic performance measure. It says nothing about whether the app helps a real person
 manage blood pressure. It must never be presented, in the submission or in a demo, as
@@ -590,9 +597,11 @@ make test-fast
 make test
 
 # 3. Per-file runs, behind the table in §1.2
-.venv/bin/python -m pytest tests/test_data_integrity.py -q      # 34 tests
-.venv/bin/python -m pytest tests/test_safety.py -q              # 40 tests
-.venv/bin/python -m pytest tests/test_stats_and_summary.py -q   # 23 tests
+.venv/bin/python -m pytest tests/test_data_integrity.py -q       # 34 tests
+.venv/bin/python -m pytest tests/test_degraded_and_output.py -q  # 45 tests
+.venv/bin/python -m pytest tests/test_demo_flow.py -q            # 19 tests
+.venv/bin/python -m pytest tests/test_safety.py -q               # 44 tests
+.venv/bin/python -m pytest tests/test_stats_and_summary.py -q    # 23 tests
 
 # 4. Fictional demo data, then run the app (no model needed — degraded mode)
 make seed
@@ -649,7 +658,7 @@ for t in ['I have chest pain', 'no chest pain', 'I forgot my tablet yesterday mo
 
 | Question | Answer |
 |---|---|
-| Does the automated suite pass? | Yes — 162 of 162, in roughly twelve seconds |
+| Does the automated suite pass? | Yes — 165 of 165, in roughly twelve seconds |
 | Is the safety routing order correct? | Yes, verified — emergency beats medication requests in the same sentence |
 | Are false refusals of legitimate reports prevented? | Yes, with regression tests for the cases that previously failed |
 | Is the content sourced and audited? | Yes — 63 candidates, 32 rejected, 23 statements shipped and re-verified, 10 reworded |
@@ -659,6 +668,6 @@ for t in ['I have chest pain', 'no chest pain', 'I forgot my tablet yesterday mo
 | Has an accessibility audit been performed? | **No.** |
 | Were older adults involved? | **No.** |
 | Is the CodeBuddy/WorkBuddy evidence requirement met? | **No — OUTSTANDING, and it is a hard submission gate.** |
-| Is 162 a clinical accuracy figure? | **No, and it must not be presented as one.** |
+| Is 165 a clinical accuracy figure? | **No, and it must not be presented as one.** |
 | Are the rule citations all resolvable to a source? | **Not machine-checked, and seven cited ids are not registered** (§1.2) |
 | Is negation handled on every red-flag rule? | **Yes — detection is in the matcher, so it applies to every rule** (§3.2, §6.9) |

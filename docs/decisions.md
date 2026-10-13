@@ -690,7 +690,7 @@ was not independently audited.
 No, and this is the most important limitation in the project.
 
 The model endpoint was never exercised. The probe was blocked during the build and was not worked
-around. The 162 tests run against the database, safety, statistics, summary and demo-flow layers, which are
+around. The 165 tests run against the database, safety, statistics, summary and demo-flow layers, which are
 the layers the degraded path also uses, so degraded mode is covered indirectly rather than by a
 test of its own; it is what the demonstration will most likely show. `_live_turn` in
 `app/llm/orchestrator.py` has been statically reviewed and not run, and no test reaches it.

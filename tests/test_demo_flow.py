@@ -97,6 +97,47 @@ class TestDemoReset:
         client.post("/api/demo/reset")
         assert client.get("/app").status_code == 200
 
+    def test_reset_restores_the_knowledge_base(self, client):
+        """The second half of the same regression, found later than the first.
+
+        `reset_db()` drops every table, and two different functions fill them back
+        up: `seed_demo()` for the patient and `load_knowledge()` for the education
+        entries. The handler called only the first, so after a reset the patient was
+        present, the readings were present, and every medicine rendered with no
+        explanation attached.
+        """
+        import sqlite3
+
+        from app.config import SETTINGS
+
+        client.post("/api/demo/reset")
+
+        conn = sqlite3.connect(SETTINGS.db_path)
+        try:
+            facts = conn.execute("SELECT COUNT(*) FROM education_fact").fetchone()[0]
+            sources = conn.execute("SELECT COUNT(*) FROM education_source").fetchone()[0]
+        finally:
+            conn.close()
+
+        assert sources > 0, "reset left the source register empty"
+        assert facts > 0, "reset left the fact table empty"
+
+    def test_reset_response_reports_the_fact_count(self, client):
+        """The response should carry the evidence, not just the claim."""
+        body = client.post("/api/demo/reset").json()
+        assert body["education_facts"] > 0
+        assert body["knowledge_ok"] is True
+
+    def test_medicines_page_explains_a_medicine_after_reset(self, client):
+        """The user-visible consequence, which is what makes the defect matter."""
+        client.post("/api/demo/reset")
+        html = client.get("/app/medicines").text
+        assert "Amlodipine" in html, "the demo patient's medicine should be listed"
+        # A medicine with no fact renders its card without this block.
+        assert "Amlodipine" in html and "calcium channel blocker" in html, (
+            "the explanation did not render after a reset"
+        )
+
     def test_failure_is_reported_rather_than_claimed_success(self, client, monkeypatch):
         """If seeding fails, the response must not say it worked."""
         from app.demo import seed as demo_seed

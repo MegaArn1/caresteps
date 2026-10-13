@@ -395,7 +395,7 @@ run it.
 ### Source code pointer
 
 Repository root contains `app/` (application), `content/` (rules and cited facts),
-`tests/` (162 tests), `docs/` (plan and build log), `scripts/` (seed and utilities) and
+`tests/` (165 tests), `docs/` (plan and build log), `scripts/` (seed and utilities) and
 `submission/` (this document and the evidence folder). Start with `README.md`, then
 `docs/BUILD_LOG.md`, which logs every defect we found and fixed. Run `make setup`, `make
 seed`, `make run`. No API key is needed to exercise everything except a live model turn.
@@ -413,7 +413,7 @@ arguments are stored on every `audit_event` row and are visible in the database 
 `GET /api/audit`; the trace page renders the outcome, mode, detail and source ids rather
 than a raw argument dump.
 
-**162 automated tests pass.** They cover data integrity (separate timestamps, revision
+**165 automated tests pass.** They cover data integrity (separate timestamps, revision
 chains, simulated flags, the refusal to write `unrecorded` as a report), safety boundaries
 (a set of configured emergency, boundary and ordinary phrases reproduced against the real
 `route()`, plus rule-file integrity and the specific exclusions that prevent a false
@@ -455,7 +455,7 @@ repository.
 
 | Item | Figure | How to check it |
 |---|---|---|
-| Automated tests passing | 162 | `make test` |
+| Automated tests passing | 165 | `make test` |
 | Schema tables | 13 | `app/db.py` |
 | Tool contracts | 10, each with a JSON Schema | `app/tools/contracts.py` |
 | Safety rules | 23 total, 21 enabled, 2 held disabled pending review | `make seed` output, `/api/rules` |

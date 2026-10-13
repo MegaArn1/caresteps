@@ -24,7 +24,7 @@ Recorded here so the presenter knows which parts of the script are known-good.
 | Checked | Result |
 |---|---|
 | `make seed` from a clean database | Ran. 14 sources, 23 facts enabled, 1 held back. Rules v1: 21 enabled, 2 held for review, 23 total. Profile created. |
-| 162-test suite | `162 passed` |
+| 165-test suite | `165 passed` |
 | `/healthz` in degraded mode | Returns the JSON in §1.3 |
 | `/healthz` with `LLM_BASE_URL` + `LLM_MODEL` set | `live: true`, `degraded: false` — the badge disappears |
 | Chat turn with an unreachable endpoint | Degrades in under 1 second to the scripted reply. The app keeps working. |
@@ -98,7 +98,7 @@ printed on purpose. Do not skip past it if a judge is watching the terminal — 
 Two optional checks before going on stage:
 
 ```bash
-make test        # 162 passed
+make test        # 165 passed
 make reset && make seed    # back to a known state
 ```
 
@@ -132,10 +132,10 @@ Nothing to set. Start with `make run`.
   call. Chest pain still routes to 995 in this mode.
 
 Use Configuration A. It is the configuration to use on stage, and the one whose behaviour has been
-exercised end to end here. To be precise about what that means: the 162 tests import the repository,
+exercised end to end here. To be precise about what that means: the 165 tests import the repository,
 the content loader, the safety router, the statistics and the summary, and the emergency help
 config — and the suite does cover the degraded conversation layer (`app/llm/degraded.py`) and the
-orchestrator's output checks, through `tests/test_degraded_and_output.py` (45 of the 162 tests).
+orchestrator's output checks, through `tests/test_degraded_and_output.py` (45 of the 165 tests).
 What no test reaches is the live provider loop, `_live_turn` in `app/llm/orchestrator.py`; that is
 the one path the suite cannot exercise without a model endpoint, and it is covered in §6.
 
@@ -1031,6 +1031,14 @@ expected. All three are symptoms of a database that has been written to during a
 it is simulated." message it was written to return, and it rebuilds the patient, the readings and
 the education tables together.
 
+That last clause was written before it was true. The route restored the patient and the readings
+but not the knowledge base, so after a reset `/app/medicines` lost every explanation and said it
+could not match a medicine name it was displaying on the same page. The tables are dropped by
+`reset_db()` and refilled by two different functions — `seed_demo()` for the patient, and
+`load_knowledge()` for the education entries — and only the first was being called. Both are called
+now, the rebuild is verified against all three tables, and the response reports the fact count. A
+test drives it: `tests/test_demo_flow.py`.
+
 This row used to say the opposite, and the history is worth keeping because it is the worst bug
 this project shipped. The earlier handler dropped every table and then died before re-seeding
 them, answering HTTP 500 and leaving the app with zero profiles — a "recover the database" button
@@ -1040,9 +1048,9 @@ impossible now: the connection is opened with `connect()`, and the rebuild is **
 (success is reported only if a profile exists and readings were written) rather than assumed from
 reaching the end of the function.
 
-Verified live: HTTP 200, one profile, 11 readings. `make reset && make seed` remains the command
-to prefer on stage, because it does the same thing without a round trip through the browser — but
-if the database looks wrong mid-demo, this route is a working way back.
+Verified live: HTTP 200, one profile, 11 readings, 24 education facts. `make reset && make seed`
+remains the command to prefer on stage, because it does the same thing without a round trip through
+the browser — but if the database looks wrong mid-demo, this route is a working way back.
 
 ### A page errors
 
@@ -1098,7 +1106,7 @@ language layer on top, on purpose, and the language layer is the least load-bear
 
 We do not, and we are not claiming it. There is no longitudinal evidence: the demo history is
 fourteen fictional days written by us, and no real patient has used the app at any point. What has
-been tested is the behaviour under specific inputs — 162 automated tests over data integrity,
+been tested is the behaviour under specific inputs — 165 automated tests over data integrity,
 safety boundaries, statistics and the summary; 45 of them cover the degraded conversation layer
 and the model-output checks. What has not been done is a user study with older
 adults — zero participants. The handbook's solution section (方案 9.4) recommends a walkthrough
@@ -1138,7 +1146,7 @@ page the patient carries in themselves.
 
 **If a judge pushes on the missing model run:** answer it before they finish the question. The
 live model path has never been executed. The endpoint probe was blocked during the build and was
-not worked around. Degraded mode is what the 162 tests cover — 45 of them exercising
+not worked around. Degraded mode is what the 165 tests cover — 45 of them exercising
 `app.llm.degraded` and the orchestrator's `check_output` / `_collect_numbers` / `_safety_context`
 — and it is what this demonstration shows. No test reaches the live provider loop, `_live_turn`.
 The consequence is specific and worth naming: whether a configured endpoint supports the
@@ -1228,7 +1236,7 @@ Say none of these, in any form, however indirectly.
    or "demo data".
 6. **Do not claim an accessibility certification or a WCAG conformance audit.** Say what the
    interface was designed for and that it was not independently audited.
-7. **Do not present the 162 passing tests as validation of the medical content.** They test data
+7. **Do not present the 165 passing tests as validation of the medical content.** They test data
    integrity, safety routing, statistics and the summary. They do not test whether the advice is
    medically correct, and no test could.
 8. **Do not quote a number that is not on screen or in `docs/BUILD_LOG.md`.** If a figure has to be

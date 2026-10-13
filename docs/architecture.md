@@ -16,11 +16,12 @@ are given so a reader can verify rather than trust.
   docstring narrates her as 72; the database stores an age band, `65-74`, and never a
   birthdate or a number.) She is not a real person.
 - **The live model path has never been exercised.** No endpoint was ever successfully
-  called during the build. `_live_turn` in `app/llm/orchestrator.py` has had static
-  review only, and so has the degraded layer: the test suite exercises the repository,
-  rules, statistics and summary, but imports no part of `app/llm/degraded.py` or
-  `app/llm/orchestrator.py`. Degraded mode has been walked by hand against the running
-  app. See "What is not verified" at the end.
+  called during the build, so `_live_turn` in `app/llm/orchestrator.py` has had static
+  review only. The degraded layer beside it is a different case: it *is* covered, by
+  `tests/test_degraded_and_output.py` (45 tests over intent routing, number extraction,
+  `check_output` and `_safety_context`). An earlier version of this paragraph said the
+  suite imported no part of `app/llm/`, which was wrong — it imports `degraded`,
+  `orchestrator`, `provider` and `help`. See "What is not verified" at the end.
 - No accessibility conformance audit (WCAG certification) was performed. The stylesheet
   was *designed for* stated accessibility targets; see the trade-offs table.
 
@@ -512,7 +513,7 @@ overstate its own safety. All three columns live on `care_plan`:
 |---|---|---|
 | `verified_by_user` | Did the patient confirm this? | The user agrees this is what their plan says. It says nothing about whether it is correct. |
 | `verified_by_team` | Did we check it against a source? | A team member read the cited page. It is not a clinical judgement. |
-| `reviewed_by_clinician` | Did a clinician sign off? | **Never set to 1 anywhere in this prototype.** `app/db.py` defaults it to 0, and the only code that reads it is the passthrough in `h_get_care_plan`; nothing writes a 1. |
+| `reviewed_by_clinician` | Did a clinician sign off? | **Never set to 1 anywhere in this prototype.** `app/db.py` defaults it to 0, and nothing writes a 1. Two places read it: the passthrough in `h_get_care_plan` (`app/tools/handlers.py`) and the badge in `app/templates/plan.html`, which would render "Reviewed by a clinician" if it were ever set. |
 
 `medication_item` does not carry these three columns. It has a single
 `confirmed_by_user` flag, so a medicine name and a plan instruction are not tracked at
@@ -570,7 +571,7 @@ Stated plainly, because a threat model that only lists what is handled is market
 | **No multi-tenancy hardening.** Isolation is a `WHERE user_id = ?` clause applied consistently, plus a session lookup. There is no row-level security, no per-tenant key, no tenancy boundary in the storage layer. | A missed filter in a future repository function would be a cross-user read, caught only by a test. `test_reports_cannot_cross_profiles` covers the paths that exist today. |
 | **No audit tamper-evidence.** `audit_event` is append-only by convention. Nothing hashes the chain, nothing signs it, and a process with database access can edit or delete rows. | The trace page is a faithful record of what the running system did, not a forensic one. It cannot prove the absence of a deleted line. |
 | **No clinical validation, clinical review, or user testing.** No clinician reviewed any rule or fact. No older adult was observed using the app. | Every safety property in this document is a property of the code. None of it has been tested against a real patient, a real clinical judgement, or a real emergency. Every rule and fact is `team_checked` or held back at `pending_review`; nothing is `clinician_reviewed`. |
-| **The live model path is unexercised.** No call to a configured endpoint has ever completed. | The orchestrator's tool loop, provider error handling, argument parsing and the output-check integration on live prose are all statically reviewed only. Neither live mode nor the degraded conversation layer is covered by the test suite — the suite exercises the repository, safety rules, statistics and summary, and imports no part of `app/llm/` except `help.py`. The degraded path has been walked by hand. |
+| **The live model path is unexercised.** No call to a configured endpoint has ever completed. | The orchestrator's tool loop, provider error handling, argument parsing and the output-check integration on live prose are all statically reviewed only. Live mode is covered by nothing. The degraded conversation layer beside it *is* covered, by `tests/test_degraded_and_output.py`; the suite imports `app/llm/degraded.py`, `orchestrator.py`, `provider.py` and `help.py`. |
 | **Content is a hand-checked set, not a curated corpus.** 14 sources, 23 enabled facts, all `team_checked`. | Recall is low by design. The app declines more often than a general-purpose assistant would, and that is the intended behaviour rather than a defect to be fixed by loosening retrieval. |
 | **Accessibility was designed for, not audited.** 19px base type, 48px tap targets, contrast chosen to meet WCAG AA, colour never the only signal, zero external requests so no font fails. | No conformance audit was run. No assistive-technology testing was performed. Stating design targets is not the same as claiming conformance, and this project does not claim it. |
 
@@ -589,7 +590,7 @@ largest gap between this prototype and a valid entry.
 
 | Claim | Status |
 |---|---|
-| 162 automated tests pass (`make test`) | Verified — run on 2026-10-11 |
+| 165 automated tests pass (`make test`) | Verified — 162 on 2026-10-11, 165 after the reset regression tests were added |
 | Safety router runs before the model and its verdict is not overridden | Verified by code path and by `tests/test_safety.py` |
 | The model has no reachable path that writes | Verified: no SQL tool, and `confirm_draft` has no schema so `schemas_for_model()` never emits it |
 | No rule or enabled fact contains a numeric BP threshold | Verified by two tests that scan the content files |

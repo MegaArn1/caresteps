@@ -44,6 +44,17 @@ def current_user_id(request: Request) -> str:
         profile = repo.get_profile(conn)
         if profile is None:
             # Empty database: build the fictional patient and its history.
+            #
+            # The knowledge base is loaded here too, and it is not optional. A judge
+            # who clones the repo and runs the server gets an empty database and
+            # therefore lands on this path, not on `make seed`. Loading only the
+            # patient - which is what this used to do - left the education tables
+            # empty, so `/app/medicines` could not explain a medicine whose name it
+            # knew. `make seed` does both, and this is the equivalent for the
+            # first-request path.
+            from ..content_loader import load_knowledge
+
+            load_knowledge(conn)
             demo_seed.seed_demo(conn)
             profile = repo.get_profile(conn)
     finally:

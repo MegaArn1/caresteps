@@ -123,7 +123,16 @@ async def reset(request: Request):
     * the connection is opened with ``connect()``, and
     * seeding is verified *before* success is reported. If the rebuild does not
       actually produce a profile, the response says so and does not claim success.
+
+    A third defect was found later and is fixed here: the handler re-seeded the
+    patient and the readings but never loaded the knowledge base, so after a reset
+    ``education_source`` and ``education_fact`` were empty. ``/app/medicines``
+    resolves each medicine to a fact by id, so every medicine rendered without its
+    explanation — the app knew the name and had nothing to say about it. Dropping a
+    table drops everything in it, and this one was filled by ``scripts/seed.py``
+    rather than by ``seed_demo()``, which is why the omission was easy to miss.
     """
+    from ..content_loader import load_knowledge
     from ..db import connect, reset_db
     from ..demo import seed as demo_seed
 
@@ -131,6 +140,9 @@ async def reset(request: Request):
 
     conn = connect()
     try:
+        # Knowledge first, then the patient: the medication rows reference education
+        # entries, so loading in the other order would leave the reference dangling.
+        knowledge = load_knowledge(conn)
         user_id = demo_seed.seed_demo(conn)
 
         # Verify the rebuild rather than assuming it. Reaching the end of the previous
@@ -138,16 +150,19 @@ async def reset(request: Request):
         # database went unnoticed.
         profile = repo.get_profile(conn, user_id)
         readings = repo.count_rows(conn, "bp_reading")
-        if not profile or readings == 0:
+        facts = repo.count_rows(conn, "education_fact")
+        if not profile or readings == 0 or facts == 0:
             return JSONResponse(
                 {
                     "ok": False,
                     "error": (
                         "The demo data could not be rebuilt, so the database is "
-                        "currently empty. Run 'make seed' from a terminal to restore it."
+                        "currently incomplete. Run 'make seed' from a terminal to "
+                        "restore it."
                     ),
                     "profiles": repo.count_rows(conn, "user_profile"),
                     "readings": readings,
+                    "education_facts": facts,
                 },
                 status_code=500,
             )
@@ -184,6 +199,8 @@ async def reset(request: Request):
             "message": "Demo data rebuilt. All of it is simulated.",
             "user_id": user_id,
             "readings": readings,
+            "education_facts": facts,
+            "knowledge_ok": knowledge.ok,
         }
     )
 

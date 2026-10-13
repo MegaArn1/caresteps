@@ -101,10 +101,24 @@ caresteps/
     education/         vetted knowledge entries with provenance
     rules/             safety rules with provenance and review status
   demo-data/           fictional patient, 14-day history, reset logic
+  scripts/             seeding, cover generation, and `demo-check`
   tests/               pytest suite over data behaviour, stats, summary, boundaries
   docs/                plan, architecture, evaluation, decisions
+  memory/              working notes kept next to the code, including the open gates
   submission/          competition materials
 ```
+
+Two of those directories deserve a word, because neither is a build artefact.
+
+`scripts/` holds the entry points the Makefile drives. `make demo-check` runs
+`scripts/demo_check.py`, which replays every routing case from the demo guide against a
+temporary database and prints a per-case pass or fail.
+
+`memory/` holds the short notes written while building: the invariants a future edit could
+silently break, the record of which submission gates are still open, and the research
+finding that Singapore publishes no numeric blood-pressure threshold. They are kept in the
+repository rather than in someone's head because the second reader of this code should get
+the same warnings the first one did. Nothing in them is load-bearing at runtime.
 
 ---
 

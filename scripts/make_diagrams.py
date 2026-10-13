@@ -54,6 +54,47 @@ def find_mmdc() -> list[str] | None:
     return None
 
 
+def _explain_failure(name: str, proc: subprocess.CompletedProcess) -> int:
+    """Turn a renderer crash into an instruction, not a stack trace.
+
+    The Mermaid CLI's most common failure by far is that it cannot start a browser,
+    and its default output for that is twenty lines of Puppeteer internals ending in
+    a ChromeLauncher frame. A stack trace tells the reader nothing they can act on,
+    so the known cases are recognised and named, and the raw output is kept behind
+    an environment variable for the case where it is genuinely needed.
+    """
+    raw = ((proc.stderr or "") + (proc.stdout or "")).strip()
+
+    print(f"  failed to render {name}.")
+
+    if "Could not find chrome" in raw or "chrome-headless-shell" in raw:
+        print("\n  Mermaid CLI could not find a browser to drive.")
+        print("  Either install one:   npx puppeteer browsers install chrome-headless-shell")
+        print("  or point at an existing one:")
+        print("      export PUPPETEER_EXECUTABLE_PATH=/path/to/chrome-headless-shell")
+        print("  (extract the chrome-for-testing zip if the installer needs an archiver")
+        print("   this machine does not have).")
+    elif "no zip archiver" in raw or "Extraction failed" in raw:
+        print("\n  The browser download could not be unpacked: no archiver is available.")
+        print("  Install 'unzip', or download and extract the chrome-for-testing zip")
+        print("  yourself and set PUPPETEER_EXECUTABLE_PATH to the binary.")
+    elif "Failed to launch" in raw or "ChromeLauncher" in raw or "BrowserLauncher" in raw:
+        print("\n  A browser was found but would not start.")
+        print("  In a container or under WSL this is usually the sandbox. Try:")
+        print("      export PUPPETEER_EXECUTABLE_PATH=/path/to/chrome-headless-shell")
+        print("  and re-run; this script already passes --no-sandbox to the renderer.")
+    else:
+        print("\n  The renderer failed for a reason this script does not recognise.")
+        print("  Re-run with MERMAID_DEBUG=1 to see its raw output.")
+
+    if os.environ.get("MERMAID_DEBUG"):
+        print("\n  --- renderer output ---")
+        for line in raw.splitlines()[-30:]:
+            print(f"  {line}")
+
+    return 1
+
+
 def main() -> int:
     blocks = extract_blocks()
     if len(blocks) != len(NAMES):
@@ -94,11 +135,7 @@ def main() -> int:
                 capture_output=True, text=True, env=env,
             )
             if proc.returncode != 0 or not dst.exists():
-                print(f"  failed to render {name}:")
-                tail = (proc.stderr or proc.stdout or "").strip().splitlines()[-6:]
-                for line in tail:
-                    print(f"    {line}")
-                return 1
+                return _explain_failure(name, proc)
 
             from PIL import Image
 

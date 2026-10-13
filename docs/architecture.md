@@ -28,6 +28,11 @@ are given so a reader can verify rather than trust.
 
 ## 1. System architecture
 
+A rendered copy of this diagram is committed at
+[`../submission/diagrams/architecture-system.png`](../submission/diagrams/architecture-system.png)
+(the submission needs an image; the Mermaid source below is the one to edit, and
+`make diagrams` re-renders it).
+
 ```mermaid
 flowchart TB
     User["User — phone browser<br/>text and structured input"]
@@ -104,6 +109,9 @@ recorded rather than quietly fixed, because the build log is a process record.
 ---
 
 ## 2. Trust boundaries
+
+Rendered copy:
+[`../submission/diagrams/architecture-trust-boundaries.png`](../submission/diagrams/architecture-trust-boundaries.png).
 
 Four trust zones, not three. The application zone is split in two because the code
 that decides *whether* a write is permitted is a different kind of thing from the code

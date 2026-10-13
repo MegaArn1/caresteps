@@ -585,7 +585,7 @@ largest gap between this prototype and a valid entry.
 | Safety router runs before the model and its verdict is not overridden | Verified by code path and by `tests/test_safety.py` |
 | The model has no reachable path that writes | Verified: no SQL tool, and `confirm_draft` has no schema so `schemas_for_model()` never emits it |
 | No rule or enabled fact contains a numeric BP threshold | Verified by two tests that scan the content files |
-| The degraded path works without a model | Verified by running the app through the demo cases. **Not** verified by the test suite — no test imports `app/llm/degraded.py`. |
+| The degraded path works without a model | Verified by running the app through the demo cases, and by `tests/test_degraded_and_output.py` (45 tests over intent routing, number extraction, `check_output` and `_safety_context`). |
 | The **live** path works against a real endpoint | **Not verified.** Statically reviewed only. |
 | Clinical review of rules or content | **Not done.** `team_checked` throughout, plus two rules held at `pending_review`. |
 | Accessibility conformance | **Not audited.** Designed for stated targets. |

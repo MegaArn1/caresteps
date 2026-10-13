@@ -9,7 +9,7 @@ VENV := .venv
 BIN := $(VENV)/bin
 PORT ?= 8000
 
-.PHONY: help setup seed run run-live test test-fast lint reset clean db-shell demo-check
+.PHONY: help setup seed run run-live test test-fast reset clean db-shell demo-check
 
 help:
 	@echo "CareSteps - available targets:"

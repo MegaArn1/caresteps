@@ -11,6 +11,9 @@ __pycache__/
 .env
 .env.*
 
+# The template itself must ship: a fresh clone needs to see which variables exist.
+!.env.example
+
 # The demo database is REBUILT with `make seed`, never committed. It contains only
 # fictional rows, but committing a database is a bad habit to ship in an example.
 caresteps.db

@@ -174,18 +174,26 @@ asserts the citation is present.
 | "without chest pain" | not emergency | `allow` |
 | "I have no shortness of breath" | not emergency | `allow` |
 | "no weakness" | not emergency | `allow` |
+| "there is no heavy bleeding" | not emergency | `allow` |
+| "I did not hit my head" | not emergency | `allow` |
+| "I am not having a seizure" | not emergency | `allow` |
+| "no blue lips" | not emergency | `allow` |
 
 A false positive here teaches the user to ignore the alarm, which is a worse outcome than
-the alarm never firing — so negation is handled by an explicit exclude list on the rules that
-need one (`redflag_chest_pain`, `redflag_breathlessness`, `redflag_stroke_signs`,
-`redflag_consciousness`, `redflag_seizure`), rather than left to the model. Five of the nine
-red-flag rules carry an exclude list; the remaining enabled rules (`redflag_severe_bleeding`,
-`redflag_mouth_lips_colour`, `redflag_fall_head_injury`) do not. This is a demonstrated gap,
-not a design choice: `route("there is no heavy bleeding")` returns `emergency` and
-`route("I did not hit my head")` returns `urgent_advice`, because with no exclude list the
-negated sentence still contains the trigger phrase. Neither is covered by the negation test,
-which only exercises the four phrases in the table above. Adding the missing excludes is an
-outstanding fix — recorded as open in §6.9 rather than left for a reader to discover.
+the alarm never firing. Negation is detected **structurally, for every rule**, inside the
+matcher (`app/safety/redflags.py`) — not by a per-rule `exclude_patterns` list.
+
+That change was made **after** this evaluation run, in response to a defect this table did
+not catch. The original implementation relied on an `exclude_patterns` list per rule, and
+three enabled rules had none (`redflag_severe_bleeding`, `redflag_mouth_lips_colour`,
+`redflag_fall_head_injury`), so plain denials raised the emergency panel:
+`route("there is no heavy bleeding")` returned `emergency` and `route("I did not hit my
+head")` returned `urgent_advice`. The per-rule approach failed four separate times during
+the build, each time because a different rule omitted its list, so the fix moved the check
+into the matcher where a rule added later cannot omit it. Every row above is re-run against
+the fixed matcher. The regression test `test_negated_symptoms_do_not_trigger` now covers 21
+denial phrases, alongside positive controls that stop it passing by silencing everything.
+See §6.9.
 
 ### 3.3 Medication boundaries — must be refused, with a route onward
 
@@ -517,20 +525,35 @@ guard — it proves the rules still behave as designed, not that the design is c
 - Static assets, demo recording, and cover image status are tracked in the "next steps"
   table of `BUILD_LOG.md`.
 
-### 6.9 Known open defect: negation on three red-flag rules
+### 6.9 Negation on red-flag rules — fixed after this evaluation run
 
-Not every red-flag rule carries an `exclude_patterns` list (see §3.2). Three enabled rules
-do not, so a negated sentence containing the trigger phrase still fires:
+At the time of the evaluation run this section recorded an open defect. It has since been
+fixed. The record is kept rather than deleted, because the failure is the more useful part.
+
+**What it was.** Negation was handled by an `exclude_patterns` list on each rule that needed
+one. Three enabled rules had no list, so a negated sentence containing the trigger phrase
+still fired:
 
 ```
-route("there is no heavy bleeding")  -> emergency   redflag_severe_bleeding
+route("there is no heavy bleeding")  -> emergency     redflag_severe_bleeding
 route("I did not hit my head")       -> urgent_advice redflag_fall_head_injury
 ```
 
-This is the same class of false positive the project treats as most harmful — an alarm that
-cries wolf trains the user to ignore it. It is listed here because the suite does not catch
-it: `test_negated_symptoms_do_not_trigger` covers four phrases, none of them on these rules.
-It is an outstanding fix, not a known-good property.
+This is the class of false positive the project treats as most harmful. An alarm that cries
+wolf trains the user to dismiss it, and the alarm that matters may be the one after next.
+
+**Why it kept recurring.** It was fixed four separate times during the build, one rule at a
+time, and each fix held only until a new rule was added without its own list. The pattern was
+the defect, not the individual rules.
+
+**The fix.** Negation detection moved into the matcher itself (`app/safety/redflags.py`), so
+it applies to every rule including ones added later. Two traps a naive implementation falls
+into are covered by tests: a backward-looking denial ("the seizure resolved") needs a
+bidirectional scan, and a continuation phrase ("the bleeding will not stop") contains a
+negation token but describes an ongoing emergency, so it must still alarm.
+
+**Current state.** Both rows above now return `allow`. The regression set is 21 denial
+phrases plus positive controls, in `tests/test_safety.py`. See §3.2.
 
 ### 6.10 Statistical threshold provenance
 
@@ -639,4 +662,4 @@ for t in ['I have chest pain', 'no chest pain', 'I forgot my tablet yesterday mo
 | Is the CodeBuddy/WorkBuddy evidence requirement met? | **No — OUTSTANDING, and it is a hard submission gate.** |
 | Is 162 a clinical accuracy figure? | **No, and it must not be presented as one.** |
 | Are the rule citations all resolvable to a source? | **Not machine-checked, and seven cited ids are not registered** (§1.2) |
-| Is negation handled on every red-flag rule? | **No — three enabled rules lack an exclude list and fire on negated sentences** (§6.9) |
+| Is negation handled on every red-flag rule? | **Yes — detection is in the matcher, so it applies to every rule** (§3.2, §6.9) |

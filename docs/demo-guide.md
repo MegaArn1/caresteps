@@ -102,8 +102,10 @@ make test        # 162 passed
 make reset && make seed    # back to a known state
 ```
 
-`make demo-check` is declared in the Makefile but `scripts/demo_check.py` does not exist. Do not
-type it on stage.
+`make demo-check` runs `scripts/demo_check.py`. It drives every sentence in §3 through the real
+HTTP surface against a **temporary** database, compares the verdicts against the tables there, and
+prints a per-case pass or fail. It forces degraded mode and never writes to `caresteps.db`, so it
+is safe to run immediately before going on stage. It should report 27/27.
 
 ### 1.2 Two environment configurations
 
@@ -1025,17 +1027,22 @@ What "odd" looks like: the home page says there are readings from 60 days but th
 shows none; a barrier appears with an id that does not resolve; the record count is larger than
 expected. All three are symptoms of a database that has been written to during a rehearsal.
 
-**`POST /api/demo/reset` is broken in this build. Do not call it on stage.** It answers HTTP 500,
-not the "Demo data rebuilt. All of it is simulated." it was written to return, and it is
-destructive rather than merely unusable: the handler drops every table first and then dies before
-re-seeding them, so the app is left with zero profiles, zero readings and zero barriers. The
-route is not repairable with a URL change; the fault is in `app/routes/api.py`, which calls
-`db_session()` as a plain function when `app/db.py` defines `session()` as a `@contextmanager` —
-so `seed_demo` fails at its first `execute` and the `finally: conn.close()` fails too. The lazy
-re-seed in `app/routes/deps.py` will rebuild the patient on the next page view, but it never calls
-`load_knowledge`, so the education tables stay empty and `/app/medicines` silently loses the
-Amlodipine explanation and says it could not match the name instead. If you have already called
-it, recover with the command at the top of this section.
+**`POST /api/demo/reset` works, and it is safe to use.** It returns the "Demo data rebuilt. All of
+it is simulated." message it was written to return, and it rebuilds the patient, the readings and
+the education tables together.
+
+This row used to say the opposite, and the history is worth keeping because it is the worst bug
+this project shipped. The earlier handler dropped every table and then died before re-seeding
+them, answering HTTP 500 and leaving the app with zero profiles — a "recover the database" button
+that destroyed the database. The cause was `session()`, a `@contextmanager` in `app/db.py`, being
+called as though it were a connection. Two changes in `app/routes/api.py` make that state
+impossible now: the connection is opened with `connect()`, and the rebuild is **verified**
+(success is reported only if a profile exists and readings were written) rather than assumed from
+reaching the end of the function.
+
+Verified live: HTTP 200, one profile, 11 readings. `make reset && make seed` remains the command
+to prefer on stage, because it does the same thing without a round trip through the browser — but
+if the database looks wrong mid-demo, this route is a working way back.
 
 ### A page errors
 
@@ -1267,9 +1274,11 @@ Cut this out and keep it beside the laptop.
 Pre-flight: `make setup` → `make seed` → `make run` → check `/healthz` → run Group A, B, G once →
 video ready.
 
-Do not type on stage: `make demo-check` (the script does not exist), `POST /api/demo/reset` (500s
-and wipes the database), anything from the group-B risk table (`there is no heavy bleeding`,
-`I did not hit my head`, `no blue lips`, `I am not having a seizure`).
+Safe to use on stage: `make demo-check` (27/27 expected) and `POST /api/demo/reset` (returns 200
+and rebuilds the demo data). The group-B sentences (`there is no heavy bleeding`, `I did not hit
+my head`, `no blue lips`, `I am not having a seizure`) are also safe — they must not alarm, and
+they do not. Type one only if you intend to show the negation behaviour; typed by accident during
+the emergency segment it produces a quiet answer, not a panel.
 
 Do not say: clinical validation, real patients, hospital integration, live model verified,
 accessibility certified, that the demo data is a trial, or that the app detects a dangerous blood

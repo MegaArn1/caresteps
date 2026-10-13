@@ -21,9 +21,9 @@ than argue around it. Three limits apply to the whole document:
    `pending_review` instead, because they need clinical input we have not had. No clinician
    has read any of it.
 2. **The live model path has never been exercised against a real endpoint.** It is
-   statically reviewed only. The degraded (no-model) path is what we actually run and
-   have walked by hand; the pytest suite does not cover it either, so the coverage claim
-   for it is our account of manual use, not a test result.
+   statically reviewed only. The degraded (no-model) path is the one we actually run; it
+   is covered by `tests/test_degraded_and_output.py` (45 tests). The live path is not
+   covered by anything but static review.
 3. **There is no integration with any hospital system, HealthHub, or PTEC.** None was
    built and none is claimed.
 
@@ -417,9 +417,10 @@ than a raw argument dump.
 chains, simulated flags, the refusal to write `unrecorded` as a report), safety boundaries
 (a set of configured emergency, boundary and ordinary phrases reproduced against the real
 `route()`, plus rule-file integrity and the specific exclusions that prevent a false
-refusal), and statistics and summary outputs. They do not cover the live model path,
-because it has never been run, and they do not exercise the degraded conversation layer
-either.
+refusal), statistics and summary outputs, and the degraded conversation layer
+(`tests/test_degraded_and_output.py`, 45 tests, covering intent routing, number
+extraction, `check_output` and `_safety_context`). They do not cover the live model path,
+because it has never been run.
 
 ---
 

@@ -532,7 +532,7 @@ Nothing above should be taken on trust. The artefacts are in the repository.
 | 14 sources, with publishers, URLs, dates and review states | `content/education/sources.json` |
 | 23 enabled facts and their source ids | `content/education/facts.json` |
 | The audit, the 14 rewrites and the reason for each | `facts.json` → `_audit` |
-| The 63 candidates and the 32 rejections, with the defect named for six of them | `docs/BUILD_LOG.md`, phase P7 |
+| The 63 candidates and the 32 rejections, with the defect named for five of them | `docs/BUILD_LOG.md`, phase P7 |
 | No numeric threshold in any rule or config | `tests/test_safety.py`; run `make test` |
 | No numeric threshold in enabled content | `tests/test_data_integrity.py` |
 | Uncited rules cannot load | `app/safety/rules.py`; `content/rules/boundaries.json` |
@@ -541,9 +541,9 @@ Nothing above should be taken on trust. The artefacts are in the repository.
 | No clinical review anywhere | `review_state` fields in `content/education/*.json` and `content/rules/*.json`; every enabled entry reads `team_checked` |
 
 The automated test suite is 165 tests, covering data integrity, safety boundaries, statistics
-and summary behaviour, the degraded conversation layer, and the demo flows. All 165 pass. That figure and the ones in this document come from
-`docs/BUILD_LOG.md` and from test output; no other numbers about this project's coverage or
-performance are asserted anywhere.
+and summary behaviour, the degraded conversation layer, and the demo flows. All 165 pass. That
+figure and the ones in this document come from `docs/BUILD_LOG.md` and from test output.
+`docs/evaluation.md` also names per-file test counts.
 
 ---
 

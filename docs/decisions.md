@@ -204,9 +204,10 @@ Two structural points carry most of the weight:
   handlers in `UI_ONLY_HANDLERS`, and `dispatch()` refuses them unless a confirmation page
   called it. `app/repository.py` is the module that performs those writes, using parameterised
   statements. The exceptions are build-time code, not model-reachable paths: `app/demo/seed.py`
-  and `app/content_loader.py` issue statements directly, and `app/db.py` owns the schema. The
-  model has no path to a direct write, which makes "the model cannot save anything by itself" a
-  structural fact rather than a prompt instruction.
+  issues statements directly, and `app/db.py` owns the schema. `app/content_loader.py` writes
+  only through `repo.upsert_education_source` and `repo.upsert_education_fact`. The model has
+  no path to a direct write, which makes "the model cannot save anything by itself" a structural
+  fact rather than a prompt instruction.
 
 **Cost.** A single agent has one context window and one tool budget. If a future version needed
 genuinely different reasoning for a benefits question and a records question, a single agent
@@ -717,10 +718,10 @@ satisfy, and it is recorded in `docs/content-provenance.md` section 6 and in
 |---|---|---|
 | A single OpenAI-compatible wire format for the model | One format the adapter is small enough to audit, and it decouples the app from a vendor | `app/llm/provider.py` |
 | A failed model call returns `ok=False` rather than raising | A dead endpoint degrades the app; it does not break it | `LLMResult` in `app/llm/provider.py`; the failure branch in `_live_turn` |
-| Statistics thresholds set at 2 readings for a mean and 3 per window for a comparison | An engineering judgement to avoid describing a period from a single reading | `MIN_READINGS_FOR_MEAN`, `MIN_READINGS_PER_WINDOW_FOR_COMPARISON` in `app/stats.py`, marked in the comments as an engineering judgement and not a literature finding |
+| Statistics thresholds set at 2 readings for a mean and 3 per window for a comparison | An engineering judgement to avoid describing a period from a single reading | `MIN_READINGS_FOR_MEAN`, `MIN_READINGS_PER_WINDOW_FOR_COMPARISON` in `app/stats.py` |
 | Local emergency numbers are shown only when the entry is verified | The most dangerous bug found in the whole build was two templates printing the emergency number when the verification flag was false | Fixed and recorded in `docs/BUILD_LOG.md` phase P5 |
 | The user's own words are stored verbatim in barrier records and reproduced on the summary | A concern rewritten into clinical language is no longer the patient's concern | `app/summary.py` (the `difficulties` block carries `user_words` with `record_ids`, labelled confirmed or not confirmed by the patient); `app/routes/barrier.py` records the words as submitted |
-| The visit summary is preview, edit, omit, then print — never sent | The app cannot send anything, and must not appear to | `app/summary.py::apply_omissions`; `docs/PLAN.md` M5 |
+| The visit summary is preview, edit, omit, then print — never sent | The app cannot send anything, and must not appear to | `app/summary.py::apply_omissions`; `app/templates/summary.html` |
 | Two held-back safety rules ship disabled rather than deleted | The demo can show a rule that exists and is held back pending confirmation instead of pretending the gap is not there | `redflag_fever_with_confusion`, `boundary_emergency_contact_change` |
 | The demo database resets by deleting the file | No migration tooling is needed for fictional data, and a clean demonstration is worth more than persisted state | `make seed`, `make reset`, and `app/db.py::reset_db` |
 

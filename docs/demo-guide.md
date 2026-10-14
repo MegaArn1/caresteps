@@ -5,7 +5,9 @@
 > database — with two exceptions, both marked where they occur: the conversational turns were
 > driven through `POST /api/chat` rather than an on-screen chat box, because no template in this
 > build renders one, and the live model path has never been run at all. Where a claim is not
-> verified, it says so.
+> verified, it says so. **Literal dates quoted below (2026-09-28, 2026-10-10, 2026-10-11) are
+> from that 2026-10-11 run and shift every day because the seed builds relative to `date.today()`.**
+> The counts and ranges remain exactly correct; only the calendar dates drift.
 
 Project identity, for the framing: Tencent Cloud AI Singapore Hackathon 2026, Healthcare Track
 (NTU LKC Medicine), Challenge Statement 2 — "AI Healthier Every Day: Intelligent Support for
@@ -113,14 +115,13 @@ is safe to run immediately before going on stage. It should report 27/27.
 
 Nothing to set. Start with `make run`.
 
-- Every page carries a banner except two: "**Limited mode** — The assistant is not connected, so
-  free-text questions are answered by a simpler set of rules. Everything else works: you can still
-  record readings, see your numbers, prepare for your appointment, and use the help bar."
-  `/summary/print` suppresses the banner deliberately — nothing on that page is interactive, so a
-  banner offering a way out of a broken state has nothing to act on — and `/trace` does not render
-  it either, because the trace route does not pass the variable `base.html` guards on. If you say
-  "every page" and a judge then looks at `/trace`, the one page you call the honest one, the claim
-  is checkable and wrong. Say "every page except the printable summary and the trace page".
+- Most pages carry a banner: "**Limited mode** — The assistant is not connected, so free-text
+  questions are answered by a simpler set of rules. Everything else works: you can still record
+  readings, see your numbers, prepare for your appointment, and use the help bar." Three pages
+  suppress it: `/summary/print` (nothing interactive, so no way-out banner needed), `/trace`
+  (does not pass the variable `base.html` guards on), and the reading confirmation page (does not
+  spread `_base(request)`, so `agent` is undefined). Say "most pages carry the banner; the
+  printable summary, the trace page, and the confirmation page do not".
 - The banner also prints the reason in brackets: `(LLM_BASE_URL / LLM_MODEL not set)`.
 - Free-text chat falls back to a transparent keyword router that handles: recording a reading with
   numbers, reporting a medication state, viewing trends, building a summary, viewing the plan,
@@ -605,19 +606,12 @@ Click path: nav item **Appointment**, or `/summary`.
 2. Scroll to **Reported by the patient** and click **Remove from summary** on one section — for
    example the reading notes, or how the patient said they felt.
 
-   **The section does not disappear from this preview. Do not point at it expecting that.** What
-   changes on this page is the button label, which flips to **Put back in the summary**; the
-   section's content stays on screen in full. The omission is real, but it is applied only by
-   `/summary/print` — the print route runs the omissions, the preview route does not. So show the
-   effect where it actually happens: click **Print or save as PDF** (step 3) and point at the
-   missing section on the printed page, or open `/summary/print` in a second tab. Say it the way
-   the page itself explains it:
-
-   > Removing a section takes it out of the printed version only. It does not delete anything from
-   > your record, and it does not change what is stored.
-
-   That sentence is accurate and is the whole design: the section leaves the paper, not the
-   record, and not this preview.
+   **The section disappears from this preview immediately** — the button flips to **Put back in
+   the summary** and the content vanishes. The omission applies to both the preview (`/summary`)
+   and the print route (`/summary/print`). Both routes call `apply_omissions(facts, omitted)`
+   before rendering. The section leaves the paper and the preview, but not the underlying record.
+   Say: "Removing a section takes it out of the summary you see here and out of the printed
+   version. It does not delete anything from your record, and it does not change what is stored."
 
    What is omittable is a fixed list: feelings, reading notes, difficulties, chosen actions, and
    questions. What is **not** omittable is the completion block and the readings. The reason is in
@@ -1275,7 +1269,7 @@ Cut this out and keep it beside the laptop.
 | 0:40 | `/readings/new` | Record a reading. Show "Nothing has been saved yet". Confirm. Point at the count change. |
 | 1:30 | `/support/ask` | Type a reason. **Pick no category.** Show "No reason has been given a name yet." Then pick one and show the support change. Open `/app/support` for the 7-category map. |
 | 2:40 | `/app/medicines` | Statement, source with URL, `team_checked` caveat. Then `POST /api/chat`: `should I double the dose today`, `what is this white round pill`. |
-| 3:30 | `/app/trends` → `/summary` | Denominators. Broken line. Four adherence states with unrecorded apart. Then remove a section and **show it gone on the printed page** — the preview keeps it, by design. |
+| 3:30 | `/app/trends` → `/summary` | Denominators. Broken line. Four adherence states with unrecorded apart. Then remove a section — **it vanishes from the preview** and from the print route, but not from the record. |
 | 4:30 | `POST /api/chat` → `/app/help` | `I have chest pain` → 995, and "The app has not contacted anyone". Then "What this app is not". The "call only for something life-threatening" line is on `/app/help`, not in the JSON. |
 | 5:20 | `/trace` | Model status. 10 tool contracts. **21 live rules**, 23 total with 2 held for review. The live audit log. |
 

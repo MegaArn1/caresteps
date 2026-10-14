@@ -87,8 +87,7 @@ caresteps/
     main.py            FastAPI app, startup, session
     config.py          environment settings
     db.py              SQLite schema and connection
-    models.py          domain types
-    repository.py      the ONLY module that writes to the database
+    repository.py      database writes; seed.py also writes directly
     stats.py           deterministic statistics
     summary.py         visit summary fact table
     safety/            deterministic routing: red flags, boundaries, clarification
@@ -100,7 +99,7 @@ caresteps/
   content/
     education/         vetted knowledge entries with provenance
     rules/             safety rules with provenance and review status
-  demo-data/           fictional patient, 14-day history, reset logic
+  demo-data/           README.md explaining the seed (patient/history live in code)
   scripts/             seeding, cover generation, and `demo-check`
   tests/               pytest suite over data behaviour, stats, summary, boundaries
   docs/                plan, architecture, evaluation, decisions

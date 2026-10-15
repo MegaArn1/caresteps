@@ -1072,6 +1072,7 @@ tr.superseded td.note {
   box-shadow: var(--shadow-md);
   position: relative;
   animation: slideIn 0.3s ease-out;
+  word-wrap: break-word;
 }
 
 @keyframes slideIn {
@@ -1086,10 +1087,29 @@ tr.superseded td.note {
 }
 
 .msg.assistant {
-  background: var(--surface-base);
-  border: 1px solid var(--gray-200);
+  background: var(--gradient-card);
+  border: 2px solid var(--gray-200);
   align-self: flex-start;
   border-radius: var(--radius-xl) var(--radius-xl) var(--radius-xl) 6px;
+  color: var(--gray-900);
+  box-shadow: var(--shadow-sm);
+}
+
+.msg.assistant::before {
+  content: '🤖';
+  position: absolute;
+  left: -12px;
+  top: -8px;
+  font-size: 20px;
+  background: var(--surface-base);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+  border: 2px solid var(--primary-light);
 }
 
 .msg.user {
@@ -1097,7 +1117,25 @@ tr.superseded td.note {
   color: #FFFFFF;
   align-self: flex-end;
   border-radius: var(--radius-xl) var(--radius-xl) 6px var(--radius-xl);
-  box-shadow: var(--shadow-md), var(--shadow-glow);
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
+  font-weight: 500;
+  border: none;
+}
+
+.msg.user::before {
+  content: '👤';
+  position: absolute;
+  right: -12px;
+  top: -8px;
+  font-size: 18px;
+  background: var(--accent);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
 }
 
 .msg.safety {

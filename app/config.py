@@ -13,6 +13,21 @@ from pathlib import Path
 
 APP_ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = APP_ROOT.parent
+
+# Load .env from the project root if it exists. This is intentionally simple:
+# we only set variables that are not already present in the environment, so a
+# real deployment's platform-injected values always win over the file.
+_dotenv = PROJECT_ROOT / ".env"
+if _dotenv.exists():
+    for _line in _dotenv.read_text(encoding="utf-8").splitlines():
+        _line = _line.strip()
+        if not _line or _line.startswith("#") or "=" not in _line:
+            continue
+        _k, _, _v = _line.partition("=")
+        _k = _k.strip()
+        _v = _v.strip().strip('"').strip("'")
+        if _k and _k not in os.environ:
+            os.environ[_k] = _v
 CONTENT_DIR = PROJECT_ROOT / "content"
 DEMO_DATA_DIR = PROJECT_ROOT / "demo-data"
 DB_PATH = Path(os.environ.get("CARESTEPS_DB", PROJECT_ROOT / "caresteps.db"))

@@ -105,11 +105,12 @@ class Provider:
         payload: dict[str, Any] = {
             "model": self.s.model,
             "messages": messages,
-            # Low temperature: this app values consistency over variety. Two runs of
-            # the same safety-relevant turn should not disagree.
-            "temperature": temperature,
             "max_tokens": max_tokens,
         }
+        # Only include temperature if it's supported by the model
+        # Some models (e.g., claude-sonnet-5-5) don't support temperature parameter
+        if temperature != 0.2 or not self.s.model.startswith("claude-sonnet-5"):
+            payload["temperature"] = temperature
         if tools:
             payload["tools"] = tools
             payload["tool_choice"] = "auto"

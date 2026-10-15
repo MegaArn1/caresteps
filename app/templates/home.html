@@ -233,6 +233,71 @@
   next visit. Nothing is sent anywhere by this app.
 </p>
 
+{# -------------------------------------------------------------------- chat
+   The assistant is reachable here without navigating away. It runs through the
+   same safety gates and tool loop as every other path. If the model is not
+   connected the reply is clearly labelled as coming from the rule set.
+#}
+<div class="card" style="margin-top:24px">
+  <h2>Ask the assistant</h2>
+  <p class="small muted">
+    You can ask about your readings, your medicines, or what to do next.
+    The assistant cannot change a prescription and cannot contact anyone for you.
+    {% if agent and agent.degraded %}
+      <span class="badge warn" style="vertical-align:middle">Limited mode — no model connected</span>
+    {% elif agent and agent.live %}
+      <span class="badge ok" style="vertical-align:middle">Assistant connected</span>
+    {% endif %}
+  </p>
+
+  <div class="chat" id="chat-log" aria-live="polite" aria-label="Conversation" role="log">
+    {# Prior messages for this session are loaded by the script below. #}
+  </div>
+
+  <form id="chat-form" class="composer" autocomplete="off">
+    <textarea
+      id="chat-input"
+      name="message"
+      rows="2"
+      placeholder="Type a question…"
+      aria-label="Your message"
+      style="font-size:18px"></textarea>
+    <button class="btn primary" type="submit" aria-label="Send">Send</button>
+  </form>
+</div>
+
+<script>
+/* Load any messages already in this session so the log survives a refresh. */
+(function () {
+  fetch("/api/messages?limit=20")
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (!data.ok || !data.messages || !data.messages.length) return;
+      var log = document.getElementById("chat-log");
+      if (!log) return;
+      data.messages.forEach(function (m) {
+        var div = document.createElement("div");
+        if (m.role === "user") {
+          div.className = "msg user";
+          div.textContent = m.content;
+        } else {
+          /* Re-render assistant turns through the same renderer so
+             emergency / safety panels reappear correctly after a refresh. */
+          if (window.carestepsChat && m.payload) {
+            /* carestepsChat is the sender; for history we use renderReply
+               which is not exposed — fall back to plain text for now. */
+          }
+          div.className = "msg assistant";
+          div.textContent = m.content;
+        }
+        log.appendChild(div);
+      });
+      log.scrollTop = log.scrollHeight;
+    })
+    .catch(function () { /* silent — history is not critical */ });
+})();
+</script>
+
 <div class="card flat" style="margin-top:32px">
   <h2>Demo Controls</h2>
   <p class="small muted">

@@ -239,15 +239,17 @@
    connected the reply is clearly labelled as coming from the rule set.
 #}
 <div class="card" style="margin-top:24px">
-  <h2>Ask the assistant</h2>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <h2 style="margin:0">Ask the assistant</h2>
+    {% if agent and agent.degraded %}
+      <span class="badge warn">Limited mode</span>
+    {% elif agent and agent.live %}
+      <span class="badge ok">Assistant connected</span>
+    {% endif %}
+  </div>
   <p class="small muted">
     You can ask about your readings, your medicines, or what to do next.
     The assistant cannot change a prescription and cannot contact anyone for you.
-    {% if agent and agent.degraded %}
-      <span class="badge warn" style="vertical-align:middle">Limited mode — no model connected</span>
-    {% elif agent and agent.live %}
-      <span class="badge ok" style="vertical-align:middle">Assistant connected</span>
-    {% endif %}
   </p>
 
   <div class="chat" id="chat-log" aria-live="polite" aria-label="Conversation" role="log">

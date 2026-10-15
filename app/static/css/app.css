@@ -253,7 +253,7 @@ nav.main a:hover {
 }
 
 nav.main a[aria-current="page"] {
-  color: var(--surface-base);
+  color: #FFFFFF;
   background: var(--gradient-primary);
   box-shadow: var(--shadow-md), var(--shadow-glow);
 }

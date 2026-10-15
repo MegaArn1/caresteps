@@ -52,6 +52,7 @@ export LLM_BASE_URL="https://your-endpoint/v1"
 export LLM_API_KEY="sk-..."
 export LLM_MODEL="your-model"
 make run
+
 ```
 
 `LLM_BASE_URL` must be an **OpenAI-compatible** `/v1/chat/completions` endpoint that supports

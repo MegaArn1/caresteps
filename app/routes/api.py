@@ -40,7 +40,12 @@ async def chat(request: Request, message: str = Form(...)):
     try:
         repo.add_message(conn, user_id, sid, "user", text)
 
-        result = run_turn(conn, user_id, sid, text, ctx_drafts={})
+        # Keep a reference to the drafts dict. The ToolContext inside _live_turn
+        # mutates the same object, so any prepare_* call will have populated it by
+        # the time run_turn returns. We bridge the results to the session below so
+        # the chat-confirm endpoints can find them on the next request.
+        ctx_drafts: dict = {}
+        result = run_turn(conn, user_id, sid, text, ctx_drafts=ctx_drafts)
 
         repo.add_message(
             conn, user_id, sid, "assistant", result.text,
@@ -57,7 +62,62 @@ async def chat(request: Request, message: str = Form(...)):
     finally:
         conn.close()
 
+    # Persist any drafts the live turn produced so the confirm endpoint can find
+    # them. The reading form uses request.session["reading_draft"] directly; the
+    # chat path uses a keyed store so multiple prepare_* calls in one session do
+    # not clobber each other.
+    if ctx_drafts:
+        existing = request.session.get("chat_drafts") or {}
+        existing.update(ctx_drafts)
+        request.session["chat_drafts"] = existing
+
     return JSONResponse({"ok": True, **result.to_dict()})
+
+
+@router.post("/chat/confirm")
+async def chat_confirm(request: Request, draft_id: str = Form(...)):
+    """Save a draft that the chat path produced.
+
+    The live turn calls prepare_reading or prepare_medication_report, which put
+    the draft into ctx_drafts; the /api/chat handler then persists that dict to
+    the session under "chat_drafts". This endpoint retrieves it, calls
+    confirm_draft (the UI-only handler), and clears the entry.
+
+    It mirrors the two-phase pattern that the form-based flow uses, just with
+    the draft keyed by the id the model returned rather than stored flat.
+    """
+    from ..tools import ToolContext, dispatch
+    from ..tools.handlers import h_confirm_draft
+
+    user_id = current_user_id(request)
+    sid = get_session_id(request)
+
+    chat_drafts = request.session.get("chat_drafts") or {}
+    if draft_id not in chat_drafts:
+        return JSONResponse(
+            {"ok": False, "error": "That draft is no longer waiting. Please try again."},
+            status_code=400,
+        )
+
+    conn = db()
+    try:
+        ctx = ToolContext(conn=conn, user_id=user_id, session_id=sid, drafts=chat_drafts)
+        result = h_confirm_draft(ctx, {"draft_id": draft_id})
+        if result.status != "ok":
+            return JSONResponse({"ok": False, "error": result.message}, status_code=400)
+        repo.audit(
+            conn, kind="tool_call", user_id=user_id, session_id=sid,
+            tool_name="confirm_draft", args={"draft_id": draft_id},
+            result_status="ok", rule_version=RULES.version, mode="ui",
+        )
+    finally:
+        conn.close()
+
+    # Remove the entry now it has been persisted.
+    chat_drafts.pop(draft_id, None)
+    request.session["chat_drafts"] = chat_drafts
+
+    return JSONResponse({"ok": True, **result.data})
 
 
 @router.get("/status")
@@ -87,19 +147,6 @@ def audit(request: Request, limit: int = 80):
     conn = read_conn()
     try:
         return {"ok": True, "events": repo.list_audit(conn, session_id=sid, limit=limit)}
-    finally:
-        conn.close()
-
-
-@router.get("/stats")
-def stats(request: Request, days: int = 14):
-    """The computed statistics, exposed so the numbers on screen are inspectable."""
-    from .. import stats as stats_mod
-
-    user_id = current_user_id(request)
-    conn = read_conn()
-    try:
-        return {"ok": True, "stats": stats_mod.build_period_stats(conn, user_id, days=days)}
     finally:
         conn.close()
 

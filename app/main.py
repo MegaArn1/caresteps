@@ -27,7 +27,7 @@ from .db import init_db
 from .llm.help import emergency_info
 from .llm.orchestrator import orchestrator_metadata
 from .safety.rules import RULES
-from .routes import api, barrier, pages, readings, summary as summary_routes
+from .routes import api, barrier, pages, readings, stats as stats_routes, summary as summary_routes
 
 APP_DIR = Path(__file__).resolve().parent
 
@@ -125,5 +125,10 @@ def root(request: Request):
     return RedirectResponse(url="/app", status_code=303)
 
 
-for module in (pages, readings, barrier, summary_routes, api):
+for module in (pages, readings, barrier, summary_routes, api, stats_routes):
     app.include_router(module.router)
+
+# The medication-status router lives in the same file as the readings router but
+# carries a different prefix and therefore must be mounted separately. It was
+# defined but never included here, so POST /medication/report returned 404.
+app.include_router(readings.med_router)

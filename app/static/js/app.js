@@ -94,6 +94,42 @@
       wrap.appendChild(choices);
     }
 
+    // A reading or medication draft that the assistant prepared needs a confirm
+    // button. The draft_id is echoed from the server so we can POST it back
+    // without the user navigating away.
+    var draftId = data.payload && data.payload.draft_id;
+    var needsConfirm = data.payload && data.payload.needs_confirmation && draftId;
+    if (needsConfirm) {
+      var kind = data.payload.kind; // "reading_draft" | "medication_draft"
+      var label = kind === "reading_draft" ? "Save this reading" : "Confirm medication record";
+      var confirmBtn = el("button", "btn", label);
+      confirmBtn.type = "button";
+      confirmBtn.style.marginTop = "10px";
+      confirmBtn.addEventListener("click", function () {
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = "Saving…";
+        fetch("/api/chat/confirm", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: "draft_id=" + encodeURIComponent(draftId)
+        })
+          .then(function (r) { return r.json(); })
+          .then(function (res) {
+            if (res.ok) {
+              confirmBtn.textContent = "Saved ✓";
+            } else {
+              confirmBtn.textContent = "Could not save — please try again";
+              confirmBtn.disabled = false;
+            }
+          })
+          .catch(function () {
+            confirmBtn.textContent = "Could not reach the app — try again";
+            confirmBtn.disabled = false;
+          });
+      });
+      wrap.appendChild(confirmBtn);
+    }
+
     // A boundary refusal offers the constructive route rather than dead-ending.
     if (data.payload && data.payload.offer_add_question) {
       var qbtn = el("button", "btn ghost", "Add this to my questions for the doctor");
@@ -195,6 +231,43 @@
 
   // Exposed so inline option buttons elsewhere can drive the same flow.
   window.carestepsChat = sendMessage;
+
+  /* ----------------------------------------------------------- demo reset button */
+
+  var resetBtn = document.getElementById("reset-demo-btn");
+  if (resetBtn) {
+    resetBtn.addEventListener("click", function () {
+      if (!confirm("Reset all demo data? This will remove any changes you made and restore the fictional demo patient.")) {
+        return;
+      }
+
+      resetBtn.disabled = true;
+      resetBtn.textContent = "Resetting...";
+
+      fetch("/api/demo/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" }
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (data.ok) {
+            resetBtn.textContent = "Reset complete ✓";
+            setTimeout(function () {
+              window.location.href = "/app";
+            }, 1000);
+          } else {
+            resetBtn.textContent = "Reset failed";
+            resetBtn.disabled = false;
+            alert(data.error || "Could not reset demo data. Please try again.");
+          }
+        })
+        .catch(function () {
+          resetBtn.textContent = "Reset demo data";
+          resetBtn.disabled = false;
+          alert("Could not reach the server. Please try again.");
+        });
+    });
+  }
 
   /* ------------------------------------------------------------------- chart
    * Renders from the `series` the server produced. The important behaviour is that a

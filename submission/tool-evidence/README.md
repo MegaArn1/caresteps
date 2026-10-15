@@ -6,9 +6,28 @@
 
 ## Current status
 
-**Task definitions ready. Evidence collection pending.**
+**Tasks 1 and 2 completed in WorkBuddy. Additional screenshot collection is pending.**
 
-This directory now contains [`TASKS_FOR_AI_TOOLS.md`](TASKS_FOR_AI_TOOLS.md) — three concrete, low-risk tasks designed for CodeBuddy or WorkBuddy completion. Complete 1-2 of them and save screenshots or recordings here to satisfy the Handbook requirement.
+This directory contains [`TASKS_FOR_AI_TOOLS.md`](TASKS_FOR_AI_TOOLS.md), the WorkBuddy
+conversation screenshot, a machine-readable Task 1 result, and a written completion
+summary. Two more sanitized screenshots or a recording are still needed to satisfy the
+handbook's minimum of three screenshots or recordings.
+
+## 已完成任务
+
+### 任务 1：系统统计 API
+
+- 工具：WorkBuddy AI
+- 时间：2026-10-15
+- 证据：`screenshot/Screenshot 2026-10-15 221753.png`, `task1-stats-api-result.json`, `task1-2-workbuddy-summary.md`
+- 成果：新增并注册无参数 `GET /api/stats`，返回五项系统指标；显式 `?days=14` 保留原有周期统计结构；定向测试 5 项、完整测试 170 项全部通过
+
+### 任务 2：部署指南
+
+- 工具：WorkBuddy AI
+- 时间：2026-10-15
+- 证据：`screenshot/Screenshot 2026-10-15 221753.png`, `task1-2-workbuddy-summary.md`
+- 成果：新增 `docs/DEPLOYMENT.md`，覆盖 Render 与 Railway 部署、持久卷、数据库初始化、验证、备份和常见故障排查
 
 ## What the handbook requires
 
@@ -52,10 +71,11 @@ Before submitting, verify every screenshot:
 | Item | Status |
 |---|---|
 | Task definitions written | **DONE** — see `TASKS_FOR_AI_TOOLS.md` |
-| At least 1-2 tasks completed in CodeBuddy/WorkBuddy | **NOT DONE** |
-| At least 3 conversation screenshots/recordings captured | **NOT DONE** |
-| Evidence files saved to this directory | **NOT DONE** |
-| Evidence sanitized | N/A |
-| This README updated with completion log | **NOT DONE** |
+| At least 1-2 tasks completed in CodeBuddy/WorkBuddy | **DONE** — Tasks 1 and 2 |
+| At least 3 conversation screenshots/recordings captured | **IN PROGRESS** — 1 screenshot present |
+| Evidence files saved to this directory | **IN PROGRESS** — screenshot, JSON result, and written summary present |
+| Evidence sanitized | **IN PROGRESS** — review all final captures before submission |
+| This README updated with completion log | **DONE** |
 
-Until rows 2-3 are complete, this submission does not meet the Handbook's eligibility condition, regardless of the quality of the prototype.
+Until at least two more sanitized screenshots or an equivalent recording are added, the
+submission does not yet meet the handbook's minimum visual-evidence condition.

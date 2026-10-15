@@ -233,4 +233,49 @@
   next visit. Nothing is sent anywhere by this app.
 </p>
 
+<div class="card flat" style="margin-top:32px">
+  <h2>Demo Controls</h2>
+  <p class="small muted">
+    Reset all data back to the initial demonstration state. This will remove any readings
+    or changes you made and restore the fictional demo patient.
+  </p>
+  <button class="btn ghost wide" id="reset-demo-btn">Reset demo data</button>
+  <p class="tiny muted" style="margin-top:10px" id="reset-status">
+    This rebuilds the simulated dataset only. All data in this prototype is fictional.
+  </p>
+</div>
+
+<script>
+document.getElementById('reset-demo-btn').addEventListener('click', function() {
+  if (!confirm('Reset all data back to the demo state? This cannot be undone.')) {
+    return;
+  }
+
+  const btn = this;
+  const status = document.getElementById('reset-status');
+
+  btn.disabled = true;
+  btn.textContent = 'Resetting...';
+  status.textContent = 'Clearing data and reloading demo dataset...';
+
+  fetch('/api/demo/reset', { method: 'POST' })
+    .then(res => res.json())
+    .then(data => {
+      if (data.ok) {
+        status.textContent = 'Reset complete. Reloading page...';
+        setTimeout(() => window.location.reload(), 1000);
+      } else {
+        status.textContent = 'Reset failed: ' + (data.error || 'Unknown error');
+        btn.disabled = false;
+        btn.textContent = 'Reset demo data';
+      }
+    })
+    .catch(err => {
+      status.textContent = 'Reset failed: ' + err.message;
+      btn.disabled = false;
+      btn.textContent = 'Reset demo data';
+    });
+});
+</script>
+
 {% endblock %}

@@ -1,0 +1,14 @@
+{
+  "task": "Task 1: system statistics API",
+  "verified_at": "2026-10-15",
+  "command": "curl http://127.0.0.1:18765/api/stats",
+  "response": {
+    "total_users": 1,
+    "total_bp_recordings": 11,
+    "total_medications_tracked": 2,
+    "active_barriers": 1,
+    "database_size_kb": 176
+  },
+  "targeted_tests": "5 passed",
+  "full_test_suite": "170 passed, 3 deprecation warnings"
+}

@@ -1079,6 +1079,34 @@ def list_audit(
     return [dict(r) for r in conn.execute(sql, args)]
 
 
+def system_metrics(conn: sqlite3.Connection) -> dict[str, int]:
+    """Return global operational counts for the monitoring API.
+
+    Blood-pressure corrections are append-only in this project, so
+    ``total_bp_recordings`` counts every stored row, including superseded history.
+    An active barrier is an unresolved ``open`` event; resolved and parked events are
+    deliberately excluded. Database size is the number of allocated SQLite pages and
+    therefore excludes transient WAL/SHM sidecar files.
+    """
+    row = conn.execute(
+        """SELECT
+               (SELECT COUNT(*) FROM user_profile) AS total_users,
+               (SELECT COUNT(*) FROM bp_reading) AS total_bp_recordings,
+               (SELECT COUNT(*) FROM medication_item) AS total_medications_tracked,
+               (SELECT COUNT(*) FROM barrier_event WHERE status = 'open') AS active_barriers"""
+    ).fetchone()
+    page_count = int(conn.execute("PRAGMA page_count").fetchone()[0])
+    page_size = int(conn.execute("PRAGMA page_size").fetchone()[0])
+
+    return {
+        "total_users": int(row["total_users"]),
+        "total_bp_recordings": int(row["total_bp_recordings"]),
+        "total_medications_tracked": int(row["total_medications_tracked"]),
+        "active_barriers": int(row["active_barriers"]),
+        "database_size_kb": (page_count * page_size + 1023) // 1024,
+    }
+
+
 def count_rows(conn: sqlite3.Connection, table: str) -> int:
     return conn.execute(f"SELECT COUNT(*) AS c FROM {table}").fetchone()["c"]
 

@@ -308,6 +308,9 @@ def _live_turn(conn, user_id, session_id, message, drafts) -> TurnResult:
                     "args": args,
                     "status": tool_result.status,
                     "message": tool_result.message[:300],
+                    # data is kept so _payload_from_tools can surface draft_id
+                    # without a second pass over tool results.
+                    "data": tool_result.data,
                 }
             )
 
@@ -407,13 +410,28 @@ def _grounded_fallback(executed: list[dict], problems: list[str]) -> str:
 
 
 def _payload_from_tools(executed: list[dict]) -> dict:
-    """Surface anything the UI should render alongside the prose."""
+    """Surface anything the UI should render alongside the prose.
+
+    The draft_id is forwarded so the confirm button in the chat panel can POST
+    it back to /api/chat/confirm without the user having to navigate away.
+    """
     payload: dict[str, Any] = {"kind": "text"}
     for e in executed:
+        data = e.get("data") or {}
         if e["name"] == "prepare_reading" and e["status"] == "ok":
-            payload = {"kind": "reading_draft", "needs_confirmation": True}
+            payload = {
+                "kind": "reading_draft",
+                "needs_confirmation": True,
+                "draft_id": data.get("draft_id"),
+                "draft": data.get("draft"),
+            }
         elif e["name"] == "prepare_medication_report" and e["status"] == "ok":
-            payload = {"kind": "medication_draft", "needs_confirmation": True}
+            payload = {
+                "kind": "medication_draft",
+                "needs_confirmation": True,
+                "draft_id": data.get("draft_id"),
+                "draft": data.get("draft"),
+            }
         elif e["name"] == "record_barrier" and e["status"] == "ok":
             payload = {"kind": "barrier_recorded"}
         elif e["name"] == "add_question" and e["status"] == "ok":

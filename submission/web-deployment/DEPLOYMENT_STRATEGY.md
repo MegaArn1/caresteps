@@ -8,36 +8,36 @@ the actual form.
 The source repository is [MegaArn1/caresteps](https://github.com/MegaArn1/caresteps).
 Public application hosting has not yet been provisioned.
 
-## Selected configuration
+## Selected free-demo configuration
 
-[render.yaml](../../render.yaml) defines a native Python service, one instance, a
-persistent SQLite disk, health check `/healthz` and a start command binding `$PORT`.
-The selected disk-capable service is paid; this is configuration for review, not an
-already purchased or provisioned service. A Render free service has ephemeral storage
-and cannot attach a persistent disk.
+The owner selected Render's **free web service** on October 16, 2026.
+[render.yaml](../../render.yaml) uses Python 3.11.7, one instance/worker, `/healthz`,
+and `CARESTEPS_DB=/tmp/caresteps.db`, without a disk. No paid service or storage is requested.
 
-The blueprint initially uses limited mode without model credentials. After deploying,
-set `LLM_BASE_URL`, `LLM_API_KEY` and `LLM_MODEL` through the hosting secret settings and
-set `LLM_FORCE_DEGRADED=0` if live conversation is wanted. Do not copy credentials into
-this file. Configure one worker and one replica. Do not seed during each deploy.
+The database and entered records are ephemeral. Render can spin the service down after
+15 minutes without inbound traffic; the next request can take about a minute to start.
+A new instance recreates the fictional seed on the first `/app` visit. This is a
+competition demo and does not preserve newly entered records across restarts.
 
-The application reads a local `.env` for development; exported/platform variables take
-precedence. GitHub does not receive `.env`. Shared fictional demo data is suitable for
-judging; this configuration has no production patient authentication.
+Existing model settings are configured only as service-side environment variables.
+`LLM_FORCE_DEGRADED=0` permits live calls when the three `LLM_*` settings are available;
+the application falls back when the provider fails. Model-service availability and any
+existing gateway usage charges are separate from the free hosting plan.
 
-## Deploy from GitHub
+Automatic deploys are disabled while the demo is being verified. Future application
+changes require a manual deploy from the Render dashboard or API.
 
-1. Use the reviewed `main` branch in the GitHub repository.
-2. Connect that repository to Render and review the blueprint before deploying.
-3. Confirm the disk mount and `CARESTEPS_DB=/var/data/caresteps.db`.
-4. Open `/app` once to initialize the fictional profile on a new volume.
-5. Verify `/healthz`, `/api/stats`, reading preview/confirm, chat, `/trace` and summary.
-6. Add optional model configuration and check an actual live result if required.
-7. Record the actual public URL in [DEPLOYMENT_INFO.md](DEPLOYMENT_INFO.md), then test
-   access without a signed-in hosting account.
+## Verification before recording the live URL
 
-Railway with a volume is an alternative in [docs/DEPLOYMENT.md](../../docs/DEPLOYMENT.md).
-No current free-credit or pricing promise is made.
+1. Confirm the Render service reports `plan=free` and has no attached disk.
+2. Wait for its first deploy to become live and check the deployed commit.
+3. Open `/app` to initialize fictional records, then check `/healthz` and `/api/stats`.
+4. Verify CSS, reading preview/confirmation, medicines, trends, chat, `/trace` and summary.
+5. Check a real model/tool reply, a known safety boundary and emergency routing.
+6. Record the actual public URL and limitations in [DEPLOYMENT_INFO.md](DEPLOYMENT_INFO.md).
+
+Optional paid persistence is documented in [docs/DEPLOYMENT.md](../../docs/DEPLOYMENT.md).
+It is not part of this free deployment.
 
 ## Remaining submission links
 

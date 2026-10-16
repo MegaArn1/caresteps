@@ -1,21 +1,20 @@
+# Free hackathon demo. New records are ephemeral across restarts and idle spin-down.
+# Configure optional LLM_* secrets in Render; no credentials belong in this file.
 services:
   - type: web
     name: caresteps
     runtime: python
     region: singapore
-    plan: 0.5c-512mb
+    plan: free
     numInstances: 1
+    autoDeployTrigger: "off"
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1
     healthCheckPath: /healthz
-    disk:
-      name: caresteps-data
-      mountPath: /var/data
-      sizeGB: 1
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.7
       - key: CARESTEPS_DB
-        value: /var/data/caresteps.db
+        value: /tmp/caresteps.db
       - key: LLM_FORCE_DEGRADED
-        value: "1"
+        value: "0"

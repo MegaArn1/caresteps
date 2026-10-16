@@ -1,8 +1,8 @@
 # CareSteps — Deployment Guide
 
-This guide deploys CareSteps as a **single-instance competition demo** on Render or
-Railway. The application is a FastAPI service with a local SQLite database and no
-frontend build step.
+The selected deployment is a **free, single-instance Render competition demo**.
+It uses ephemeral SQLite storage. This guide also describes optional paid persistence
+on Render or Railway. The application is FastAPI with no frontend build step.
 
 > **Prototype status.** CareSteps is not a medical device, an emergency service, or a
 > production authentication system. Deploy only fictional demo data. Do not use this
@@ -21,7 +21,8 @@ uvicorn app.main:app --host 0.0.0.0 --port $PORT
 The important deployment constraints are:
 
 - Run **one service instance, one replica, and one Uvicorn worker**.
-- Store `caresteps.db` on a persistent volume, not the platform's ephemeral filesystem.
+- The selected free demo uses `/tmp/caresteps.db`; new entries are lost after a restart
+  or idle spin-down. Use a paid persistent volume only if durable records are needed.
 - Do not run `make run` in the cloud. It binds to `127.0.0.1`, enables reload, and does
   not use the platform-provided port.
 - Do not run the seed command during every build or deploy. It deliberately replaces the
@@ -47,7 +48,7 @@ Configure variables in the platform dashboard. For local development, CareSteps 
 
 | Variable | Required | Example | Purpose |
 |---|---:|---|---|
-| `CARESTEPS_DB` | Yes for cloud deployment | `/var/data/caresteps.db` | Absolute path to SQLite on the persistent volume |
+| `CARESTEPS_DB` | Yes for cloud deployment | `/tmp/caresteps.db` (free); `/var/data/caresteps.db` (paid) | SQLite path; only a mounted paid volume is durable |
 | `LLM_BASE_URL` | No | `https://gateway.example/v1` | OpenAI-compatible API root; do not include `/chat/completions` |
 | `LLM_API_KEY` | No | Set in the platform's secret manager | Bearer token for the model gateway |
 | `LLM_MODEL` | No | `your-model-name` | Model identifier understood by the gateway |
@@ -62,14 +63,14 @@ settings are absent, CareSteps starts normally in limited mode.
 
 ## 3. Database initialization
 
-`app.main` calls `init_db()` at startup. On a new persistent volume this creates the
+`app.main` calls `init_db()` at startup. On a new instance or empty persistent volume this creates the
 SQLite schema automatically. The first visit to `/app` also loads the knowledge base
 and creates the fictional demo patient when no profile exists.
 
 The recommended first-deploy sequence is therefore:
 
-1. Attach the persistent volume.
-2. Set `CARESTEPS_DB` to a file under its mount path.
+1. For the selected free demo, use the ephemeral filesystem without attaching a disk.
+2. Set `CARESTEPS_DB=/tmp/caresteps.db` (or a file under a paid volume mount).
 3. Start the service.
 4. Open `/healthz` to confirm that the schema is reachable.
 5. Open `/app` once to create the fictional demo data.
@@ -137,14 +138,17 @@ Counts and database size can differ after the demo is used.
 
 ## 5. Deploy to Render
 
-A reviewable [render.yaml](../render.yaml) is included. It creates a paid disk-capable
-service in limited mode; add optional model secrets in the platform settings and set
-`LLM_FORCE_DEGRADED=0` for live calls. No hosting resource is created by this file alone.
+The checked-in [render.yaml](../render.yaml) selects `plan: free`, no disk,
+`CARESTEPS_DB=/tmp/caresteps.db`, one instance and one worker. Configure optional
+`LLM_BASE_URL`, `LLM_API_KEY` and `LLM_MODEL` in the service settings. The blueprint
+permits live calls with `LLM_FORCE_DEGRADED=0`; absent configuration still uses limited mode.
 
-Render can deploy the repository as a native Python web service. A persistent disk is
-required because the normal service filesystem is ephemeral. Render persistent disks are
-available only on paid services, so a free web service cannot provide durable SQLite
-storage for this deployment.
+A free service spins down after inactivity and uses ephemeral storage. Expect a cold
+start on the next visit and a fresh fictional dataset on a new instance. Automatic
+deploys are disabled, so source changes require a manual deploy.
+
+A persistent disk requires a paid Render service. The optional paid instructions below
+use `/var/data`; do not attach a disk or select a paid plan for the selected free demo.
 
 ### Step 1 — Create the web service
 
@@ -182,7 +186,10 @@ PYTHON_VERSION=3.11.7
 
 Render requires a fully qualified version when `PYTHON_VERSION` is used.
 
-### Step 3 — Attach persistent storage
+### Step 3 — Storage: free demo or optional paid persistence
+
+For the selected free demo, skip disk creation and set `CARESTEPS_DB=/tmp/caresteps.db`.
+The following disk steps apply only after intentionally selecting a paid plan.
 
 1. Open the service's **Advanced** settings during creation, or its **Disk** page later.
 2. Add a persistent disk.
@@ -345,7 +352,8 @@ After every deployment:
 - [ ] `GET /app` renders and initializes the fictional dataset on a new volume.
 - [ ] `GET /api/stats` returns the five system-metric fields.
 - [ ] `/api/docs` opens the generated FastAPI documentation.
-- [ ] Restarting or redeploying the service does not reset `total_users` to zero.
+- [ ] On the free demo, a new instance may have zero profiles until `/app` seeds it.
+- [ ] On optional paid persistence, restart/redeploy preserves stored records.
 - [ ] The service has one instance, one replica, and one worker.
 - [ ] No credential appears in logs, source code, or screenshots.
 

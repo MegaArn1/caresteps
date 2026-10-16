@@ -103,7 +103,7 @@ scripts/         Database seeding, deterministic demo checks and diagram renderi
 tests/           Automated software checks
 docs/            Current setup, architecture, evaluation and deployment documentation
 submission/      Selected competition materials and their reproducible source scripts
-render.yaml      Reviewable deployment blueprint; requires a paid disk-capable service
+render.yaml      Free Render demo blueprint; ephemeral SQLite, one instance
 ```
 
 ## Attribution

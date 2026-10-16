@@ -63,5 +63,5 @@ A live-mode flag is configuration, and a passing software suite is not a clinica
 figure. Some scoped tools write directly; confirmation is required for reading and
 medication-report drafts. The trace is an action log, not private model reasoning.
 
-Use the actual contribution record in [development.md](development.md) when describing
+Use the recorded development workflow in [development.md](development.md) when describing
 the build tools. The WorkBuddy screenshots prove the recorded tasks, not the whole build.

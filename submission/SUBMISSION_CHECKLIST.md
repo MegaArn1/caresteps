@@ -15,15 +15,14 @@
 | Demo Video Link | **必填**，5–8 分钟，概览/核心 Agent 用法/构建反思 | [caresteps-demo-gemini.mp4](demo-video/caresteps-demo-gemini.mp4)，441.934 秒；**待托管并验证可播放 URL** |
 | WorkBuddy/CodeBuddy Conversation History | **必填**，聊天记录及至少 3 张截图；1 个文件，≤10 MB | [CareSteps_WorkBuddy_Evidence.pdf](tool-evidence/CareSteps_WorkBuddy_Evidence.pdf)，三张现有截图；见[贡献范围](../docs/development.md) |
 | Architecture Diagram PPT | **必填**，1 个文件，≤10 MB | [CareSteps_Architecture_Diagram.pptx](architecture-diagram/CareSteps_Architecture_Diagram.pptx)，9 页；PDF 为附加阅读版 |
-| Source Code | **必填**，GitHub 仓库 URL | **本地候选已准备，等待用户确认后建仓库/push** |
+| Source Code | **必填**，GitHub 仓库 URL | [MegaArn1/caresteps](https://github.com/MegaArn1/caresteps) |
 | Social Media Post Link | Bonus，可选；指定四个 hashtags | 未发布，不影响必填项 |
 
-## 工具证据与规则边界
+## 工具证据
 
-两份 PDF 没有规定 WorkBuddy/CodeBuddy 必须占主要实现比例。手册原文要求项目原创，
-并 built on at least one of CodeBuddy or WorkBuddy，且必须提供使用证据。
-现有三张截图展示 WorkBuddy 的统计 API、测试与部署指南任务；这不等于整个项目由
-[开发记录](../docs/development.md)与 Git 署名中。若另有未提供的主办方要求，需据实核对。
+手册要求项目原创、基于 CodeBuddy 或 WorkBuddy 产品，并提供使用证据。
+现有三张截图记录 WorkBuddy 的统计 API、测试与部署指南任务，已封装为一个 PDF。
+任务过程和可验证成果见[开发流程](../docs/development.md)与证据目录。
 
 ## 本地验证
 

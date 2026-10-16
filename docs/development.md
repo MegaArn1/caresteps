@@ -1,31 +1,30 @@
-# Development tools and contribution record
+# Development workflow
 
-CareSteps was built with assistance from several development tools. Tool contribution
-and the model used by the running application are separate questions.
+CareSteps uses a task-based development and verification workflow: define a small
+deliverable, inspect the changed files, and run observable checks against fictional data.
 
-| Tool | Recorded contribution |
-|---|---|
-| Tencent WorkBuddy | Implemented the consolidated system-statistics API and associated tests, and wrote the cloud deployment guide. The saved October 15, 2026 conversation screenshots and result record document these tasks. |
-| Codex | Assisted submission-asset preparation and the final release audit, documentation cleanup, artifact packaging and verification. |
+## Recorded WorkBuddy tasks
 
-The WorkBuddy contribution is documented by
-[the completion record](../submission/tool-evidence/task1-2-workbuddy-summary.md),
-[API result](../submission/tool-evidence/task1-stats-api-result.json), and
-[three conversation screenshots](../submission/tool-evidence/README.md). The single-file
-[evidence PDF](../submission/tool-evidence/CareSteps_WorkBuddy_Evidence.pdf) packages the
-existing screenshots; it is not a new development session.
+The saved October 15, 2026 conversation documents two completed tasks:
 
-The supplied handbook (PDF page 37) requires an original project built on at least one
-of CodeBuddy or WorkBuddy and mandatory usage evidence. The supplied actual form asks
-for chat history with at least three screenshots in one upload. Neither supplied PDF
-states a percentage or a requirement that WorkBuddy be the primary implementation tool.
-This record does not decide eligibility under additional organizer instructions that
-are not included in those PDFs.
+- Implement the consolidated system-statistics API and associated regression tests.
+- Write the single-instance cloud deployment guide for Render and Railway.
 
-WorkBuddy's recorded contributions should be described as those tasks. They should not
-be expanded into a claim that it built the original application. A runtime gateway's
-model identifier also does not identify the tool that wrote the source.
+Supporting records are the [completion summary](../submission/tool-evidence/task1-2-workbuddy-summary.md),
+[API result](../submission/tool-evidence/task1-stats-api-result.json),
+[three conversation screenshots](../submission/tool-evidence/README.md) and
+[combined evidence PDF](../submission/tool-evidence/CareSteps_WorkBuddy_Evidence.pdf).
+The evidence PDF packages the existing screenshots rather than a newly executed session.
 
-Private credentials, machine-specific environment state and raw media intermediates are
-excluded from the release tree. Historical credential strings are redacted in the
-publication copy; developer identities and tool attribution are preserved.
+## Verification
+
+Review the implementation and run `make test` and `make demo-check`. Source-linked
+health content retains its review state, and all demonstration patient records are fictional.
+Software checks do not establish clinical validation or accessibility conformance.
+
+Development tools are separate from the application's optional runtime model gateway.
+The gateway's configured model identifier is not a development-tool record or independent
+verification of the backend provider.
+
+Credentials, local environment state and raw media intermediates are excluded from
+publication. See [evaluation](evaluation.md) and the [submission checklist](../submission/SUBMISSION_CHECKLIST.md).

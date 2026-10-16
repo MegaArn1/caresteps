@@ -13,7 +13,7 @@ description is maintained in [../description.md](../description.md) to avoid con
 | Demo Video Link | PENDING — a public playable URL for `caresteps-demo-gemini.mp4` |
 | WorkBuddy/CodeBuddy Conversation History | `submission/tool-evidence/CareSteps_WorkBuddy_Evidence.pdf` |
 | Architecture Diagram PPT | `submission/architecture-diagram/CareSteps_Architecture_Diagram.pptx` |
-| Source Code | PENDING — GitHub repository URL after approval and push |
+| Source Code | https://github.com/MegaArn1/caresteps |
 | Social Media Post Link (Bonus) | Optional. If used, include the form's four hashtags: #WorkBuddy #CodeBuddy #Miora #TencentCloudHackathon. |
 
 The blurb is **8 words**, satisfying the strict **under 10 words** requirement. The form

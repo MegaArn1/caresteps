@@ -60,7 +60,7 @@ on 10 days. These demonstrate implementation behavior, not reduced blood pressur
 improved adherence or saved consultation time; those outcomes require future study.
 
 WorkBuddy implemented the system-statistics API and deployment guide, with three saved
-conversation screenshots. The broader development contribution record is in
+conversation screenshots. The recorded development workflow is in
 [docs/development.md](../docs/development.md). A narrated 7:22 video covers the core
 workflows, a recorded live reply, limited mode and development-tool reflection.
 

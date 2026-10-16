@@ -4,7 +4,7 @@ Status on **2026-10-16**: **not deployed**. No public URL has been verified.
 
 | Field | Verified value |
 |---|---|
-| GitHub repository URL | Pending owner-approved creation/push |
+| GitHub repository URL | https://github.com/MegaArn1/caresteps |
 | Deployed commit | Pending |
 | Hosting platform | Planned: Render; not provisioned |
 | Application URL | Pending |

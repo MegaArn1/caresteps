@@ -1,7 +1,7 @@
 > Release note (2026-10-16): the current software suite has 170 passing tests.
 > Source-selection observations below describe the project's selected corpus, not an
 > exhaustive claim about all Singapore clinical guidance. `team_checked` is not clinical
-> review. See [development attribution](development.md) and [evaluation](evaluation.md).
+> review. See [development workflow](development.md) and [evaluation](evaluation.md).
 
 # Content provenance
 

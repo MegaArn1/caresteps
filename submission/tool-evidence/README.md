@@ -23,8 +23,5 @@ sanitized images (optional dependencies are in `submission/requirements-assets.t
 [completion record](task1-2-workbuddy-summary.md) provide supporting written evidence.
 The completion record describes historical findings; it is not a current bug checklist.
 
-These tasks contributed the system-statistics API, tests and deployment guide. They
-are not evidence that WorkBuddy implemented the original application. See
-[the full development record](../../docs/development.md). The handbook's product-use
-requirement does not specify a majority percentage in the supplied PDFs; this evidence
-package does not certify eligibility under any additional organizer rules.
+The recorded tasks produced the system-statistics API, tests and deployment guide.
+See [the development workflow](../../docs/development.md) for the observable checks.

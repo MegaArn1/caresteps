@@ -25,7 +25,7 @@ model calls.
 
 The WorkBuddy reflection uses the existing 22:52:18 conversation screenshot and describes
 the statistics API and deployment-guide tasks. It does not claim WorkBuddy implemented
-the original application. See [development attribution](../../docs/development.md).
+the original application. See [development workflow](../../docs/development.md).
 
 The later voiceover used the owner-selected gateway model identifier
 `gemini-3.8-flash-tts` and Kore voice. The verification record distinguishes the requested

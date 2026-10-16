@@ -68,7 +68,7 @@ cookies and no production login. Use fictional inputs only. See the
 | [Deployment](docs/DEPLOYMENT.md) | Render/Railway, persistent SQLite and post-deployment checks |
 | [Content provenance](docs/content-provenance.md) | Health-source selection, review states and attribution |
 | [Design decisions](docs/decisions.md) | Scope choices and their costs |
-| [Development record](docs/development.md) | Development tools, contribution scope and evidence |
+| [Development workflow](docs/development.md) | Recorded WorkBuddy tasks and verification process |
 | [Submission checklist](submission/SUBMISSION_CHECKLIST.md) | Actual form requirements, final files and remaining gates |
 
 ## Submission materials
@@ -79,7 +79,8 @@ cookies and no production login. Use fictional inputs only. See the
 - [7:22 narrated demo](submission/demo-video/caresteps-demo-gemini.mp4) and [subtitles](submission/demo-video/caresteps-demo-gemini.en.srt)
 - [WorkBuddy conversation evidence PDF](submission/tool-evidence/CareSteps_WorkBuddy_Evidence.pdf)
 
-The live application URL, hosted video URL and GitHub URL are pending publication.
+Source code: [MegaArn1/caresteps](https://github.com/MegaArn1/caresteps).
+The live application URL and hosted video URL are pending publication.
 The local MP4 is a download artifact; the submission form needs a working video link.
 
 ## Verify
@@ -107,8 +108,8 @@ render.yaml      Reviewable deployment blueprint; requires a paid disk-capable s
 
 ## Attribution
 
-Original application work by the CareSteps team. Development-tool contributions are
-recorded in [docs/development.md](docs/development.md) and the retained Git history.
+Original application work by the CareSteps team. The recorded development workflow is
+described in [docs/development.md](docs/development.md).
 Third-party health material is paraphrased with source attribution; see
 [content provenance](docs/content-provenance.md). No open-source license is granted by
 this README; competition judging access does not itself grant reuse rights.

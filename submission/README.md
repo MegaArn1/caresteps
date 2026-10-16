@@ -12,10 +12,10 @@ some appear optional or as guidance in the handbook.
 | Architecture Diagram PPT, one upload ≤10 MB | [9-slide PPTX](architecture-diagram/CareSteps_Architecture_Diagram.pptx) | Ready; [PDF companion](architecture-diagram/CareSteps_Architecture_Diagram.pdf) |
 | Demo Video Link, 5–8 minutes | [7:22 MP4](demo-video/caresteps-demo-gemini.mp4) | Local file ready; hosted playable URL pending |
 | Project Web Link | [Deployment plan](web-deployment/DEPLOYMENT_STRATEGY.md) | Required; deployment and public URL pending |
-| Source Code | Repository containing this release | Required; GitHub creation/push pending owner approval |
+| Source Code | Repository containing this release | Required; [MegaArn1/caresteps](https://github.com/MegaArn1/caresteps) |
 | Social Media Post Link | Form bonus field | Optional; no post published by this audit |
 
-See the [full checklist](SUBMISSION_CHECKLIST.md), [development record](../docs/development.md),
+See the [full checklist](SUBMISSION_CHECKLIST.md), [development workflow](../docs/development.md),
 [cover sources](cover-image/README.md), [architecture sources](architecture-diagram/README.md)
 and [video notes](demo-video/README.md).
 

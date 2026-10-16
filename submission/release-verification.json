@@ -55,16 +55,16 @@
       "sha256": "4e7f4071f554e51a96a80d6f9466253884b0e9b3f74973ffbd2c7a91d80a2051"
     },
     "tool-evidence/CareSteps_WorkBuddy_Evidence.pdf": {
-      "bytes": 374530,
-      "sha256": "e38d4b0e6b416fbc7cea63132af1efaa4beee7628741de89339fe6873e07971a"
+      "bytes": 374467,
+      "sha256": "898ec107a6fe339c0bbc67ce60abaac5869eee4f207e914b2f8ff5e1bbaa9c78"
     },
     "architecture-diagram/CareSteps_Architecture_Diagram.pptx": {
-      "bytes": 4118679,
-      "sha256": "c11c962b9278f9497be9a478fb49501def60fc34e5251110ab50d53e1f5f0f72"
+      "bytes": 4125355,
+      "sha256": "8888e882eb58b3f667e272e73df5c921cf5001d689991a9e86494ff5f50944f2"
     },
     "architecture-diagram/CareSteps_Architecture_Diagram.pdf": {
-      "bytes": 554088,
-      "sha256": "cde04bf44abc24bf64802a741489862099d46fbc328662bc7afc8e7d97a62c48"
+      "bytes": 556706,
+      "sha256": "788c82d252f1c2088d836a6f1536ff610edd8064b15f3712053eff4aa4c885f6"
     },
     "demo-video/caresteps-demo-gemini.mp4": {
       "bytes": 24491605,
@@ -139,9 +139,14 @@
     "requirements-dev.txt": "f89b39ed0609b3e44a2d70edfdfeab837cbeb1c5638a6eb6c5a1f347149671e0"
   },
   "remote_verification": {
-    "github": "pending owner approval",
+    "github": "See source_repository; remote push receipt is recorded after publication.",
     "live_web_url": "not deployed",
     "hosted_video_url": "not published",
     "form_submission": "not submitted"
+  },
+  "source_repository": "https://github.com/MegaArn1/caresteps",
+  "publication_update": {
+    "scope": "Submission documentation, evidence packaging and saved presentation layout; runtime source unchanged.",
+    "architecture": "9 slides, 475 native elements, 235 rendered text frames verified."
   }
 }

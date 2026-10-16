@@ -5,9 +5,8 @@ experience the running project in a browser. A source repository or a local-only
 does not satisfy that field. The handbook's optional-link wording is less strict than
 the actual form.
 
-No remote repository or hosting resource has been created by this release audit.
-The owner requested local review before GitHub creation/push. Public deployment follows
-that approval.
+The source repository is [MegaArn1/caresteps](https://github.com/MegaArn1/caresteps).
+Public application hosting has not yet been provisioned.
 
 ## Selected configuration
 
@@ -26,9 +25,9 @@ The application reads a local `.env` for development; exported/platform variable
 precedence. GitHub does not receive `.env`. Shared fictional demo data is suitable for
 judging; this configuration has no production patient authentication.
 
-## After approval
+## Deploy from GitHub
 
-1. Create the GitHub repository and push the reviewed publication candidate.
+1. Use the reviewed `main` branch in the GitHub repository.
 2. Connect that repository to Render and review the blueprint before deploying.
 3. Confirm the disk mount and `CARESTEPS_DB=/var/data/caresteps.db`.
 4. Open `/app` once to initialize the fictional profile on a new volume.
@@ -44,7 +43,7 @@ No current free-credit or pricing promise is made.
 
 - Application URL: pending deployment.
 - Video URL: pending hosting of the selected 7:22 MP4, with public/unlisted playback.
-- Source URL: pending approved GitHub creation and push.
+- Source URL: https://github.com/MegaArn1/caresteps.
 
 Do not put placeholder URLs in the submitted form.
 

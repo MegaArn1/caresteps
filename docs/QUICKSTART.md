@@ -72,7 +72,7 @@ make demo-check
 make seed
 ```
 
-Expected automated results: **170 tests** and **27/27 routing cases**. The HTTP test
+Expected automated results: **171 tests** and **27/27 routing cases**. The HTTP test
 suite creates temporary databases. `make seed` instead resets the configured demo DB.
 
 ```bash

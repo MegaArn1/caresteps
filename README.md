@@ -86,7 +86,7 @@ demo-video link for the submission form; the local MP4 remains a downloadable ar
 ## Verify
 
 ```bash
-make test         # 170 tests
+make test         # 171 tests
 make demo-check   # 27 routing scenarios
 ```
 

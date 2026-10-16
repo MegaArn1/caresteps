@@ -13,7 +13,7 @@ make seed
 make run
 ```
 
-Expect **170 passed** and **27/27 routing cases**. The final seed command resets the
+Expect **171 passed** and **27/27 routing cases**. The final seed command resets the
 configured local demo database; never use it on a database that should be retained.
 If another server is using the default port, choose `make run PORT=8001`.
 

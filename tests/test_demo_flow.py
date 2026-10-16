@@ -285,3 +285,34 @@ class TestEmergencyPathIsReachable:
 
     def test_chat_requires_a_message(self, client):
         assert client.post("/api/chat", data={"message": "   "}).status_code == 400
+
+
+class TestChatConcurrency:
+    def test_health_stays_responsive_while_model_waits(self, client, monkeypatch):
+        """A slow model turn must not block Render's concurrent health checks."""
+        import concurrent.futures
+        import threading
+
+        from app.llm.orchestrator import TurnResult
+        from app.routes import api as api_mod
+
+        started = threading.Event()
+        release = threading.Event()
+
+        def waiting_turn(*args, **kwargs):
+            started.set()
+            if not release.wait(timeout=10):
+                raise RuntimeError("The test did not release the model turn")
+            return TurnResult(text="Fictional test reply", mode="live", agent_mode="live")
+
+        monkeypatch.setattr(api_mod, "run_turn", waiting_turn)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+            turn = pool.submit(client.post, "/api/chat", data={"message": "test model wait"})
+            try:
+                assert started.wait(timeout=3), "The chat turn did not start"
+                health = pool.submit(client.get, "/healthz").result(timeout=2)
+                assert health.status_code == 200
+                assert health.json()["ok"] is True
+            finally:
+                release.set()
+            assert turn.result(timeout=3).status_code == 200

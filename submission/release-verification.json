@@ -1,11 +1,11 @@
 {
   "date": "2026-10-16",
-  "scope": "Clean staged-tree export with no .env, database or project virtual environment; runtime/test requirements installed into a new Python 3.11 environment. No remote hosting or live model call.",
+  "scope": "Release software checks with locked runtime/test dependencies and temporary fictional databases; public Render verification is recorded separately.",
   "checks": {
     "tests": {
       "exit_code": 0,
-      "elapsed_seconds": 41.48,
-      "result": "170 passed, 3 warnings in 40.43s"
+      "elapsed_seconds": 28.11,
+      "result": "171 passed, 3 warnings in 28.11s"
     },
     "routing": {
       "exit_code": 0,
@@ -55,8 +55,8 @@
       "sha256": "4e7f4071f554e51a96a80d6f9466253884b0e9b3f74973ffbd2c7a91d80a2051"
     },
     "tool-evidence/CareSteps_WorkBuddy_Evidence.pdf": {
-      "bytes": 374467,
-      "sha256": "898ec107a6fe339c0bbc67ce60abaac5869eee4f207e914b2f8ff5e1bbaa9c78"
+      "bytes": 374454,
+      "sha256": "cbfbdaebfe7f988fba3f176af89e10ef2610f952e6e31205bab8dfa96d4681ef"
     },
     "architecture-diagram/CareSteps_Architecture_Diagram.pptx": {
       "bytes": 4125355,
@@ -87,7 +87,7 @@
     "app/main.py": "ce2bdcee2bcbbf830c5a35ac4ea7174d7137ddb08648dd60c7dbf955d5f1eeef",
     "app/repository.py": "3fab77587a1a959f9e973163373c423a10a46a94d8012eb5d2ca3c6eeb1dc913",
     "app/routes/__init__.py": "c590c1dcfee7131914b12e8e0b50ed6415c08dc6e445d885b95642ca1301100c",
-    "app/routes/api.py": "a012caa4cf11f7cc79cd0db8a5269f28e130022b2c814218f65524b003b1d5d7",
+    "app/routes/api.py": "5dbd22513f4cfd1f956ca0360fe919a9ac399369bc24ab77eb47332c15f00e8e",
     "app/routes/barrier.py": "5304da9e3c65b71e6b2537c456aaa3455710cd1c340d977d1e13c9c863b6eed1",
     "app/routes/deps.py": "c894bfc6a1b7387bbc7fc584cd37280cd03f2730c4ee95c71ffe2208574a311d",
     "app/routes/pages.py": "7641577bd4654163eb77831b578cb63666818bd839e075d47ced4d9959a9f930",
@@ -131,7 +131,7 @@
     "tests/conftest.py": "447b4297bf070af31e3215d73d19c877e31387e3ace56c2c9d12f2a4fca96a3a",
     "tests/test_data_integrity.py": "0b5785dd2b94fa467344026415b870bf7fcbb3ee7a4d11164b971ac800a79cb4",
     "tests/test_degraded_and_output.py": "b436fe1cd98ef9be103839583de5263cd727f86a07096bcb16d934c6ba5519c9",
-    "tests/test_demo_flow.py": "f822b4047b2cad1d7499277b0de748965f87c78dc20f35c1a8ed8c3175708595",
+    "tests/test_demo_flow.py": "09f3c9fe2459209245e3d46188af6c423958ae70f9fbb3948ce52232f3e3e595",
     "tests/test_safety.py": "bb0fffdb152544cf416872b8d35e5fb04e0c9e7a89391aa0577419e9f2ab38fd",
     "tests/test_stats_and_summary.py": "7b457ff7a76a5926e2b5000269905270bb775e98433a5804b0f6d9e10bf91ff0",
     "tests/test_system_stats_api.py": "f73a030c307b8d776ab303196208e0f1981c858c19c15ec4b3acbaca79815abe",
@@ -140,7 +140,7 @@
   },
   "remote_verification": {
     "github": "See source_repository; remote push receipt is recorded after publication.",
-    "live_web_url": "not deployed",
+    "live_web_url": "Public deployment verification in progress.",
     "hosted_video_url": "https://www.youtube.com/watch?v=gTVs-9tpJL8",
     "form_submission": "not submitted",
     "youtube_metadata": {
@@ -152,7 +152,7 @@
   },
   "source_repository": "https://github.com/MegaArn1/caresteps",
   "publication_update": {
-    "scope": "Submission documentation, evidence packaging and saved presentation layout; runtime source unchanged.",
+    "scope": "Public free-demo configuration and a regression fix for concurrent health checks during synchronous provider I/O.",
     "architecture": "9 slides, 475 native elements, 235 rendered text frames verified."
   }
 }

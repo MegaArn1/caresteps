@@ -26,19 +26,19 @@ External live model calls are not part of these automated checks.
 
 ## Automated software suite
 
-The existing suite passes **170 tests**. It checks:
+The existing suite passes **171 tests**. It checks:
 
 | File | Tests | Main scope |
 |---|---:|---|
 | `test_data_integrity.py` | 34 | Input records, timestamps, correction history, content metadata and boundaries |
 | `test_degraded_and_output.py` | 45 | Deterministic conversation, extraction and live-output check functions |
-| `test_demo_flow.py` | 19 | HTTP workflows, reset and first-request initialization |
+| `test_demo_flow.py` | 20 | HTTP workflows, reset and first-request initialization |
 | `test_safety.py` | 44 | Known routing patterns, negation and priority conflicts |
 | `test_stats_and_summary.py` | 23 | Statistics, missing states, windows and summary facts |
 | `test_system_stats_api.py` | 5 | Operational totals, empty DB behavior and period-endpoint compatibility |
-| **Total** | **170** | |
+| **Total** | **171** | |
 
-The baseline local environment passed in **40.93 seconds**, with three upstream
+The pre-deployment 170-test baseline passed in **40.93 seconds**, with three upstream
 warnings concerning FastAPI startup hooks and the TestClient/httpx integration.
 Test duration depends on storage and environment; it is not a product metric.
 The clean publication-candidate verification is recorded in `submission/release-verification.json`.
@@ -81,3 +81,15 @@ hashes are recorded in `submission/release-verification.json`.
 
 See [architecture](architecture.md), [content provenance](content-provenance.md),
 [development attribution](development.md) and the [submission checklist](../submission/SUBMISSION_CHECKLIST.md).
+
+## Public deployment concurrency regression
+
+The first live Render check returned a source-linked model answer in 8.322 seconds,
+but a concurrent `/healthz` request timed out after 5 seconds. Synchronous provider I/O
+was running inside an asynchronous route and blocking the event loop.
+
+The chat route now runs as a synchronous FastAPI handler, which dispatches it to the
+worker pool. The added regression holds a model turn open while checking that a second
+HTTP request can still complete. It fails before the fix. The current suite contains
+171 tests; the original video and architecture deck preserve the 170-test snapshot
+recorded before this deployment patch.

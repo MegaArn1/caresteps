@@ -21,8 +21,12 @@ router = APIRouter(prefix="/api", tags=["api"])
 
 
 @router.post("/chat")
-async def chat(request: Request, message: str = Form(...)):
+def chat(request: Request, message: str = Form(...)):
     """One conversational turn.
+
+    The provider uses synchronous HTTP. A synchronous FastAPI route runs this
+    work in the thread pool, keeping health checks and other requests responsive
+    while the model is waiting. Database connections stay in the same worker.
 
     The message is persisted before the turn runs, so a crash mid-turn still leaves an
     audit trail of what was asked. The response is persisted after, with its mode

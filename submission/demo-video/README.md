@@ -48,3 +48,7 @@ locations. The published scripts and text alone do not include the raw audio/vid
 
 The existing verification record reports a successful full decode, subtitle checks and
 SHA-256. This audit also verifies the final file's encoding, duration and hash.
+
+The recording preserves the pre-deployment 170-test snapshot. The deployed release adds
+one concurrency regression for health checks during a waiting model turn; current
+software validation has 171 tests. See [evaluation](../../docs/evaluation.md).

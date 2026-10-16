@@ -1,4 +1,4 @@
-> Release note (2026-10-16): the current software suite has 170 passing tests.
+> Release note (2026-10-16): the current software suite has 171 passing tests.
 > Source-selection observations below describe the project's selected corpus, not an
 > exhaustive claim about all Singapore clinical guidance. `team_checked` is not clinical
 > review. See [development workflow](development.md) and [evaluation](evaluation.md).
@@ -545,8 +545,8 @@ Nothing above should be taken on trust. The artefacts are in the repository.
 | The disabled grading-table entry | `facts.json` → `edu_numeric_bands_disabled` |
 | No clinical review anywhere | `review_state` fields in `content/education/*.json` and `content/rules/*.json`; every enabled entry reads `team_checked` |
 
-The automated test suite is 170 tests, covering data integrity, safety boundaries, statistics
-and summary behaviour, the degraded conversation layer, and the demo flows. All 170 pass. That
+The automated test suite is 171 tests, covering data integrity, safety boundaries, statistics
+and summary behaviour, the degraded conversation layer, and the demo flows. All 171 pass. That
 figure and the ones in this document come from the retained local build log and from test output.
 `docs/evaluation.md` also names per-file test counts.
 

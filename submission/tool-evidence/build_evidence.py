@@ -33,7 +33,7 @@ lines=[
  'See docs/development.md for the recorded workflow and verification process.',
  '',
  'Historical task validation: 5 targeted tests and 170 full-suite tests passed.',
- 'Current release validation repeats the 170-test suite and 27 routing scenarios.',
+ 'Current release validation has 171 tests and 27 routing scenarios.',
  'Software checks do not establish clinical validation or accessibility conformance.',
 ]
 y=548

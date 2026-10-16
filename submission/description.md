@@ -54,7 +54,7 @@ smaller deterministic conversation remain available.
 
 The prototype makes adherence barriers visible alongside records and gives the patient a
 printable account for a professional discussion. It does not automatically send a report.
-Measurable engineering evidence is **170 passing automated tests**, **27 reproducible
+Measurable engineering evidence is **171 passing automated tests**, **27 reproducible
 routing scenarios**, **10 model-visible tools**, and a fictional 14-day demo with readings
 on 10 days. These demonstrate implementation behavior, not reduced blood pressure,
 improved adherence or saved consultation time; those outcomes require future study.

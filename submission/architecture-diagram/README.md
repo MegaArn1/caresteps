@@ -39,3 +39,7 @@ the owner should retain the corresponding original usage rights.
 
 Health-content and third-party attribution are discussed in
 [content provenance](../../docs/content-provenance.md).
+
+The deck records the pre-deployment 170-test snapshot. The subsequent chat-concurrency
+patch adds one regression (171 tests in the current release); the architecture and its
+10-tool / 13-table counts are unchanged. See [evaluation](../../docs/evaluation.md).

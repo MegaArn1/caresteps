@@ -1,4 +1,4 @@
-# CareSteps - deliberately minimal. Five direct dependencies; no frontend build step.
+# CareSteps - deliberately minimal. Six direct dependencies; no frontend build step.
 #
 # Versions are pinned to the ones verified working in the build environment
 # (Python 3.11.7, 2026-10-11).

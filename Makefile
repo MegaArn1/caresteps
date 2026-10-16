@@ -14,7 +14,7 @@ PORT ?= 8000
 help:
 	@echo "CareSteps - available targets:"
 	@echo ""
-	@echo "  make setup      Create .venv and install the 5 dependencies"
+	@echo "  make setup      Create .venv and install runtime + test dependencies"
 	@echo "  make seed       Rebuild the database with fictional demo data"
 	@echo "  make run        Serve at http://127.0.0.1:$(PORT)  (works with no model)"
 	@echo "  make run-live   Serve, expecting LLM_* to be configured"

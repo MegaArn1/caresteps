@@ -1,0 +1,59 @@
+{
+  "date": "2026-10-16",
+  "origin": "http://127.0.0.1:8000",
+  "device_scale_factor": 2,
+  "viewport_css_pixels": {
+    "width": 1120,
+    "height": 2200
+  },
+  "data": "Fictional seed data in an isolated temporary database; no real patient records.",
+  "runtime_mode": "LLM_FORCE_DEGRADED=1; no live model requests.",
+  "edits": "No HTML, CSS, labels, banner visibility or chart data were altered for capture. Crops are specified above.",
+  "captures": [
+    {
+      "filename": "home-actions.png",
+      "url": "http://127.0.0.1:8000/app",
+      "css_clip": {
+        "x": 12,
+        "y": 442.6875,
+        "width": 1096,
+        "height": 506.796875
+      },
+      "description": "Greeting and three real homepage actions; banners are outside the crop."
+    },
+    {
+      "filename": "reading-entry.png",
+      "url": "http://127.0.0.1:8000/readings/new",
+      "css_clip": {
+        "x": 12,
+        "y": 442.6875,
+        "width": 1084,
+        "height": 455.9375
+      },
+      "description": "Real blood-pressure form with typed but unsaved fictional example 138/82."
+    },
+    {
+      "filename": "reading-values.png",
+      "url": "http://127.0.0.1:8000/readings/new",
+      "css_clip": {
+        "x": 16,
+        "y": 695.625,
+        "width": 1088,
+        "height": 191
+      },
+      "description": "Actual labelled form fields with fictional unsaved values, captured without changing UI styles."
+    },
+    {
+      "filename": "trends-chart.png",
+      "url": "http://127.0.0.1:8000/app/trends",
+      "css_clip": {
+        "x": 12,
+        "y": 1106.609375,
+        "width": 1096,
+        "height": 568.640625
+      },
+      "description": "Unmodified real chart of the fictional seeded demo history."
+    }
+  ],
+  "browser_errors": []
+}

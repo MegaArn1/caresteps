@@ -1,31 +1,50 @@
-# CareSteps - keep secrets and generated state out of the repository.
-#
-# The Handbook requires complete source via GitHub. Neither the demo database nor
-# any credential belongs in that repository.
+# Credentials and machine-specific configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
 
-# Local environment
+# Python environment and generated state
 .venv/
+venv/
 __pycache__/
 *.py[cod]
 .pytest_cache/
-.env
-.env.*
+.coverage
+htmlcov/
+*.egg-info/
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+var/
 
-# The template itself must ship: a fresh clone needs to see which variables exist.
-!.env.example
+# Private release review, originals, raw recordings and agent working state
+.local-release/
+.workbuddy-ai/
+.claude/
+.codex/
+memory/
+submission/diagrams/
+submission/demo-video/source/
+submission/demo-video/gemini-voiceover/generated/
+*.backup
+*.backup.*
+*.bak
+*.zip
 
-# The demo database is REBUILT with `make seed`, never committed. It contains only
-# fictional rows, but committing a database is a bad habit to ship in an example.
-caresteps.db
-caresteps.db-wal
-caresteps.db-shm
+# Office lock files
+~$*
 
-# The database in the project root is the default; allow the dir to exist.
-!caresteps.db.gitkeep
-
-# OS / editor noise
+# OS / editor state
 .DS_Store
 Thumbs.db
 *.swp
 .idea/
 .vscode/
+
+# Public submission PDFs override the parent workspace's blanket PDF exclusion.
+!submission/architecture-diagram/*.pdf
+!submission/tool-evidence/*.pdf

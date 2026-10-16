@@ -1,3 +1,8 @@
+> Release note (2026-10-16): the current software suite has 170 passing tests.
+> Source-selection observations below describe the project's selected corpus, not an
+> exhaustive claim about all Singapore clinical guidance. `team_checked` is not clinical
+> review. See [development attribution](development.md) and [evaluation](evaluation.md).
+
 # Content provenance
 
 Where every health fact in CareSteps came from, and what we decided not to use.
@@ -50,7 +55,7 @@ foundation.
 
 The rejections were not about format. They were substantive. The build log records the
 category of defect, and it does so for the five highlighted below rather than for all
-32 (`docs/BUILD_LOG.md`, phase P7):
+32 (the retained local build log, phase P7):
 
 | Rejected candidate | Defect |
 |---|---|
@@ -532,7 +537,7 @@ Nothing above should be taken on trust. The artefacts are in the repository.
 | 14 sources, with publishers, URLs, dates and review states | `content/education/sources.json` |
 | 23 enabled facts and their source ids | `content/education/facts.json` |
 | The audit, the 14 rewrites and the reason for each | `facts.json` → `_audit` |
-| The 63 candidates and the 32 rejections, with the defect named for five of them | `docs/BUILD_LOG.md`, phase P7 |
+| The 63 candidates and the 32 rejections, with the defect named for five of them | the retained local build log, phase P7 |
 | No numeric threshold in any rule or config | `tests/test_safety.py`; run `make test` |
 | No numeric threshold in enabled content | `tests/test_data_integrity.py` |
 | Uncited rules cannot load | `app/safety/rules.py`; `content/rules/boundaries.json` |
@@ -540,9 +545,9 @@ Nothing above should be taken on trust. The artefacts are in the repository.
 | The disabled grading-table entry | `facts.json` → `edu_numeric_bands_disabled` |
 | No clinical review anywhere | `review_state` fields in `content/education/*.json` and `content/rules/*.json`; every enabled entry reads `team_checked` |
 
-The automated test suite is 165 tests, covering data integrity, safety boundaries, statistics
-and summary behaviour, the degraded conversation layer, and the demo flows. All 165 pass. That
-figure and the ones in this document come from `docs/BUILD_LOG.md` and from test output.
+The automated test suite is 170 tests, covering data integrity, safety boundaries, statistics
+and summary behaviour, the degraded conversation layer, and the demo flows. All 170 pass. That
+figure and the ones in this document come from the retained local build log and from test output.
 `docs/evaluation.md` also names per-file test counts.
 
 ---

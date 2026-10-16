@@ -42,8 +42,8 @@ Before starting, you need:
 
 ## 2. Environment variables
 
-Configure variables in the platform dashboard. CareSteps does not load a local `.env`
-file by itself.
+Configure variables in the platform dashboard. For local development, CareSteps loads
+`.env` at startup; platform/exported variables take precedence.
 
 | Variable | Required | Example | Purpose |
 |---|---:|---|---|
@@ -136,6 +136,10 @@ Counts and database size can differ after the demo is used.
 ---
 
 ## 5. Deploy to Render
+
+A reviewable [render.yaml](../render.yaml) is included. It creates a paid disk-capable
+service in limited mode; add optional model secrets in the platform settings and set
+`LLM_FORCE_DEGRADED=0` for live calls. No hosting resource is created by this file alone.
 
 Render can deploy the repository as a native Python web service. A persistent disk is
 required because the normal service filesystem is ephemeral. Render persistent disks are

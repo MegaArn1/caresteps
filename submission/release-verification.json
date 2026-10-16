@@ -1,0 +1,147 @@
+{
+  "date": "2026-10-16",
+  "scope": "Clean staged-tree export with no .env, database or project virtual environment; runtime/test requirements installed into a new Python 3.11 environment. No remote hosting or live model call.",
+  "checks": {
+    "tests": {
+      "exit_code": 0,
+      "elapsed_seconds": 41.48,
+      "result": "170 passed, 3 warnings in 40.43s"
+    },
+    "routing": {
+      "exit_code": 0,
+      "elapsed_seconds": 4.21,
+      "result": "27/27"
+    },
+    "video_decode": {
+      "exit_code": 0,
+      "elapsed_seconds": 4.89,
+      "result": "passed"
+    },
+    "fresh_server": {
+      "result": "passed",
+      "http_status": {
+        "/app": 200,
+        "/static/css/app.css?v=2": 200,
+        "/readings/new": 200,
+        "/app/medicines": 200,
+        "/app/trends": 200,
+        "/summary": 200,
+        "/summary/print": 200,
+        "/trace": 200,
+        "/api/status": 200
+      },
+      "profiles_before_first_app_visit": 0,
+      "seeded_system_metrics": {
+        "total_users": 1,
+        "total_bp_recordings": 11,
+        "total_medications_tracked": 2,
+        "active_barriers": 1,
+        "database_size_kb": 164
+      },
+      "mode": "forced degraded; no gateway calls"
+    },
+    "architecture": {
+      "result": "passed",
+      "slides": 9,
+      "native_elements": 475,
+      "text_frames": 235,
+      "source_fingerprints": 15,
+      "previews": 9
+    }
+  },
+  "artifacts": {
+    "cover-image/CareSteps_Cover.png": {
+      "bytes": 295723,
+      "sha256": "4e7f4071f554e51a96a80d6f9466253884b0e9b3f74973ffbd2c7a91d80a2051"
+    },
+    "tool-evidence/CareSteps_WorkBuddy_Evidence.pdf": {
+      "bytes": 374530,
+      "sha256": "e38d4b0e6b416fbc7cea63132af1efaa4beee7628741de89339fe6873e07971a"
+    },
+    "architecture-diagram/CareSteps_Architecture_Diagram.pptx": {
+      "bytes": 4118679,
+      "sha256": "c11c962b9278f9497be9a478fb49501def60fc34e5251110ab50d53e1f5f0f72"
+    },
+    "architecture-diagram/CareSteps_Architecture_Diagram.pdf": {
+      "bytes": 554088,
+      "sha256": "cde04bf44abc24bf64802a741489862099d46fbc328662bc7afc8e7d97a62c48"
+    },
+    "demo-video/caresteps-demo-gemini.mp4": {
+      "bytes": 24491605,
+      "sha256": "0450410354161802e2c313ef16f6e04a916a080a73b273f44ee6af08fe20fc13"
+    }
+  },
+  "validated_source_sha256": {
+    "app/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "app/config.py": "70d5eeee62a05e7d43155233c9d6b1baa9a77a06f6eae84595200eb2283b03f0",
+    "app/content_loader.py": "b334e1f431bebe4047d3e0ef952bae427d9080514ed88d76f57609178a19e7c6",
+    "app/db.py": "9775ba28641e8811f081389c5f1894a1fd93712244195a7a7dfa043f2abf5d4b",
+    "app/demo/__init__.py": "8887ccad383e74b91a46ccc3b031bc073b3ddac9dda600819c823d480a79f113",
+    "app/demo/seed.py": "ff11e4874d621d735d9ed36ae27b5c500b33e589773a2454148b1499f36192f8",
+    "app/llm/__init__.py": "26e55cd9669be0996a6d7ff25831b84bd6309525cd98948183b0a84c984d0e30",
+    "app/llm/degraded.py": "24b715e011ffb77d41c2385214aea7719570012d492bdd0ef1d23af9cf7caf6c",
+    "app/llm/help.py": "c780520a4cf4d7ea4e744d370cc3f95841753df0c24cdfb0b41bd95b2a609361",
+    "app/llm/orchestrator.py": "d13ed72136d4c9b7fea4ccc61e2c0eb2010092bb1b65ee3e2ae836d5468ba2d9",
+    "app/llm/prompts.py": "cd71716ae05fbb1078ff86b86fa5fafd5af4928705432dfadb13fbbe76663d0a",
+    "app/llm/provider.py": "aa062d5d21b0cbeffae42a7b0b2c05c4cbae0ef141e73d21c9f90139ade6a24b",
+    "app/main.py": "ce2bdcee2bcbbf830c5a35ac4ea7174d7137ddb08648dd60c7dbf955d5f1eeef",
+    "app/repository.py": "3fab77587a1a959f9e973163373c423a10a46a94d8012eb5d2ca3c6eeb1dc913",
+    "app/routes/__init__.py": "c590c1dcfee7131914b12e8e0b50ed6415c08dc6e445d885b95642ca1301100c",
+    "app/routes/api.py": "a012caa4cf11f7cc79cd0db8a5269f28e130022b2c814218f65524b003b1d5d7",
+    "app/routes/barrier.py": "5304da9e3c65b71e6b2537c456aaa3455710cd1c340d977d1e13c9c863b6eed1",
+    "app/routes/deps.py": "c894bfc6a1b7387bbc7fc584cd37280cd03f2730c4ee95c71ffe2208574a311d",
+    "app/routes/pages.py": "7641577bd4654163eb77831b578cb63666818bd839e075d47ced4d9959a9f930",
+    "app/routes/readings.py": "0a1ee11fcefb4b1694b6344b3ba10a67eaa131bde1b9d742941ca4e0ad275717",
+    "app/routes/stats.py": "40acbe993a38ac203ad44f1e051029a2cba96dc8a72374e5a48714f5de4c5f34",
+    "app/routes/summary.py": "40c89f6ef053eefd14726b7918d7c5984c3a20cfd62c01168fa012dde1ebba66",
+    "app/safety/__init__.py": "5193b99fe26f7f48c51ba16780c7ea555df19ebdd5e057287ec32db5febcfad4",
+    "app/safety/boundaries.py": "8b35fce213f74da81fcdb6510e7e81959a30c0dab81efe7cf49f9fd0f213c110",
+    "app/safety/clarify.py": "0a865a0283a496edced9372bcdda55513e3c83853f0fac205e3579a1fd32ae4c",
+    "app/safety/redflags.py": "2032ccae6c162e844f72dbc1a7944693fd20c82dd8ba68ca092e4070ddb78e6c",
+    "app/safety/rules.py": "5dce2117b4a59908619eaa3adfb9fee919be2d341b9aefe25b4c9b5c5c562dcc",
+    "app/static/css/app.css": "9e52a45c0ded9fc1291f176fb5c7352c8abf43ab7b517996a17beea15e3b53f9",
+    "app/static/js/app.js": "95b3ce562345831d80b89d724e36cd2d940d591fb9a0c1b6f284dded723a7f75",
+    "app/stats.py": "a45ac14e4f395d415efd6d64af9e2fecbfd916af57555ad61571542a43f1e14a",
+    "app/summary.py": "72fa8cbfa4bd3be8e0fc8fcaa85202f8cebc24e986ba0fc6b85e697c007b2ffe",
+    "app/templates/barrier_ask.html": "6731f118ce42eecbeaad9ce067be458c36429e9139b5f7030f6ae19c2aa1e33d",
+    "app/templates/barrier_detail.html": "c11b7716d7940cfc9ca196ccca3d91b1bb069fb329dfaa80462d7b79af804eb7",
+    "app/templates/barrier_list.html": "ec27beecea5bf3b0ff4f98932c83f08306307c80dbe6e0fa4c6ee39f3445f9ba",
+    "app/templates/base.html": "55fa91f5fd2ca10a4ad8f09876922df25cafb1ef00ffd43879733792166c3fb0",
+    "app/templates/help.html": "5ff62e3efbdcbd790c7a8801644e03ccb003e770676572914a1caa9357a00f23",
+    "app/templates/history.html": "122a240098335309d40f7bfd16b1021623b0712f8e87524cebcc6bf2b24be2ea",
+    "app/templates/home.html": "bd15ca761f24d780408a2ced84755c8e1694c0447db37b7a49a42e658a640a0c",
+    "app/templates/medicines.html": "95f8f6ee1ed25cfb86e88ccab1b6104a3841a0ee7ecbf01d8ff543ca319c040a",
+    "app/templates/plan.html": "5ba8b8dd77c50bbb07eef221e2950185f65b325439165c1e073ea945b8ef7f20",
+    "app/templates/reading_confirm.html": "78b747b42fdac3dd2d29c41eaab45401e826ce7aafde0bbd9d02e1cd30079a1c",
+    "app/templates/reading_new.html": "6ecf8b858619a03f62e73f8a1506e33fbdbb49869ec209b41df5fdcea5a0e107",
+    "app/templates/summary.html": "5c7f72b33fcf993766a215caca83a06df34ef9f32ed410e33cce1a8f72ab8a5a",
+    "app/templates/summary_print.html": "40958312b973379f34372c536b79409cf89ddb480e934441349cee3d7730eb29",
+    "app/templates/support.html": "5f57852b8de0320372f884766dcaf3863583b3d4bd40e1145218f90550ac7f83",
+    "app/templates/trace.html": "3aae5af75635c6308135f25149e3a025445eb9094a819d8daac93738951c94f5",
+    "app/templates/trends.html": "09eef551a1f359939c961240dba88af54178b45df7d4f9fff3768e5888eeb211",
+    "app/tools/__init__.py": "458f97f74f5d1a83b6599a775a46bbe868e3a5ac09735b6597e2f3d3aaa72a23",
+    "app/tools/contracts.py": "18991f62b731d3dcfc2e583104a87bf91df2f47e356bffbc2a5f74d88b06d407",
+    "app/tools/handlers.py": "a7725af200523a35ef1855c2f1bf1e85c9a2ebd6b10c8c24aade2584267e0467",
+    "content/education/facts.json": "c15877304ed9ae3d0395f5047d2d191216841bf3e05af1056c3dd82e9c50fa5b",
+    "content/education/sources.json": "8fefa1c3e6900a42d762e8f9d30dd94d843a15ccd6cca5e281882c69fd8efed5",
+    "content/rules/boundaries.json": "4a7f3c0dbcc685def5c14110a1e03bfdcbf0821f8443aac3bcf464af75e13ada",
+    "content/rules/clarify.json": "63e0a90d6899551c68d273809a2ba74d112e428bb0b5fb2d0beae9021b141e2c",
+    "content/rules/emergency.json": "40698df12384c7fd98b843bd680aed67bc44691011803fac806c89726646404b",
+    "content/rules/redflags.json": "2e73a61461ce11a8d7582a5837f047afa258fa766fd33bdb893d93502aa0789a",
+    "tests/conftest.py": "447b4297bf070af31e3215d73d19c877e31387e3ace56c2c9d12f2a4fca96a3a",
+    "tests/test_data_integrity.py": "0b5785dd2b94fa467344026415b870bf7fcbb3ee7a4d11164b971ac800a79cb4",
+    "tests/test_degraded_and_output.py": "b436fe1cd98ef9be103839583de5263cd727f86a07096bcb16d934c6ba5519c9",
+    "tests/test_demo_flow.py": "f822b4047b2cad1d7499277b0de748965f87c78dc20f35c1a8ed8c3175708595",
+    "tests/test_safety.py": "bb0fffdb152544cf416872b8d35e5fb04e0c9e7a89391aa0577419e9f2ab38fd",
+    "tests/test_stats_and_summary.py": "7b457ff7a76a5926e2b5000269905270bb775e98433a5804b0f6d9e10bf91ff0",
+    "tests/test_system_stats_api.py": "f73a030c307b8d776ab303196208e0f1981c858c19c15ec4b3acbaca79815abe",
+    "requirements.txt": "2142d04fbf7760acc245ac14829b62bb6458e40df6a83168d69ced4306d99de8",
+    "requirements-dev.txt": "f89b39ed0609b3e44a2d70edfdfeab837cbeb1c5638a6eb6c5a1f347149671e0"
+  },
+  "remote_verification": {
+    "github": "pending owner approval",
+    "live_web_url": "not deployed",
+    "hosted_video_url": "not published",
+    "form_submission": "not submitted"
+  }
+}

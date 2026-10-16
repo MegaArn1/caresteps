@@ -1,0 +1,61 @@
+{
+  "review_date": "2026-10-16",
+  "handbook": {
+    "filename": "Copy of AI CAN DO IT Tencent Cloud AI Singapore Hackathon 2026 Handbook.pdf",
+    "submission_requirements_pdf_page": 37,
+    "healthcare_challenge_2_diagram_guidance_pdf_page": 35,
+    "diagram_scope": [
+      "architecture",
+      "trust boundaries",
+      "key design trade-offs"
+    ]
+  },
+  "tool_names": [
+    "get_care_plan",
+    "prepare_reading",
+    "prepare_medication_report",
+    "retrieve_education",
+    "record_barrier",
+    "get_period_stats",
+    "get_recent_activity",
+    "set_reminder_preference",
+    "build_visit_summary",
+    "add_question"
+  ],
+  "ui_only_handler": "confirm_draft",
+  "tables": [
+    "audit_event",
+    "barrier_event",
+    "bp_reading",
+    "care_plan",
+    "consultation_question",
+    "conversation_message",
+    "education_fact",
+    "education_source",
+    "medication_item",
+    "medication_report",
+    "support_action",
+    "user_profile",
+    "visit_summary"
+  ],
+  "automated_tests_passed": 170,
+  "test_command": ".venv/bin/python -m pytest -q",
+  "live_endpoint_tested_for_this_deliverable": false,
+  "source_sha256": {
+    "app/main.py": "ce2bdcee2bcbbf830c5a35ac4ea7174d7137ddb08648dd60c7dbf955d5f1eeef",
+    "app/config.py": "70d5eeee62a05e7d43155233c9d6b1baa9a77a06f6eae84595200eb2283b03f0",
+    "app/db.py": "9775ba28641e8811f081389c5f1894a1fd93712244195a7a7dfa043f2abf5d4b",
+    "app/repository.py": "3fab77587a1a959f9e973163373c423a10a46a94d8012eb5d2ca3c6eeb1dc913",
+    "app/routes/api.py": "a012caa4cf11f7cc79cd0db8a5269f28e130022b2c814218f65524b003b1d5d7",
+    "app/routes/deps.py": "c894bfc6a1b7387bbc7fc584cd37280cd03f2730c4ee95c71ffe2208574a311d",
+    "app/safety/__init__.py": "5193b99fe26f7f48c51ba16780c7ea555df19ebdd5e057287ec32db5febcfad4",
+    "app/tools/contracts.py": "18991f62b731d3dcfc2e583104a87bf91df2f47e356bffbc2a5f74d88b06d407",
+    "app/tools/handlers.py": "a7725af200523a35ef1855c2f1bf1e85c9a2ebd6b10c8c24aade2584267e0467",
+    "app/stats.py": "a45ac14e4f395d415efd6d64af9e2fecbfd916af57555ad61571542a43f1e14a",
+    "app/summary.py": "72fa8cbfa4bd3be8e0fc8fcaa85202f8cebc24e986ba0fc6b85e697c007b2ffe",
+    "app/llm/orchestrator.py": "d13ed72136d4c9b7fea4ccc61e2c0eb2010092bb1b65ee3e2ae836d5468ba2d9",
+    "app/llm/provider.py": "aa062d5d21b0cbeffae42a7b0b2c05c4cbae0ef141e73d21c9f90139ade6a24b",
+    "app/llm/prompts.py": "cd71716ae05fbb1078ff86b86fa5fafd5af4928705432dfadb13fbbe76663d0a",
+    "app/content_loader.py": "b334e1f431bebe4047d3e0ef952bae427d9080514ed88d76f57609178a19e7c6"
+  }
+}

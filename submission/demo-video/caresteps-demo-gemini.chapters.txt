@@ -1,0 +1,35 @@
+00:00 CareSteps
+00:14 Everyday support
+00:25 Record a reading
+00:37 Enter 145 over 88
+00:47 Check before saving
+00:59 Saved to history
+01:11 Numbers with context
+01:22 Gaps stay visible
+01:34 Accessible data list
+01:45 Ask what got in the way
+01:59 No forced category
+02:12 Confirm the reason
+02:23 Matching support
+02:34 Medicine information
+02:47 Source and review state
+03:00 Assistant in the app
+03:12 Ask about amlodipine
+03:24 Model answer
+03:37 Medication boundary
+03:49 Chest pain: safety first
+04:03 Help is explicit
+04:15 Inspect the system
+04:28 Rules before model
+04:41 Auditable tool calls
+04:55 Limited mode
+05:08 Honest fallback
+05:21 Appointment preparation
+05:33 Context for every number
+05:48 Medication records
+06:02 Questions for the visit
+06:14 Patient controls the page
+06:26 Print-ready result
+06:37 WorkBuddy build evidence
+06:54 What we learned
+07:07 Limits and next steps

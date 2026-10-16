@@ -1,0 +1,178 @@
+{
+  "date": "2026-10-16",
+  "screenshots": [
+    {
+      "file": "submission/tool-evidence/screenshot/Screenshot 2026-10-15 221753.png",
+      "sha256": "d18745c448ed6c112f9d09a1f27936eed91cc63aa7f7b2d1f9dcac5728204011",
+      "original_sha256": "16dc801216d474fc947662e60716ba58af20861d7fe536ac7ad493575a130c4d",
+      "redaction_boxes": [
+        [
+          557,
+          287,
+          878,
+          311
+        ],
+        [
+          610,
+          454,
+          915,
+          478
+        ],
+        [
+          610,
+          481,
+          915,
+          505
+        ],
+        [
+          610,
+          508,
+          915,
+          532
+        ],
+        [
+          610,
+          536,
+          915,
+          560
+        ],
+        [
+          610,
+          563,
+          915,
+          587
+        ],
+        [
+          610,
+          591,
+          915,
+          615
+        ],
+        [
+          610,
+          618,
+          915,
+          642
+        ],
+        [
+          558,
+          646,
+          879,
+          670
+        ],
+        [
+          558,
+          674,
+          879,
+          698
+        ],
+        [
+          558,
+          701,
+          879,
+          725
+        ],
+        [
+          558,
+          735,
+          879,
+          759
+        ],
+        [
+          558,
+          761,
+          879,
+          785
+        ],
+        [
+          558,
+          786,
+          879,
+          810
+        ],
+        [
+          558,
+          810,
+          879,
+          834
+        ],
+        [
+          558,
+          835,
+          879,
+          859
+        ],
+        [
+          558,
+          860,
+          879,
+          884
+        ],
+        [
+          558,
+          883,
+          879,
+          907
+        ],
+        [
+          56,
+          1035,
+          162,
+          1064
+        ]
+      ],
+      "scope": "Private local path prefix / account display name only. Prompts, responses, file suffixes, verification output and tool UI are retained."
+    },
+    {
+      "file": "submission/tool-evidence/screenshot/Screenshot 2026-10-15 223751.png",
+      "sha256": "3d23ed3918435e6f9c188306706745d021fac75b6f3cc1e1f081e2f1cb366bf2",
+      "original_sha256": "d20b67e859f1a49254956fc9a41b410334fb11d65a1301bc4df5f38d5dc7fb12",
+      "redaction_boxes": [
+        [
+          303,
+          50,
+          597,
+          74
+        ],
+        [
+          303,
+          80,
+          597,
+          104
+        ],
+        [
+          303,
+          110,
+          597,
+          134
+        ],
+        [
+          303,
+          140,
+          597,
+          164
+        ],
+        [
+          303,
+          170,
+          597,
+          194
+        ],
+        [
+          303,
+          362,
+          597,
+          386
+        ]
+      ],
+      "scope": "Private local path prefix / account display name only. Prompts, responses, file suffixes, verification output and tool UI are retained."
+    },
+    {
+      "file": "submission/tool-evidence/screenshot/Screenshot 2026-10-15 225218.png",
+      "sha256": "e2cf48b8888308b395d7327489e4749a787541db9482b971aa6aead0987a1e61",
+      "original_sha256": "09260ec4dbbf59d6fc68d3bc27c228c128e680ceae404a79a094a6fce583e592",
+      "redaction_boxes": [],
+      "scope": "Private local path prefix / account display name only. Prompts, responses, file suffixes, verification output and tool UI are retained."
+    }
+  ]
+}

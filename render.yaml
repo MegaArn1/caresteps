@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: caresteps
+    runtime: python
+    region: singapore
+    plan: 0.5c-512mb
+    numInstances: 1
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1
+    healthCheckPath: /healthz
+    disk:
+      name: caresteps-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.7
+      - key: CARESTEPS_DB
+        value: /var/data/caresteps.db
+      - key: LLM_FORCE_DEGRADED
+        value: "1"

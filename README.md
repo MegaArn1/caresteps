@@ -76,12 +76,12 @@ cookies and no production login. Use fictional inputs only. See the
 - [Project description](submission/description.md) and [form text](submission/project-info/SUBMISSION_CONTENT.md)
 - [9-slide architecture PPTX](submission/architecture-diagram/CareSteps_Architecture_Diagram.pptx)
 - [Architecture PDF](submission/architecture-diagram/CareSteps_Architecture_Diagram.pdf) and [diagram overview](submission/architecture-diagram/CareSteps_Architecture_Overview.png)
-- [7:22 narrated demo](submission/demo-video/caresteps-demo-gemini.mp4) and [subtitles](submission/demo-video/caresteps-demo-gemini.en.srt)
+- [Watch the demo on YouTube](https://www.youtube.com/watch?v=gTVs-9tpJL8); [local 7:22 MP4](submission/demo-video/caresteps-demo-gemini.mp4) and [subtitles](submission/demo-video/caresteps-demo-gemini.en.srt)
 - [WorkBuddy conversation evidence PDF](submission/tool-evidence/CareSteps_WorkBuddy_Evidence.pdf)
 
 Source code: [MegaArn1/caresteps](https://github.com/MegaArn1/caresteps).
-The live application URL and hosted video URL are pending publication.
-The local MP4 is a download artifact; the submission form needs a working video link.
+The live application URL is pending deployment. The YouTube URL above is the hosted
+demo-video link for the submission form; the local MP4 remains a downloadable artifact.
 
 ## Verify
 

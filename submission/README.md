@@ -10,7 +10,7 @@ some appear optional or as guidance in the handbook.
 | Cover, one upload ≤1 MB | [1920×1080 PNG](cover-image/CareSteps_Cover.png) | Ready; 295,723 bytes |
 | Conversation history, one upload ≤10 MB | [WorkBuddy evidence PDF](tool-evidence/CareSteps_WorkBuddy_Evidence.pdf) | Three screenshots packaged; contribution scope documented |
 | Architecture Diagram PPT, one upload ≤10 MB | [9-slide PPTX](architecture-diagram/CareSteps_Architecture_Diagram.pptx) | Ready; [PDF companion](architecture-diagram/CareSteps_Architecture_Diagram.pdf) |
-| Demo Video Link, 5–8 minutes | [7:22 MP4](demo-video/caresteps-demo-gemini.mp4) | Local file ready; hosted playable URL pending |
+| Demo Video Link, 5–8 minutes | [YouTube demo](https://www.youtube.com/watch?v=gTVs-9tpJL8); [local 7:22 MP4](demo-video/caresteps-demo-gemini.mp4) | Hosted; public metadata retrieved without login |
 | Project Web Link | [Deployment plan](web-deployment/DEPLOYMENT_STRATEGY.md) | Required; deployment and public URL pending |
 | Source Code | Repository containing this release | Required; [MegaArn1/caresteps](https://github.com/MegaArn1/caresteps) |
 | Social Media Post Link | Form bonus field | Optional; no post published by this audit |

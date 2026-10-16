@@ -42,7 +42,7 @@ No current free-credit or pricing promise is made.
 ## Remaining submission links
 
 - Application URL: pending deployment.
-- Video URL: pending hosting of the selected 7:22 MP4, with public/unlisted playback.
+- Video URL: https://www.youtube.com/watch?v=gTVs-9tpJL8 (YouTube; owner-provided link).
 - Source URL: https://github.com/MegaArn1/caresteps.
 
 Do not put placeholder URLs in the submitted form.

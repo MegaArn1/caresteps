@@ -12,7 +12,7 @@
 | Project Description | 必填，含场景、痛点来源、业务/技术设计、提示词和价值 | [description.md](description.md) |
 | Cover Image | 必填，1 个文件，≤1 MB，16:9，推荐 380×216 | [CareSteps_Cover.png](cover-image/CareSteps_Cover.png)，1920×1080，295,723 bytes；另有推荐像素版 |
 | Project Web Link | **必填**，可在浏览器在线体验 | **待部署并验证公共 URL**；不能用 GitHub 地址或 Local Only 替代 |
-| Demo Video Link | **必填**，5–8 分钟，概览/核心 Agent 用法/构建反思 | [caresteps-demo-gemini.mp4](demo-video/caresteps-demo-gemini.mp4)，441.934 秒；**待托管并验证可播放 URL** |
+| Demo Video Link | **必填**，5–8 分钟，概览/核心 Agent 用法/构建反思 | [YouTube Demo](https://www.youtube.com/watch?v=gTVs-9tpJL8)；本地成品 441.934 秒，已无需登录获取公开视频元数据，待最终播放检查 |
 | WorkBuddy/CodeBuddy Conversation History | **必填**，聊天记录及至少 3 张截图；1 个文件，≤10 MB | [CareSteps_WorkBuddy_Evidence.pdf](tool-evidence/CareSteps_WorkBuddy_Evidence.pdf)，三张现有截图；见[贡献范围](../docs/development.md) |
 | Architecture Diagram PPT | **必填**，1 个文件，≤10 MB | [CareSteps_Architecture_Diagram.pptx](architecture-diagram/CareSteps_Architecture_Diagram.pptx)，9 页；PDF 为附加阅读版 |
 | Source Code | **必填**，GitHub 仓库 URL | [MegaArn1/caresteps](https://github.com/MegaArn1/caresteps) |

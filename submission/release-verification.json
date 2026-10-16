@@ -141,8 +141,14 @@
   "remote_verification": {
     "github": "See source_repository; remote push receipt is recorded after publication.",
     "live_web_url": "not deployed",
-    "hosted_video_url": "not published",
-    "form_submission": "not submitted"
+    "hosted_video_url": "https://www.youtube.com/watch?v=gTVs-9tpJL8",
+    "form_submission": "not submitted",
+    "youtube_metadata": {
+      "title": "Caresteps Demo",
+      "provider": "YouTube",
+      "retrieved_without_login": true,
+      "playback_verification": "pending final browser playback check"
+    }
   },
   "source_repository": "https://github.com/MegaArn1/caresteps",
   "publication_update": {

@@ -7,8 +7,9 @@ It contains English synthetic narration and burned-in English subtitles, with a
 [narration](NARRATION.md) and [verification record](caresteps-demo-gemini.verification.json).
 
 The supplied actual submission form requires a **Demo Video Link**, with a 5–8 minute
-video covering overview, core Agent use and build reflection. The local file is ready;
-**a public or unlisted playable hosting URL is still pending**. A local filesystem path
+video covering overview, core Agent use and build reflection. The hosted demo is available on
+[YouTube](https://www.youtube.com/watch?v=gTVs-9tpJL8). The owner supplied this URL on October 16, 2026;
+YouTube oEmbed metadata was retrieved without login (title: "Caresteps Demo"). A local filesystem path
 or source-repository link is not the requested hosted video experience.
 
 ## Recorded content

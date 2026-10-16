@@ -76,8 +76,9 @@ hashes are recorded in `submission/release-verification.json`.
 - No real-patient study, clinical review, clinical validation, assistive-technology
   testing or accessibility conformance audit has been performed.
 - The selected public-source corpus is not an exhaustive review of clinical guidance.
-- Public hosting, anonymous access, cloud restart persistence and actual live conversation
-  must be checked after deployment. Local verification does not claim those remote checks.
+- Public access and real live conversation were checked after deployment; see
+  [the deployment verification](../submission/web-deployment/verification.json). The free
+  service has ephemeral storage, so restart persistence is not claimed.
 
 See [architecture](architecture.md), [content provenance](content-provenance.md),
 [development attribution](development.md) and the [submission checklist](../submission/SUBMISSION_CHECKLIST.md).
@@ -93,3 +94,7 @@ worker pool. The added regression holds a model turn open while checking that a 
 HTTP request can still complete. It fails before the fix. The current suite contains
 171 tests; the original video and architecture deck preserve the 170-test snapshot
 recorded before this deployment patch.
+
+Final public verification completed the model turn while a concurrent health check
+returned HTTP 200 in 0.099 seconds. The deployed commit and check results are recorded
+in `submission/web-deployment/verification.json`.

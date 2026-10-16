@@ -11,7 +11,7 @@
 | Short Blurb | 必填，严格少于 10 个英文词 | `Everyday support for seniors managing blood pressure`，8 词 |
 | Project Description | 必填，含场景、痛点来源、业务/技术设计、提示词和价值 | [description.md](description.md) |
 | Cover Image | 必填，1 个文件，≤1 MB，16:9，推荐 380×216 | [CareSteps_Cover.png](cover-image/CareSteps_Cover.png)，1920×1080，295,723 bytes；另有推荐像素版 |
-| Project Web Link | **必填**，可在浏览器在线体验 | **待部署并验证公共 URL**；不能用 GitHub 地址或 Local Only 替代 |
+| Project Web Link | **必填**，可在浏览器在线体验 | [在线 Demo](https://caresteps-splz.onrender.com/app)，免费 Render，核心流程已验证 |
 | Demo Video Link | **必填**，5–8 分钟，概览/核心 Agent 用法/构建反思 | [YouTube Demo](https://www.youtube.com/watch?v=gTVs-9tpJL8)；本地成品 441.934 秒，已无需登录获取公开视频元数据，待最终播放检查 |
 | WorkBuddy/CodeBuddy Conversation History | **必填**，聊天记录及至少 3 张截图；1 个文件，≤10 MB | [CareSteps_WorkBuddy_Evidence.pdf](tool-evidence/CareSteps_WorkBuddy_Evidence.pdf)，三张现有截图；见[贡献范围](../docs/development.md) |
 | Architecture Diagram PPT | **必填**，1 个文件，≤10 MB | [CareSteps_Architecture_Diagram.pptx](architecture-diagram/CareSteps_Architecture_Diagram.pptx)，9 页；PDF 为附加阅读版 |
@@ -31,9 +31,9 @@
 - [x] 密钥从待发布正文清除；发布历史副本单独脱敏，原始历史保留本地。
 - [x] 旧计划、agent memory、未引用 CSS、重复成品和原始音视频移入本地归档。
 - [x] 短简介、文档路径、启动命令、真实工具数量和原型边界统一。
-- [ ] 公共 Web URL 从未登录浏览器打开，验证表单、样式、Limited mode 和已配置的 live 路径。
+- [x] 公共 Web URL 免登录可访问；表单、样式、手机页面、安全门和真实模型问答验证通过；降级路径由自动化套件覆盖。
 - [ ] 视频托管链接从未登录浏览器打开，确认无需申请权限且可播放。
-- [ ] GitHub 仓库公开可访问或已给评审访问权限；从 fresh clone 运行成功。
+- [x] GitHub 公开可访问；免登录克隆、安装和启动验证通过，Render 从公开源码构建成功。
 - [ ] 确认材料中的第三方素材使用权；源内容引用与原型声明保留。
 - [ ] 按表单上传正确的三个文件，并填写三个必填链接。
 - [ ] 提交表单后保存回执。

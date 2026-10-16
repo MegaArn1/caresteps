@@ -2,6 +2,8 @@
 
 **Everyday support for seniors managing blood pressure**
 
+[Open the live demo](https://caresteps-splz.onrender.com/app) · [Watch the demo video](https://www.youtube.com/watch?v=gTVs-9tpJL8)
+
 ![CareSteps: record, understand and prepare](submission/cover-image/CareSteps_Cover_1280x720.png)
 
 CareSteps helps older adults in Singapore follow an existing hypertension care plan:
@@ -80,8 +82,9 @@ cookies and no production login. Use fictional inputs only. See the
 - [WorkBuddy conversation evidence PDF](submission/tool-evidence/CareSteps_WorkBuddy_Evidence.pdf)
 
 Source code: [MegaArn1/caresteps](https://github.com/MegaArn1/caresteps).
-The live application URL is pending deployment. The YouTube URL above is the hosted
-demo-video link for the submission form; the local MP4 remains a downloadable artifact.
+The [live demo](https://caresteps-splz.onrender.com/app) uses Render's free service. After inactivity,
+allow about a minute for a cold start; new entries are reset on a new instance.
+The YouTube URL is the submission video link. See [deployment status](submission/web-deployment/DEPLOYMENT_INFO.md).
 
 ## Verify
 

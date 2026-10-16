@@ -9,7 +9,7 @@ description is maintained in [../description.md](../description.md) to avoid con
 | Short Blurb | Everyday support for seniors managing blood pressure |
 | Project Description | Copy the overview, scenario insights, solution and value sections from [description.md](../description.md); omit Markdown link syntax if pasting plain text. |
 | Cover Image | `submission/cover-image/CareSteps_Cover.png` |
-| Project Web Link | PENDING — a public browser-accessible running application URL |
+| Project Web Link | https://caresteps-splz.onrender.com/app |
 | Demo Video Link | https://www.youtube.com/watch?v=gTVs-9tpJL8 |
 | WorkBuddy/CodeBuddy Conversation History | `submission/tool-evidence/CareSteps_WorkBuddy_Evidence.pdf` |
 | Architecture Diagram PPT | `submission/architecture-diagram/CareSteps_Architecture_Diagram.pptx` |

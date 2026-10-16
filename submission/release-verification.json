@@ -139,8 +139,8 @@
     "requirements-dev.txt": "f89b39ed0609b3e44a2d70edfdfeab837cbeb1c5638a6eb6c5a1f347149671e0"
   },
   "remote_verification": {
-    "github": "See source_repository; remote push receipt is recorded after publication.",
-    "live_web_url": "Public deployment verification in progress.",
+    "github": "Public repository; push verified.",
+    "live_web_url": "https://caresteps-splz.onrender.com/app",
     "hosted_video_url": "https://www.youtube.com/watch?v=gTVs-9tpJL8",
     "form_submission": "not submitted",
     "youtube_metadata": {
@@ -148,7 +148,9 @@
       "provider": "YouTube",
       "retrieved_without_login": true,
       "playback_verification": "pending final browser playback check"
-    }
+    },
+    "deployed_commit": "e7319fcd7d38908daf30cc1f7adc827666e92313",
+    "deployment_verification": "submission/web-deployment/verification.json"
   },
   "source_repository": "https://github.com/MegaArn1/caresteps",
   "publication_update": {

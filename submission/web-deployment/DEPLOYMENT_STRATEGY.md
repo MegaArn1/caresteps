@@ -6,7 +6,8 @@ does not satisfy that field. The handbook's optional-link wording is less strict
 the actual form.
 
 The source repository is [MegaArn1/caresteps](https://github.com/MegaArn1/caresteps).
-Public application hosting has not yet been provisioned.
+The free application is live at [CareSteps](https://caresteps-splz.onrender.com/app); see
+[the verification record](DEPLOYMENT_INFO.md).
 
 ## Selected free-demo configuration
 
@@ -39,9 +40,9 @@ changes require a manual deploy from the Render dashboard or API.
 Optional paid persistence is documented in [docs/DEPLOYMENT.md](../../docs/DEPLOYMENT.md).
 It is not part of this free deployment.
 
-## Remaining submission links
+## Submission links
 
-- Application URL: pending deployment.
+- Application URL: https://caresteps-splz.onrender.com/app (verified live).
 - Video URL: https://www.youtube.com/watch?v=gTVs-9tpJL8 (YouTube; owner-provided link).
 - Source URL: https://github.com/MegaArn1/caresteps.
 

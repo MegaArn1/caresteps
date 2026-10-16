@@ -1,0 +1,73 @@
+{
+  "verified_at": "2026-10-16T14:31:34.403918+00:00",
+  "url": "https://caresteps-splz.onrender.com/app",
+  "health_url": "https://caresteps-splz.onrender.com/healthz",
+  "platform": "Render",
+  "plan": "free",
+  "region": "singapore",
+  "instances": 1,
+  "workers": 1,
+  "persistent_disk": false,
+  "deployed_commit": "e7319fcd7d38908daf30cc1f7adc827666e92313",
+  "deploy_status": "live",
+  "verified_without_login": true,
+  "software_tests": "171 passed, 3 warnings",
+  "routing_cases": "27/27",
+  "pages": {
+    "/healthz": 200,
+    "/app": 200,
+    "/static/css/app.css?v=2": 200,
+    "/static/js/app.js": 200,
+    "/readings/new": 200,
+    "/app/plan": 200,
+    "/app/medicines": 200,
+    "/app/trends": 200,
+    "/support/ask": 200,
+    "/summary": 200,
+    "/summary/print": 200,
+    "/trace": 200,
+    "/api/status": 200
+  },
+  "two_phase_reading": {
+    "status": "passed",
+    "before": 11,
+    "after": 12
+  },
+  "boundary": {
+    "status": "passed",
+    "mode": "safety"
+  },
+  "emergency": {
+    "status": "passed",
+    "mode": "safety"
+  },
+  "live_chat": {
+    "mode": "live",
+    "agent_mode": "live",
+    "elapsed_s": 8.882,
+    "tool_names": [
+      "get_care_plan",
+      "retrieve_education"
+    ],
+    "source_ids": [
+      "S2-healthhub-bp-medication",
+      "S4a-healthhub-amlodipine"
+    ]
+  },
+  "concurrent_health": {
+    "status": 200,
+    "elapsed_s": 0.099
+  },
+  "mobile": {
+    "viewport_width": 390,
+    "horizontal_overflow": false,
+    "send_button_height": 52,
+    "chat_send_and_boundary_reply": "passed"
+  },
+  "limits": [
+    "Free-service idle spin-down and cold start.",
+    "New records use ephemeral SQLite and are reset on a new instance.",
+    "Fictional shared profile; no production patient authentication."
+  ],
+  "automatic_deploys": "off; manual deploy required for later application changes"
+}
